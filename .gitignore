@@ -1,0 +1,19 @@
+# 任务工作区（本地私有，不上传）
+.workbuddy/
+
+# 第一版讲义：内容已被 guide-v2 取代，且其 extract/ 下含两本教材的提取全文（版权内容）
+study-guide/
+
+# 生成过程产生的临时文件
+guide-v2/print.html
+guide-v2/_*.png
+guide-v2/_*.pdf
+guide-v2/_build_*.pdf
+
+# Python / 系统
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,3 @@
+﻿model,test_acc,macro_f1,macro_auc,params,seconds,final_val_acc
+BPNN,1.0000,1.0000,1.0000,2694,0.1617,1.0000
+CNN,0.9792,0.9791,1.0000,6190,17.6398,0.9375

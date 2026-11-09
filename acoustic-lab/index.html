@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>声纹信号处理与神经网络 · 理论 + 复现</title>
+<style>
+:root{
+  --bg:#0f131b; --panel:#161c26; --panel2:#1c2431; --line:#2a3442;
+  --text:#e6edf3; --muted:#96a5b6; --dim:#6d7c8d;
+  --blue:#4c9be8; --teal:#2dd4a7; --amber:#f5a524; --red:#f26d6d; --purple:#a78bfa;
+  --mono:ui-monospace,Consolas,"Cascadia Code","Microsoft YaHei",monospace;
+  --sans:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.75 var(--sans)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.layout{display:grid;grid-template-columns:236px minmax(0,1fr);max-width:1500px;margin:0 auto}
+nav{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);padding:26px 16px;background:var(--panel)}
+nav h1{font-size:15px;font-weight:500;margin:0 0 4px}
+nav .sub{font-size:12px;color:var(--dim);margin-bottom:22px;line-height:1.6}
+nav a{display:block;padding:5px 10px;border-radius:6px;color:var(--muted);font-size:13px;border-left:2px solid transparent}
+nav a:hover{background:var(--panel2);text-decoration:none}
+nav a.on{color:var(--text);border-left-color:var(--blue);background:var(--panel2)}
+main{padding:38px 46px 90px;max-width:1100px}
+header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:34px}
+header h1{font-size:26px;font-weight:500;margin:0 0 8px;letter-spacing:.3px}
+header p{color:var(--muted);margin:4px 0}
+.badge{display:inline-block;padding:2px 9px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--muted);margin-right:6px}
+section{scroll-margin-top:24px;margin-bottom:52px}
+h2{font-size:19px;font-weight:500;margin:0 0 6px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+h2 .num{color:var(--blue);font:13px var(--mono);margin-right:10px}
+h3{font-size:15px;font-weight:500;margin:26px 0 8px;color:var(--text)}
+p{color:var(--muted);margin:10px 0}
+strong{color:var(--text);font-weight:500}
+ul,ol{color:var(--muted);padding-left:22px}
+li{margin:5px 0}
+code{font:13px var(--mono);background:var(--panel2);padding:2px 6px;border-radius:4px;color:var(--teal)}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 17px;overflow:auto;color:var(--text);font:13px/1.7 var(--mono)}
+.eq{background:var(--panel);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0;font:13.5px/1.9 var(--mono);color:#cfe3f7;overflow:auto}
+.eq b{color:var(--amber);font-weight:500}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:12px 16px;margin:14px 0;color:var(--muted)}
+.note .t{color:var(--amber);font-weight:500}
+.grid{display:grid;gap:14px;margin:16px 0}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+figure img{display:block;width:100%;height:auto;background:#0f131b}
+figcaption{padding:8px 12px;color:var(--dim);font-size:12px;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:var(--panel2);color:var(--text);font-weight:500}
+td{color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td.num{font:13px var(--mono);color:var(--teal)}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.kv div{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px}
+.kv .k{font-size:12px;color:var(--dim)}
+.kv .v{font:18px var(--mono);color:var(--teal);margin-top:3px}
+.tag{font-size:12px;color:var(--purple);border:1px dashed var(--line);padding:1px 7px;border-radius:5px}
+.foot{color:var(--dim);font-size:12px;border-top:1px solid var(--line);padding-top:18px;margin-top:40px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}main{padding:26px 20px}.g2,.g3{grid-template-columns:1fr}.kv{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h1>声纹信号处理 · 复现笔记</h1>
+  <div class="sub">变压器声纹故障诊断综述的技术链路，逐环节手写实现并验证</div>
+  <a href="#s0">0 · 总览与运行</a>
+  <a href="#s1">1 · x(t) 与采样</a>
+  <a href="#s2">2 · 傅里叶 / STFT</a>
+  <a href="#s3">3 · 小波与 EMD</a>
+  <a href="#s4">4 · 伽马变换辨析</a>
+  <a href="#s5">5 · Mel / MFCC / 听觉</a>
+  <a href="#s6">6 · 特征分析</a>
+  <a href="#s7">7 · BPNN 与 CNN</a>
+  <a href="#s8">8 · 分类曲线与结果</a>
+  <a href="#s9">9 · 通往深度学习</a>
+  <a href="#s10">10 · 验证总表</a>
+  <a href="#s11">11 · 局限与下一步</a>
+</nav>
+<main>
+<header>
+  <h1>声纹信号处理：从 x(t) 到深度学习</h1>
+  <p>把《变压器声纹故障诊断研究综述》的技术链路逐环节拆开——理论推导、手写复现、数值对拍、训练验证。</p>
+  <p>
+    <span class="badge">零第三方算法依赖</span>
+    <span class="badge">numpy + Pillow</span>
+    <span class="badge">6 类工况</span>
+    <span class="badge">49 维特征</span>
+    <span class="badge">BPNN / CNN 全手写</span>
+  </p>
+</header>
+
+<section id="s0">
+  <h2><span class="num">00</span>总览与运行</h2>
+  <p>整个项目只依赖 <code>numpy</code> 与 <code>Pillow</code>。FFT、小波、EMD、MFCC、反向传播、绘图引擎全部手写——目的是把"看理论算法并复现"做实，而不是调一堆库的黑盒。</p>
+  <pre>cd acoustic-lab
+python run.py                      # 全流程：合成数据 → 图/表 → 训练 → metrics
+python run.py --n 20               # 快速复跑
+python run.py --check              # 只跑算法数值验证
+python run.py --wav data/3_局部放电.wav   # 换成真实录音做单文件分析</pre>
+  <div class="kv">
+    <div><div class="k">采样率 / 时长</div><div class="v" id="kv-fs">8000 / 0.5s</div></div>
+    <div><div class="k">样本总数</div><div class="v" id="kv-n">—</div></div>
+    <div><div class="k">特征维度</div><div class="v" id="kv-d">—</div></div>
+    <div><div class="k">数据集划分</div><div class="v" id="kv-split">—</div></div>
+  </div>
+  <p>产物：<code>index.html</code>（本页）、<code>outputs/*.png</code>（全部图）、<code>outputs/*.csv</code>（波形/特征/指标表）、<code>data/*.wav</code>（6 个示例音频）。表里的数值来自 <code>outputs/metrics.js</code>，由 <code>run.py</code> 真实跑出来后写入，不是手写死的。</p>
+  <div class="note"><span class="t">关于素材</span>：你没有提供真实 WAV，因此默认用合成变压器声纹复现全流程。合成模型按综述第 3 节的机理设定（100 Hz 磁致伸缩基频 + 谐波 + 故障扰动）；任何真实录音都可用 <code>--wav</code> 接入同一套分析链。</div>
+</section>
+
+<section id="s1">
+  <h2><span class="num">01</span>x(t)：声纹信号从哪来</h2>
+  <p>变压器本体声主要来自铁芯<strong>磁致伸缩</strong>，频率是工频的 2 倍（2 f₀ = 100 Hz）及其谐波，再叠加绕组/油箱振动、冷却设备噪声与漏磁引起的 50 Hz 分量。把它写成一个可复现的模型：</p>
+  <div class="eq">
+    x(t) = <b>Σ</b><sub>k=1..5</sub> A<sub>k</sub> sin(2π·k·100·t + φ<sub>k</sub>) + 0.06 sin(2π·50·t) + s<sub>fault</sub>(t) + n(t)<br>
+    x[n] = x(n·T<sub>s</sub>)，T<sub>s</sub> = 1/f<sub>s</sub> = 0.125 ms（f<sub>s</sub> = 8000 Hz）<br>
+    A = [1.00, 0.42, 0.20, 0.10, 0.05]，φ<sub>k</sub> ~ U(0, 2π)
+  </div>
+  <p>采样定理要求 f<sub>s</sub> &gt; 2 f<sub>max</sub>；这里 8 kHz 覆盖到 4 kHz，足够放局部放电的高频脉冲（2.2–3.4 kHz）。真实工程常用 25.6 / 48 kHz（综述 6.1.4 指出采样协议不统一正是横向对比失效的原因之一）。</p>
+  <h3>六类工况的扰动项</h3>
+  <table>
+    <tr><th>工况</th><th>s_fault(t)</th><th>物理含义</th><th>哪个域最容易看出来</th></tr>
+    <tr><td>正常</td><td>只有底噪 n(t)</td><td>稳态磁致伸缩</td><td>频域：100 Hz 谐波族</td></tr>
+    <tr><td>铁芯松动</td><td>50 Hz 幅值调制 + 780 Hz 衰减敲击</td><td>夹紧力下降、间歇金属撞击</td><td>时域 / 包络</td></tr>
+    <tr><td>直流偏磁</td><td>150/250/350 Hz 奇次谐波 + tanh 削顶</td><td>励磁电流半波饱和</td><td>频域：奇次谐波比</td></tr>
+    <tr><td>局部放电</td><td>稀疏 2.2–3.4 kHz 衰减振荡脉冲</td><td>绝缘局部击穿</td><td>时频域 / 高频能量</td></tr>
+    <tr><td>短路冲击</td><td>宽带瞬态 + 17 Hz "沸腾"调制</td><td>电动力冲击、绕组变形</td><td>时频域</td></tr>
+    <tr><td>风机老化</td><td>12 Hz 转频调制的宽带气动噪声</td><td>轴承磨损、转速不稳</td><td>谱平坦度 / 噪声基底</td></tr>
+  </table>
+  <div class="grid g2">
+    <figure><img src="outputs/wave_compare.png" alt="正常与局放波形对比"><figcaption>时域对比：局放的瞬态脉冲在波形上肉眼可见，但稳态类故障几乎看不出差别</figcaption></figure>
+    <figure><img src="outputs/sampling_table.png" alt="采样与量化表"><figcaption>连续 x(t) → 离散 x[n] → 16 bit 量化；完整 4000 点在 waveform_data.csv</figcaption></figure>
+  </div>
+  <div class="grid g3">
+    <figure><img src="outputs/wave_c0.png" alt="正常波形"><figcaption>正常</figcaption></figure>
+    <figure><img src="outputs/wave_c2.png" alt="直流偏磁波形"><figcaption>直流偏磁（削顶不对称）</figcaption></figure>
+    <figure><img src="outputs/wave_c3.png" alt="局放波形"><figcaption>局部放电（脉冲串）</figcaption></figure>
+  </div>
+  <figure><img src="outputs/wave_all6.png" alt="六类波形对照"><figcaption>六类工况波形对照，每条独立归一化到自己的峰值</figcaption></figure>
+  <p class="tag">表格数据：outputs/waveform_data.csv（n, t_ms, x_n, int16）；每类一个 WAV 在 data/。</p>
+</section>
+
+<section id="s2">
+  <h2><span class="num">02</span>傅里叶变换：DFT → FFT → STFT</h2>
+  <h3>DFT：把信号投影到复正弦基上</h3>
+  <div class="eq">
+    X[k] = Σ<sub>n=0</sub><sup>N−1</sup> x[n] · e<sup>−j2πkn/N</sup>，&nbsp;&nbsp; k = 0 … N−1<br>
+    x[n] = (1/N) Σ<sub>k=0</sub><sup>N−1</sup> X[k] · e<sup>j2πkn/N</sup><br>
+    频率分辨率 Δf = f<sub>s</sub> / N；|X[k]| 是第 k 根谱线（f = k·f<sub>s</sub>/N）的幅度
+  </div>
+  <p>直接算 DFT 是 O(N²) 次复数乘法。<code>dsp.dft()</code> 就是按定义实现的矩阵版；<code>dsp.fft()</code> 用 Cooley–Tukey radix-2：按奇偶拆成两个 N/2 点 DFT，蝶形合并，复杂度降到 <strong>O(N log N)</strong>，并做了比特反转（bit-reversal）重排。本项目用 numpy 把同一层的所有蝶形一次算完，比 Python 循环快得多。</p>
+  <div class="eq">
+    X[k] = E[k] + W<sub>N</sub><sup>k</sup> O[k]&nbsp;&nbsp;（前半），&nbsp;&nbsp; X[k+N/2] = E[k] − W<sub>N</sub><sup>k</sup> O[k]&nbsp;&nbsp;（后半）<br>
+    W<sub>N</sub><sup>k</sup> = e<sup>−j2πk/N</sup> 称旋转因子
+  </div>
+  <div class="grid g2">
+    <figure><img src="outputs/dft_basis.png" alt="DFT 基函数"><figcaption>DFT 的基：不同 k 的复正弦，内积就是"这个频率有多少"</figcaption></figure>
+    <figure><img src="outputs/spectrum_compare.png" alt="频谱对比"><figcaption>直流偏磁的 150/250/350 Hz 奇次谐波抬升，频域一眼可辨</figcaption></figure>
+  </div>
+  <h3>STFT：给非平稳信号加一扇窗</h3>
+  <p>全局 FFT 丢掉了时间位置。STFT 把信号切成短帧（25 ms 帧长 / 10 ms 帧移 / 汉明窗），逐帧做 FFT：</p>
+  <div class="eq">X[m, k] = Σ<sub>n</sub> x[n] · w[n − mH] · e<sup>−j2πkn/N</sup>；&nbsp;窗越长频率分辨率越好、时间分辨率越差（时频测不准）</div>
+  <p>汉明窗抑制<strong>频谱泄漏</strong>；帧移 H 决定时间轴密度。本复现得到 48 帧 × 257 个频点，再经 Mel 滤波压缩成 26 × 48 的时频谱图——这就是后面 CNN 的输入。</p>
+  <div class="grid g3">
+    <figure><img src="outputs/stft_c0.png" alt="正常 log-Mel 谱"><figcaption>正常：稳定水平谐波带</figcaption></figure>
+    <figure><img src="outputs/stft_c3.png" alt="局放 log-Mel 谱"><figcaption>局放：竖直的能量脉冲</figcaption></figure>
+    <figure><img src="outputs/stft_c5.png" alt="风机老化 log-Mel 谱"><figcaption>风机老化：宽带噪声基底抬升</figcaption></figure>
+  </div>
+  <p class="tag">数值对拍：DFT / FFT / STFT 与 numpy.fft 的最大偏差见第 10 节验证总表。</p>
+</section>
+
+<section id="s3">
+  <h2><span class="num">03</span>小波变换与 EMD：傅里叶之外的两条路</h2>
+  <h3>为什么不够用</h3>
+  <p>STFT 的窗宽是固定的：对 100 Hz 稳态谐波合适，对局放微秒级脉冲就太钝。小波用<strong>可伸缩的基</strong>解决——高频用窄窗（时间分辨率高），低频用宽窗（频率分辨率高）。</p>
+  <div class="eq">
+    连续小波 CWT： W(a, b) = (1/√a) ∫ x(t) ψ<sup>*</sup>((t−b)/a) dt，&nbsp; a 为尺度、b 为平移<br>
+    复 Morlet：ψ(t) = π<sup>−1/4</sup> e<sup>jω₀t</sup> e<sup>−t²/2</sup>，&nbsp; 中心频率 f ≈ ω₀/(2πa)（本项目 ω₀ = 6）<br>
+    离散小波 DWT（Mallat 塔式）：cA = ↓2(x ⊛ h₀)，cD = ↓2(x ⊛ h₁)，逐层对 cA 再分解
+  </div>
+  <p>本项目实现两套 DWT：<strong>Haar</strong>（最简单的正交小波，cA=(x₀+x₁)/√2、cD=(x₀−x₁)/√2）与 <strong>db4</strong>（Daubechies D8，4 阶消失矩，8 抽头正交镜像滤波器组 QMF）。重构不是随便拼回去，而是分析算子的<strong>转置</strong>：h₁[n] = (−1)ⁿ h₀[L−1−n]，x̂ = Aᵀ·[cA;cD]。这一步写错相位，重构误差会从 1e-12 变成 1.4 —— 项目里确实踩过并修掉了。</p>
+  <div class="grid g2">
+    <figure><img src="outputs/haar_decomposition.png" alt="Haar 多层分解"><figcaption>Haar 四层分解：细节系数把冲击集中在 D1/D2</figcaption></figure>
+    <figure><img src="outputs/db4_response.png" alt="db4 QMF 频响"><figcaption>db4 双通道 QMF 幅频响应，低通/高通互补</figcaption></figure>
+  </div>
+  <figure><img src="outputs/cwt_scalogram.png" alt="Morlet 尺度图"><figcaption>局放样本的 Morlet 尺度图。注意两点：尺度原本按对数分布，图上已重采样到线性频率轴（否则纵轴刻度会错位，把 100 Hz 谐波误标成 900 Hz）；再减去每个频带的时间中位数以压掉稳态谐波，高频段残留的竖直亮条就是放电脉冲出现的时刻——这是全局 FFT 给不出的时间定位信息</figcaption></figure>
+  <h3>EMD：连基函数都不预设</h3>
+  <p>小波仍要选母小波；EMD 直接由数据自己分解。筛分（sifting）步骤：</p>
+  <ol>
+    <li>找出 h(t) 的全部局部极大/极小，用<strong>自然三次样条</strong>插值出上、下包络（本项目连 Thomas 解三对角方程都自己写）；</li>
+    <li>均值包络 m(t) = (上 + 下)/2，令 h ← h − m；</li>
+    <li>重复到标准差 SD = Σm²/Σh² &lt; 0.05，得到一个 IMF；从残差里继续筛下一个。</li>
+  </ol>
+  <p>合格的 IMF 要满足：极值点数与过零点数之差 ≤ 1，且上下包络均值为 0。IMF 按频率从高到低排列，天然适合"故障冲击集中在前几个 IMF"这类特征。缺点是端点效应与模态混叠。</p>
+  <div class="grid g2">
+    <figure><img src="outputs/emd_imfs.png" alt="EMD IMF 分量"><figcaption>EMD 分解：从高频 IMF 到低频趋势，完全由数据驱动</figcaption></figure>
+    <figure><img src="outputs/emd_energy.png" alt="IMF 能量占比"><figcaption>各 IMF 能量占比，作为时频特征送入分类器</figcaption></figure>
+  </div>
+  <table>
+    <tr><th></th><th>傅里叶 / STFT</th><th>小波 DWT / CWT</th><th>EMD</th></tr>
+    <tr><td>基函数</td><td>固定复正弦</td><td>预设母小波，可伸缩</td><td>无基，数据自适应</td></tr>
+    <tr><td>适合</td><td>稳态周期谐波</td><td>瞬态脉冲、多分辨率</td><td>非平稳、非线性</td></tr>
+    <tr><td>成本</td><td>O(N log N)</td><td>O(N)</td><td>筛分迭代，最慢</td></tr>
+    <tr><td>本项目</td><td>MFCC / 频谱特征</td><td>4 层能量熵、尺度图</td><td>IMF 能量占比 + 样本熵</td></tr>
+  </table>
+</section>
+
+<section id="s4">
+  <h2><span class="num">04</span>"伽马变换"：两种完全不同的东西</h2>
+  <div class="note"><span class="t">容易混淆</span>：中文文献里"伽马变换"在声纹语境常指两件事——(A) 谱图的 <strong>幂律 Gamma 校正</strong>（图像灰度变换）；(B) <strong>Gammatone 听觉滤波器组</strong>（名字里有 Gamma，来自脉冲响应的 Γ 形包络）。本项目两种都实现了，别把它们当成一回事。</div>
+  <h3>(A) 幂律 Gamma 校正：s → s^γ</h3>
+  <div class="eq">S' = ((S − S<sub>min</sub>)/(S<sub>max</sub> − S<sub>min</sub>))<sup>γ</sup>；&nbsp; γ &lt; 1 抬升弱能量、压缩强谐波的动态范围；γ &gt; 1 拉开对比度</div>
+  <p>声纹谱图里 100 Hz 基频能量常常比局放脉冲高几个数量级，直接送 CNN 会被强谐波"掩蔽"。γ=0.3~0.6 的压缩能让弱故障分量可见，是"声纹 → 图谱 → CNN"链路里便宜但有效的一步。</p>
+  <div class="grid g3">
+    <figure><img src="outputs/gamma_03.png" alt="γ=0.3"><figcaption>γ = 0.3：弱分量被显著抬升</figcaption></figure>
+    <figure><img src="outputs/gamma_10.png" alt="γ=1.0"><figcaption>γ = 1.0：线性归一化基线</figcaption></figure>
+    <figure><img src="outputs/gamma_20.png" alt="γ=2.0"><figcaption>γ = 2.0：对比度增强，弱分量被压暗</figcaption></figure>
+  </div>
+  <div class="grid g2">
+    <figure><img src="outputs/gamma_curve.png" alt="Gamma 曲线"><figcaption>s^γ 曲线：γ&lt;1 上凸、γ&gt;1 下凸</figcaption></figure>
+    <figure><img src="outputs/gamma_06.png" alt="γ=0.6"><figcaption>γ = 0.6：CNN 输入实际采用值</figcaption></figure>
+  </div>
+  <p>量化效果（P90−P10 对比度，数值由脚本实测）：<span id="gamma-contrast">—</span>。可以看到 γ 从 2.0 降到 0.3 时弱能量区间被重新分配。</p>
+  <h3>(B) Gammatone：模拟耳蜗的听觉滤波器</h3>
+  <div class="eq">
+    h(t) = t<sup>n−1</sup> · e<sup>−2πbt</sup> · cos(2πf<sub>c</sub>t + φ)，&nbsp; n = 4<br>
+    b = 24.7 · (4.37 f<sub>c</sub>/1000 + 1) 来自 ERB 带宽；中心频率按 ERB 数域等距排布
+  </div>
+  <p>它是 MFCC 中 Mel 三角滤波器的"生理更真实"替代：Gamma 形脉冲响应 × 余弦载波，低频通道窄、高频通道宽。<code>dsp.gammatonegram()</code> 生成 26 通道时频表示，可与 log-Mel 谱图直接对照。</p>
+  <figure><img src="outputs/gammatonegram.png" alt="Gammatonegram"><figcaption>Gammatonegram：中心频率按 ERB 尺度分布，<span id="gt-range">—</span></figcaption></figure>
+</section>
+
+<section id="s5">
+  <h2><span class="num">05</span>Mel / MFCC / 39 维倒谱特征</h2>
+  <p>MFCC 是综述里出现频率最高的特征（几乎每个模型都用它）。它的思路是模仿人耳：低频分辨细、高频分辨粗，再做倒谱解卷积。</p>
+  <div class="eq">
+    1 预加重 x'[n] = x[n] − 0.97 x[n−1]（补偿高频衰减）<br>
+    2 分帧 25 ms / 帧移 10 ms → 汉明窗 w[n] = 0.54 − 0.46 cos(2πn/(N−1))<br>
+    3 功率谱 P[k] = |FFT|² → 26 个 Mel 三角滤波器 → 对数能量 log(·)<br>
+    4 Mel 转换：mel(f) = 2595 log₁₀(1 + f/700)<br>
+    5 DCT-II 去相关，取前 13 维 → MFCC；再算 Δ、ΔΔ → <b>13 + 13 + 13 = 39 维</b><br>
+    c<sub>k</sub> = √(2/M) Σ<sub>m</sub> log E<sub>m</sub> cos(πk(2m+1)/(2M))
+  </div>
+  <p>为什么有效：log 谱在倒谱域把"激励（谐波结构）"和"传递函数（声道/箱体共振）"分离，取低阶系数就得到紧凑的谱包络；Δ/ΔΔ 补上动态信息。综述里双向 LSTM 用的正是 39 维 MFCC 时序特征。</p>
+  <div class="grid g2">
+    <figure><img src="outputs/mel_filters.png" alt="Mel 滤波器组"><figcaption>Mel 三角滤波器组：低频窄、高频宽</figcaption></figure>
+    <figure><img src="outputs/mfcc_heatmap.png" alt="MFCC 热力图"><figcaption>一段正常声纹的 13 维 MFCC × 48 帧</figcaption></figure>
+  </div>
+  <figure><img src="outputs/mfcc_39.png" alt="39 维构成"><figcaption>静态系数 + 一阶差分 + 二阶差分的构成示意（画出前 2 维）</figcaption></figure>
+  <p class="tag">本项目：26 个 Mel 通道、13 维 MFCC、48 帧；输入 CNN 时把 log-Mel 谱图做 γ=0.4 校正后缩放到 32×32。</p>
+</section>
+
+<section id="s6">
+  <h2><span class="num">06</span>特征提取与特征分析</h2>
+  <p>从每条声纹抽取 <strong>49 维</strong>特征，对应综述的第 4 节"时域 / 频域 / 时频域"三分类：</p>
+  <table>
+    <tr><th>域</th><th>维数</th><th>特征</th><th>主要捕获什么</th></tr>
+    <tr><td>时域</td><td>8</td><td>RMS、短时能量标准差、峰值、峭度、偏度、过零率、波形因子、脉冲因子</td><td>冲击、削顶、幅值分布</td></tr>
+    <tr><td>频域</td><td>7</td><td>谱质心、谱带宽、谱平坦度、100 Hz 占比、奇次谐波比、高频能量比、谱峰频率</td><td>谐波结构、宽带噪声</td></tr>
+    <tr><td>倒谱</td><td>26</td><td>13 维 MFCC 的均值 + 标准差</td><td>谱包络与动态</td></tr>
+    <tr><td>时频域</td><td>8</td><td>Haar 能量熵、db4 细节能量比、CWT 能量质心、IMF1–4 能量占比、IMF1 样本熵</td><td>非平稳瞬态、多尺度能量</td></tr>
+  </table>
+  <div class="grid g2">
+    <figure><img src="outputs/fisher_top.png" alt="Fisher 可分性"><figcaption>Fisher 比（类间方差/类内方差）Top 15：哪些特征真正区分故障</figcaption></figure>
+    <figure><img src="outputs/feature_table.png" alt="特征统计表"><figcaption>各工况前 7 维特征的均值 ± 标准差</figcaption></figure>
+  </div>
+  <div class="grid g2">
+    <figure><img src="outputs/pca_scatter.png" alt="PCA 散点"><figcaption>手写 SVD 做 PCA，把 49 维投到二维看类簇分离情况</figcaption></figure>
+    <figure><img src="outputs/feature_corr.png" alt="特征相关矩阵"><figcaption>相关系数热力图：高度相关的特征意味着信息冗余</figcaption></figure>
+  </div>
+  <figure><img src="outputs/top_feature_by_class.png" alt="Top1 特征各类均值"><figcaption>可分性最高的特征在六类上的均值差异</figcaption></figure>
+  <p>脚本实测的 Top 5 可分特征：<span id="fisher-top">—</span>。PCA 前两维累计解释方差 <span id="pca-var">—</span>；特征间最大非对角相关系数 <span id="corr-max">—</span>（越接近 1 冗余越严重）。</p>
+  <div class="note"><span class="t">一个诚实的观察</span>：合成信号统一归一到 0.88 峰值，所以 <code>peak</code> 这一维在六类上几乎是常数、Fisher 比接近 0。真实录音有通道增益差异，它才有意义。这类"因为数据生成方式而失效的特征"在做特征选择时必须剔掉。</div>
+</section>
+
+<section id="s7">
+  <h2><span class="num">07</span>什么是神经网络：BPNN 与 CNN</h2>
+  <h3>BPNN：误差反向传播网络</h3>
+  <p>本质上就是多层线性变换 + 非线性激活 + 链式法则。输入 49 维特征，隐层 48 个 tanh 单元，输出 6 类 softmax：</p>
+  <div class="eq">
+    前向： z₁ = XW₁ + b₁ → a₁ = tanh(z₁) → z₂ = a₁W₂ + b₂ → p = softmax(z₂)<br>
+    损失： L = −(1/N) Σ<sub>i</sub> Σ<sub>c</sub> Y<sub>ic</sub> log p<sub>ic</sub>（交叉熵）<br>
+    反向： δ₂ = (p − Y)/N &nbsp;→&nbsp; ∂L/∂W₂ = a₁ᵀδ₂，&nbsp; ∂L/∂b₂ = Σδ₂<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; δ₁ = δ₂W₂ᵀ ⊙ (1 − a₁²) &nbsp;→&nbsp; ∂L/∂W₁ = Xᵀδ₁，&nbsp; ∂L/∂b₁ = Σδ₁
+  </div>
+  <p>交叉熵 + softmax 的梯度恰好是 <code>p − Y</code>，这也是为什么用它们搭配（比 MSE + sigmoid 收敛快得多）。参数用 Adam 更新：一阶动量 + 二阶自适应步长。</p>
+  <h3>CNN：把谱图当图像看</h3>
+  <p>全连接层把 32×32 谱图拉平会丢掉局部结构，且参数爆炸。CNN 靠三件事解决：<strong>局部感受野</strong>（3×3 卷积核只邻域相连）、<strong>权值共享</strong>（同一个核扫完整张图）、<strong>池化</strong>（2×2 最大池化降维并获得平移不变性）。</p>
+  <div class="eq">
+    输入 (N,1,32,32) → im2col 展开 → conv 4×[3×3] → ReLU → maxpool 2×2<br>
+    → 展平 4×16×16 = 1024 → 全连接 6 → softmax<br>
+    卷积反向：∂L/∂W = δ<sub>out</sub>ᵀ · cols，&nbsp; ∂L/∂X = col2im(δ<sub>out</sub> · W)<br>
+    池化反向：梯度只回传给前向时取到最大值的那个位置（记录 mask）
+  </div>
+  <p><code>im2col</code> 把滑窗卷积转成一次矩阵乘法，是几乎所有框架的底层做法；<code>col2im</code> 是它的转置，用于把梯度攒回原图位置。这两处最容易写错，因此项目做了<strong>数值梯度检查</strong>：给某个权重 ±1e-5 扰动，比较解析梯度与 (L₊−L₋)/(2ε)。</p>
+  <div class="note"><span class="t">梯度检查结果</span>：BPNN 最大相对误差 <span id="grad-bp">—</span>（最大绝对误差 <span id="grad-bp-abs">—</span>），CNN <span id="grad-cnn">—</span>（绝对误差 <span id="grad-cnn-abs">—</span>）。<br>这里有个真实的坑：BPNN 的相对误差比 CNN 大几个数量级，但并不是反向传播写错——误差最大的那个权重解析梯度只有 −2.03e−06，绝对误差却仅 1.03e−11。中心差分在近零梯度处会被浮点噪声放大相对误差。<strong>判断实现是否正确要看绝对误差</strong>（本项目 &lt; 1e−8，其余探针相对误差都在 1e−10 量级）。</div>
+  <div class="grid g2">
+    <figure><img src="outputs/curve_bpnn_loss.png" alt="BPNN 损失曲线"><figcaption>BPNN 训练/验证损失</figcaption></figure>
+    <figure><img src="outputs/curve_bpnn_acc.png" alt="BPNN 准确率曲线"><figcaption>BPNN 分类准确率曲线（虚线为 1/6 随机基线）</figcaption></figure>
+  </div>
+  <div class="grid g2">
+    <figure><img src="outputs/curve_cnn_loss.png" alt="CNN 损失曲线"><figcaption>CNN 训练/验证损失</figcaption></figure>
+    <figure><img src="outputs/curve_cnn_acc.png" alt="CNN 准确率曲线"><figcaption>CNN 分类准确率曲线</figcaption></figure>
+  </div>
+</section>
+
+<section id="s8">
+  <h2><span class="num">08</span>分类曲线与结果</h2>
+  <p>同一批数据、同一划分（分层 60/20/20，标准化只用训练集统计量，避免数据泄漏），两个手写模型对比。为避免 49 维特征下所有样本比例都刷到 100%、曲线变成一条直线，学习曲线特意只用 8 维时域特征训练：</p>
+  <table id="model-table"><tr><th>模型</th><th>测试准确率</th><th>宏平均 F1</th><th>宏平均 AUC</th><th>参数量</th><th>训练耗时</th></tr></table>
+  <div class="grid g2">
+    <figure><img src="outputs/roc_curves.png" alt="ROC 曲线"><figcaption>CNN 多分类 ROC（One-vs-Rest）与各类 AUC；合成数据上几乎全贴左上边界</figcaption></figure>
+    <figure><img src="outputs/learning_curve.png" alt="学习曲线"><figcaption>学习曲线：仅用 8 维时域特征，观察样本量对泛化的影响</figcaption></figure>
+  </div>
+  <figure><img src="outputs/noise_robustness.png" alt="噪声鲁棒性曲线"><figcaption>噪声鲁棒性：给标准化特征 / Gamma 校正谱图注入高斯噪声（横轴为噪声与数据标准差之比），观察准确率衰减</figcaption></figure>
+  <p>这条曲线比全 1.00 的 ROC 有用得多：它把综述第 6.1.1 节"噪声鲁棒性不足"变成可测的量。训练时没见过的噪声一上来，准确率就开始掉——<span id="noise-final">—</span>。真实变电站的列车鸣笛、鸟声、风机宽带噪声都是这类分布外扰动。</p>
+  <div class="grid g2">
+    <figure><img src="outputs/confusion_cnn.png" alt="CNN 混淆矩阵"><figcaption>CNN 混淆矩阵热力图</figcaption></figure>
+    <figure><img src="outputs/f1_by_class.png" alt="逐类 F1"><figcaption>CNN 逐类 F1，横线为宏平均</figcaption></figure>
+  </div>
+  <div class="grid g2">
+    <figure><img src="outputs/model_compare.png" alt="模型对比表"><figcaption>手写 BPNN vs 手写 CNN 指标对照</figcaption></figure>
+    <figure><img src="outputs/confusion_table.png" alt="混淆矩阵表"><figcaption>混淆矩阵计数表（测试集）</figcaption></figure>
+  </div>
+  <p>结果与逐类 F1 明细见 <code>outputs/model_compare.csv</code>、<code>outputs/learning_curve.csv</code>、<code>outputs/confusion_table.png</code>。</p>
+</section>
+
+<section id="s9">
+  <h2><span class="num">09</span>从这里到深度学习</h2>
+  <p>这一节把本次复现和综述第 5 节的模型谱系接起来。你刚手写的 CNN 是所有后续架构的底座：</p>
+  <table>
+    <tr><th>架构</th><th>在 CNN 之上加了什么</th><th>解决综述里的哪个痛点</th><th>代价</th></tr>
+    <tr><td>CNN</td><td>基线：卷积 + 池化 + 全连接</td><td>自动学二维时频图谱特征</td><td>浅层、参数少、可解释性一般</td></tr>
+    <tr><td>ResNet</td><td>残差跳接 y = F(x) + x</td><td>深层不再梯度退化，精度 96%+</td><td>参数量大、训练慢</td></tr>
+    <tr><td>RNN / LSTM / GRU</td><td>门控循环单元，按帧序列建模</td><td>动态工况、时序演化；39 维 MFCC 直接喂进去</td><td>难并行、长序列仍吃力</td></tr>
+    <tr><td>Transformer / ViT</td><td>自注意力，谱图切块 + 位置编码</td><td>全局依赖、突发故障；可用 Grad-CAM 解释</td><td>数据饥渴、计算量大</td></tr>
+    <tr><td>领域大模型</td><td>预训练 + 参数高效微调</td><td>100 样本小场景下 F1 大幅提升</td><td>部署成本、可信度</td></tr>
+  </table>
+  <p>工程落地的三条现实约束（也是综述第 6 节的五大挑战）：</p>
+  <ul>
+    <li><strong>噪声鲁棒性</strong>：现场有列车鸣笛、鸟声等非平稳噪声，实验室 99% 到现场会掉；要做极端噪声注入与物理先验融合。</li>
+    <li><strong>标准化</strong>：采样率 48 kHz / 25.6 kHz、帧长 10 s / 2 min 各不相同，准确率不能横向比较；先统一采集协议与公开基准集。</li>
+    <li><strong>可解释与动态工况</strong>：注意力图 / SHAP 给出"模型凭哪段频谱判的"；负载波动、启停下的泛化目前几乎没有可靠验证。</li>
+  </ul>
+  <div class="note"><span class="t">别被数字骗了</span>：本项目在合成稳态数据上能接近 100%，但这是"物理机理已知 + 噪声受控 + 类别平衡"的理想条件。它验证的是<strong>算法实现正确</strong>，不是<strong>现场诊断性能</strong>。把这条记住，再去看综述里那一排 99.x% 会清醒很多。</div>
+</section>
+
+<section id="s10">
+  <h2><span class="num">10</span>验证总表（脚本实测）</h2>
+  <p>所有数值由 <code>run.py</code> 运行后写入 <code>outputs/metrics.js</code>，下面表格由页面直接读取填充。这是"复现"是否可信的凭据。</p>
+  <table id="verify-table"><tr><th>验证项</th><th>实测值</th><th>判据 / 说明</th></tr></table>
+  <h3>数据集与训练</h3>
+  <table id="data-table"><tr><th>项目</th><th>值</th></tr></table>
+  <p class="tag">指标在 <code>run.py</code> 结束时直接内联进本页（离线打开也不会丢数据），同时输出 <code>metrics.json</code> / <code>metrics.js</code> 供程序读取。</p>
+</section>
+
+<section id="s11">
+  <h2><span class="num">11</span>局限、文件清单与下一步</h2>
+  <h3>当前局限</h3>
+  <ul>
+    <li>数据是合成稳态信号，不含现场强电磁干扰、多设备混响、渐变型故障的长期演化。</li>
+    <li>8 kHz 采样是教学折中；真实工作请按 25.6/48 kHz 重新设置 <code>wav.FS</code> 与 Mel 上限。</li>
+    <li>EMD 用自然三次样条插值包络（没有 SciPy），端点仍会有轻微摆动；特征计算在 2 kHz 降采样上做以控制耗时。</li>
+    <li>分类只做了 6 类闭集，没做开集拒识、置信度校准、跨设备迁移。</li>
+  </ul>
+  <h3>换成真实 WAV</h3>
+  <pre>python run.py --wav "C:/path/to/transformer.wav"
+# 输出 outputs/real_wav/：波形图、频谱、log-Mel、MFCC、49 维特征表
+# 若要训练，把 wav.build_dataset() 换成按文件名标签读取目录即可</pre>
+  <h3>文件清单</h3>
+  <table>
+    <tr><th>文件</th><th>职责</th></tr>
+    <tr><td><code>src/wav.py</code></td><td>x(t) 模型、6 类声纹合成、16 bit WAV 读写</td></tr>
+    <tr><td><code>src/dsp.py</code></td><td>DFT/FFT/STFT、Mel/MFCC、Gamma/Gammatone、Haar/db4 DWT、Morlet CWT、EMD + 数值验证</td></tr>
+    <tr><td><code>src/features.py</code></td><td>49 维特征、Fisher、PCA、相关分析、CSV 表格</td></tr>
+    <tr><td><code>src/nn.py</code></td><td>BPNN / CNN（im2col + 反向传播）、梯度检查、训练与分类曲线</td></tr>
+    <tr><td><code>src/viz.py</code></td><td>全部 DSP 教学可视化</td></tr>
+    <tr><td><code>src/plot.py</code></td><td>零依赖深色绘图引擎（微软雅黑，中文不乱码）</td></tr>
+    <tr><td><code>run.py</code></td><td>一键编排、指标汇总、真实 WAV 模式</td></tr>
+  </table>
+  <p>最值得继续做的三件事：① 换真实录音验证噪声鲁棒性；② 把 LSTM/Transformer 接进同一套 39 维 MFCC 序列，补上动态工况；③ 用公开基准集统一指标（Accuracy / 宏 F1 / AUC / 置信区间），让结果可比较。</p>
+</section>
+
+<div class="foot">声纹信号处理与神经网络 · 理论 + 复现笔记 · 生成于 acoustic-lab / run.py</div>
+</main>
+</div>
+<script id="metrics">window.METRICS = {"dataset": {"n_per_class": 40, "total": 240, "fs": 8000, "duration_s": 0.5, "classes": ["正常", "铁芯松动", "直流偏磁", "局部放电", "短路冲击", "风机老化"], "n_fft": 512, "frame_ms": 25, "hop_ms": 10, "n_mels": 26}, "verify": {"dft_vs_numpy": 1.3955970994894752e-12, "fft_vs_numpy": 7.105427357601002e-14, "stft_vs_numpy": 5.402578411571407e-15, "haar_recon_rmse": 1.6668368461473461e-16, "db4_recon_rmse": 1.04237485356311e-12, "emd_recon_rmse": 3.4332750365383916e-17, "emd_orthogonality": 0.07420442404398704, "emd_imf_count": 5.0, "fft_2048_ms": 0.5631749983876944, "dft_256_ms": 2.848600037395954}, "gamma": {"0.3": {"p10": 0.6702768967380848, "p90": 0.9179591325685615, "contrast": 0.24768223583047677}, "0.6": {"p10": 0.4492712618797155, "p90": 0.8426489697914858, "contrast": 0.39337770791177035}, "1.0": {"p10": 0.26354090962153986, "p90": 0.7517575949353095, "contrast": 0.4882166853137696}, "2.0": {"p10": 0.06945405738396909, "p90": 0.5651394869492906, "contrast": 0.4956854295653215}}, "auditory": {"cfs_first": 95.63716280490573, "cfs_last": 3605.838769367472, "mfcc_shape": [48, 13], "n_mels": 26}, "wavelet": {"haar_levels": 4, "db4_levels": 3, "cwt_scales": 56}, "emd": {"n_imf": 5, "energy": [0.024714247228950836, 0.3616017284570979, 0.4978240087723672, 0.0676486934306154, 0.02923051714667233, 0.01898080496429639], "recon_rmse": 4.092003933217273e-17}, "features": {"n_features": 49, "fisher_top": [["mfcc2_mean", 272.9790402957032], ["mfcc1_std", 148.69893893501663], ["spec_flatness", 136.01003668666428], ["spec_bandwidth", 123.7282478267416], ["db4_detail_ratio", 122.07292305282236]], "pca_var1": 0.2907538230085531, "pca_var2": 0.21036350804417595, "corr_max_offdiag": 0.9973788365887237}, "nn": {"models": {"BPNN": {"acc": 1.0, "macro_f1": 0.9999999999993748, "macro_auc": 0.9999999999998749, "epochs": 90, "seconds": 0.1617372001055628, "params": 2694, "final_val_acc": 1.0}, "CNN": {"acc": 0.9791666666666666, "macro_f1": 0.9790849673196395, "macro_auc": 0.9999999999998749, "epochs": 70, "seconds": 17.639795999974012, "params": 6190, "final_val_acc": 0.9375}}, "grad_bpnn": [5.280442502600875e-06, 6.600702981723707e-07, 3.414441355936815e-11], "grad_cnn": [3.9503962454816276e-11, 8.649849781000475e-12, 1.5065587666285296e-11], "noise": {"levels": [0.0, 0.1, 0.2, 0.4, 0.7, 1.0, 1.5, 2.0], "BPNN": [1.0, 1.0, 1.0, 1.0, 1.0, 0.9583333333333334, 0.9166666666666666, 0.75], "CNN": [0.9791666666666666, 1.0, 1.0, 0.875, 0.8125, 0.5833333333333334, 0.4791666666666667, 0.3958333333333333]}, "split": {"train": 144, "val": 48, "test": 48}, "learning": [[20.0, 0.875], [40.0, 0.8958333333333334], [60.0, 0.8958333333333334], [80.0, 0.875], [100.0, 0.875]], "f1_by_class": {"正常": [0.9999999999993749, 0.9411764705876263], "铁芯松动": [0.9999999999993749, 0.9999999999993749], "直流偏磁": [0.9999999999993749, 0.9999999999993749], "局部放电": [0.9999999999993749, 0.9333333333327111], "短路冲击": [0.9999999999993749, 0.9999999999993749], "风机老化": [0.9999999999993749, 0.9999999999993749]}}};</script>
+<script>
+(function(){
+  var M = window.METRICS;
+  function set(id, v){ var e=document.getElementById(id); if(e) e.textContent = v; }
+  function fmt(v){ return (typeof v==='number') ? (Math.abs(v)<1e-3 && v!==0 ? v.toExponential(2) : (Number.isInteger(v)? String(v) : v.toFixed(4))) : String(v); }
+  function row(cells){ return '<tr>' + cells.map(function(c){return '<td>'+c+'</td>';}).join('') + '</tr>'; }
+  function fill(id, rows){ var e=document.getElementById(id); if(e) e.insertAdjacentHTML('beforeend', rows.join('')); }
+  if(!M){
+    document.querySelector('#s10').insertAdjacentHTML('beforeend',
+      '<div class="note"><span class="t">尚未生成数据</span>：请先在 acoustic-lab 目录运行 <code>python run.py</code>，再刷新本页。</div>');
+    return;
+  }
+  var d=M.dataset, v=M.verify, n=M.nn, f=M.features;
+  set('kv-fs', d.fs+' Hz / '+d.duration_s+' s');
+  set('kv-n', d.total+' 条');
+  set('kv-d', f.n_features+' 维');
+  set('kv-split', n.split.train+' / '+n.split.val+' / '+n.split.test);
+  set('pca-var', ((f.pca_var1+f.pca_var2)*100).toFixed(1)+'%');
+  set('corr-max', f.corr_max_offdiag.toFixed(3));
+  set('fisher-top', f.fisher_top.map(function(p){return p[0]+' ('+p[1].toFixed(1)+')';}).join('  ·  '));
+  set('gt-range', M.auditory.cfs_first.toFixed(0)+' – '+M.auditory.cfs_last.toFixed(0)+' Hz');
+  set('grad-bp', n.grad_bpnn[0].toExponential(2));
+  set('grad-cnn', n.grad_cnn[0].toExponential(2));
+  set('grad-bp-abs', n.grad_bpnn[2].toExponential(2));
+  set('grad-cnn-abs', n.grad_cnn[2].toExponential(2));
+  if(n.noise){
+    var i1=n.noise.levels.indexOf(1.0), i2=n.noise.levels.length-1;
+    set('noise-final', '噪声比 1.0 时 BPNN '+(n.noise.BPNN[i1]*100).toFixed(1)+'% / CNN '+(n.noise.CNN[i1]*100).toFixed(1)
+      +'%，噪声比 '+n.noise.levels[i2]+' 时降到 '+(n.noise.BPNN[i2]*100).toFixed(1)+'% / '+(n.noise.CNN[i2]*100).toFixed(1)+'%');
+  }
+  var gc = Object.keys(M.gamma).map(function(k){ return 'γ='+k+': '+M.gamma[k].contrast.toFixed(3); });
+  set('gamma-contrast', gc.join('　|　'));
+
+  var checks = [
+    ['手写 DFT vs numpy.fft（最大偏差）', v.dft_vs_numpy, 'O(N²) 定义实现对拍，应 < 1e-10'],
+    ['手写 FFT vs numpy.fft（最大偏差）', v.fft_vs_numpy, 'Cooley–Tukey radix-2，应 < 1e-10'],
+    ['手写 STFT vs numpy.fft（最大偏差）', v.stft_vs_numpy, '分帧 + 汉明窗 + 512 点 FFT'],
+    ['Haar DWT 重构 RMSE', v.haar_recon_rmse, '4 层分解/重构，应 ≈ 机器精度'],
+    ['db4 DWT 重构 RMSE', v.db4_recon_rmse, 'QMF 分析算子 Aᵀ 严格重构'],
+    ['EMD 重构 RMSE', v.emd_recon_rmse, 'ΣIMF + 残差 = 原信号'],
+    ['EMD 正交指数', v.emd_orthogonality, '越接近 0，IMF 之间泄漏越少'],
+    ['EMD 分解得到 IMF 个数', v.emd_imf_count, '筛分停止准则 SD < 0.05'],
+    ['FFT 2048 点单次耗时 / ms', v.fft_2048_ms, '对比 O(N²) DFT 256 点'],
+    ['DFT 256 点单次耗时 / ms', v.dft_256_ms, '点数少 8 倍却更慢，即 O(N²) 的代价'],
+    ['BPNN 梯度检查最大相对误差', n.grad_bpnn[0], '近零梯度元素会放大相对误差，见第 7 节说明'],
+    ['CNN 梯度检查最大相对误差', n.grad_cnn[0], '含 im2col / col2im / 池化 mask'],
+    ['BPNN 梯度检查最大绝对误差', n.grad_bpnn[2], '硬判据：应 < 1e-8'],
+    ['CNN 梯度检查最大绝对误差', n.grad_cnn[2], '硬判据：应 < 1e-8'],
+    ['噪声比 1.0 时 BPNN 测试准确率', n.noise ? n.noise.BPNN[n.noise.levels.indexOf(1.0)] : 0, '分布外噪声下的鲁棒性'],
+    ['噪声比 1.0 时 CNN 测试准确率', n.noise ? n.noise.CNN[n.noise.levels.indexOf(1.0)] : 0, '分布外噪声下的鲁棒性'],
+    ['Haar 分解层数 / db4 层数 / CWT 尺度数', M.wavelet.haar_levels+' / '+M.wavelet.db4_levels+' / '+M.wavelet.cwt_scales, '多分辨率设置'],
+    ['EMD 代表样本重构 RMSE', M.emd.recon_rmse, '铁芯松动样本，2 kHz 降采样'],
+  ];
+  fill('verify-table', checks.map(function(c){ return row([c[0], '<span class="num">'+fmt(c[1])+'</span>', c[2]]); }));
+  fill('model-table', Object.keys(n.models).map(function(k){
+    var r=n.models[k];
+    return row([k, fmt(r.acc), fmt(r.macro_f1), fmt(r.macro_auc), String(r.params), r.seconds.toFixed(2)+' s']);
+  }));
+  fill('data-table', [
+    row(['工况类别', d.classes.join(' / ')]),
+    row(['每类样本 / 总样本', d.n_per_class+' / '+d.total]),
+    row(['训练 / 验证 / 测试', n.split.train+' / '+n.split.val+' / '+n.split.test]),
+    row(['FFT 点数 / 帧长 / 帧移 / Mel 通道', d.n_fft+' / '+d.frame_ms+' ms / '+d.hop_ms+' ms / '+d.n_mels]),
+    row(['MFCC 形状（帧 × 维）', M.auditory.mfcc_shape.join(' × ')]),
+    row(['BPNN / CNN 训练轮数', n.models.BPNN.epochs+' / '+n.models.CNN.epochs]),
+    row(['PCA 前两维解释方差', (f.pca_var1*100).toFixed(1)+'% / '+(f.pca_var2*100).toFixed(1)+'%']),
+  ]);
+
+  var links = document.querySelectorAll('nav a');
+  var secs = document.querySelectorAll('section');
+  window.addEventListener('scroll', function(){
+    var y=window.scrollY+120, cur=0;
+    secs.forEach(function(s,i){ if(s.offsetTop<=y) cur=i; });
+    links.forEach(function(a,i){ a.classList.toggle('on', i===cur); });
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>
