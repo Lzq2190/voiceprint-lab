@@ -36,8 +36,9 @@ COVER_HTML = os.path.join(GUIDE, "_build_cover.html")
 BODY_PDF = os.path.join(GUIDE, "_build_body.pdf")
 TOC_PDF = os.path.join(GUIDE, "_build_toc.pdf")
 COVER_PDF = os.path.join(GUIDE, "_build_cover.pdf")
-FINAL = os.path.join(GUIDE, "声纹信号处理学习讲义.pdf")
-FALLBACK = os.path.join(GUIDE, "声纹信号处理学习讲义（印刷版）.pdf")
+PDF_DIR = os.path.join(GUIDE, "pdf")
+FINAL = os.path.join(PDF_DIR, "声纹信号处理学习讲义.pdf")
+TMP_PDF = os.path.join(PDF_DIR, "_tmp_build.pdf")
 
 CHROME = next((p for p in [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
@@ -513,22 +514,21 @@ def main():
         "keywords": "声纹, 语音信号处理, MFCC, 小波, EMD, 神经网络, 声纹识别",
         "creator": "Chrome + PyMuPDF",
     })
-    # 若同名文件被预览器占用，自动换一个可写的名字
-    cands = [FINAL, FALLBACK,
-             os.path.join(GUIDE, "声纹信号处理学习讲义（详版）.pdf"),
-             os.path.join(GUIDE, "声纹信号处理学习讲义（详版2）.pdf")]
-    target, last = None, None
-    for c in cands:
-        try:
-            out.save(c, garbage=4, deflate=True)
-            target = c
-            break
-        except Exception as e:
-            last = e
-    if target is None:
-        raise RuntimeError("所有候选文件名都不可写：%s" % last)
+    # 原子写入：先落临时文件，再替换正式名。
+    # 正式名若被预览器占用（Windows 上很常见），不静默改名，而是明确提示。
+    os.makedirs(PDF_DIR, exist_ok=True)
     total = len(out)
+    out.save(TMP_PDF, garbage=4, deflate=True)
     out.close()
+    try:
+        os.replace(TMP_PDF, FINAL)
+        target = FINAL
+    except PermissionError:
+        target = os.path.join(PDF_DIR, "声纹信号处理学习讲义（待替换）.pdf")
+        os.replace(TMP_PDF, target)
+        print("！%s 正被其它程序打开，新文件已存为：%s" % (
+            os.path.basename(FINAL), os.path.basename(target)))
+        print("  关闭预览后重新运行本脚本即可落到正式名。")
 
     for f in (BODY_HTML, TOC_HTML, COVER_HTML, BODY_PDF, TOC_PDF, COVER_PDF):
         if os.path.exists(f):

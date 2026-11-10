@@ -4,7 +4,7 @@
 > 讲义里的每一张图、每一个数字，都是这个仓库里的脚本跑出来的，不是示意图，也不是抄来的结论。
 
 **讲义（网页版）** → [`guide-v2/index.html`](guide-v2/index.html)　双击即可打开，离线可用，学习进度存在浏览器里
-**讲义（打印版）** → [`guide-v2/声纹信号处理学习讲义.pdf`](guide-v2/声纹信号处理学习讲义.pdf)　A4、67 页、17 条书签
+**讲义（打印版）** → [`guide-v2/pdf/声纹信号处理学习讲义.pdf`](guide-v2/pdf/声纹信号处理学习讲义.pdf)　A4、67 页、17 条书签
 **复现项目** → [`acoustic-lab/`](acoustic-lab)　只需 `numpy` + `pillow`，其余全部手写
 
 ---
@@ -98,6 +98,8 @@ cd guide-v2
 python tools/render_light_figs.py   # 改了插图配色/字号时：重绘浅色版插图到 assets-print/
 python tools/build_pdf.py           # 改了正文时：重新排版 PDF（封面/目录/书签/页码自动重建）
 ```
+
+PDF 输出到 `guide-v2/pdf/声纹信号处理学习讲义.pdf`。脚本先写临时文件再原子替换正式名——Windows 上 PDF 常被预览器占用，替换失败时它会明确提示并存成「（待替换）.pdf」，不会静默改出一堆副本。
 
 `build_pdf.py` 会自动：给每讲另起一页、把表格转三线表并按「表 X-Y」编号、给图注加「图 X-Y」、把 `Σ_{n=0}^{N-1}` 与 `C_Det` 这类 ASCII 公式排成真正的上下标、生成带真实页码的目录和 17 条书签。
 

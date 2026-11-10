@@ -20,3 +20,7 @@ desktop.ini
 
 # 旧版 PDF（预览器占用无法删除，仅本地留存，不进仓库）
 guide-v2/声纹信号处理学习讲义（详版）.pdf
+
+# 被预览器占用、无法替换的旧 PDF（本地遗留，正本在 pdf/ 下）
+guide-v2/声纹信号处理学习讲义.pdf
+guide-v2/pdf/_tmp_build.pdf
