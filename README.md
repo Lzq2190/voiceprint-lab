@@ -39,6 +39,7 @@
 | `acoustic-lab/outputs/` | 57 张 PNG、7 个 CSV、`metrics.json` | 讲义里的图全部来自这里 |
 | `guide-v2/index.html` | 讲义网页版：16 讲 + 附录，4.8 万字，37 张表，14 张实测图，72 个自检项 | 双击打开 |
 | `guide-v2/assets/`、`assets-print/` | 深色版（网页用）与浅色版（印刷用）两套插图 | 由脚本生成，勿手改 |
+| `guide-v2/labs.html` | 两个可拖的实验台：DFT 的缠绕/质心可视化、反向传播的链式分解（9 个权重可拖，实时数值梯度校验） | 双击打开，先预测再拖 |
 | `guide-v2/tools/render_light_figs.py` | 用浅色主题重绘全部插图（字号放大 1.3 倍，缩到 A4 后仍清晰） | 改了图之后重跑 |
 | `guide-v2/tools/build_pdf.py` | 把 `index.html` 排成正式 PDF：封面、目录（真实页码）、三线表、图注编号、页眉页码、书签 | 改了正文之后重跑 |
 

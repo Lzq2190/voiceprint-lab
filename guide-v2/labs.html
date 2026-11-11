@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>声纹信号处理 · 两个能拖的实验台</title>
+<style>
+:root{
+  --bg:#0f131b; --panel:#161c26; --panel2:#1b2330; --line:#2a3442;
+  --tx:#e6edf3; --mu:#8a96a6; --dim:#5d6878;
+  --blue:#4c9be8; --teal:#2dd4a7; --amber:#f5a524; --red:#f26d6d; --purple:#a78bfa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 22px 80px}
+header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+h1{font-size:25px;margin:0 0 8px;letter-spacing:.5px}
+h1 .sub{color:var(--mu);font-weight:400;font-size:16px;margin-left:10px}
+.lede{color:var(--mu);margin:0;font-size:14.5px}
+.rule-tip{border-left:3px solid var(--amber);background:rgba(245,165,36,.07);
+  padding:11px 15px;margin:20px 0 26px;border-radius:0 6px 6px 0;font-size:14px;color:#d9c8a8}
+.rule-tip b{color:var(--amber)}
+
+.tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.tabs button{background:var(--panel);color:var(--mu);border:1px solid var(--line);
+  padding:9px 18px;border-radius:7px;font-size:14.5px;cursor:pointer;font-family:inherit;
+  transition:.15s}
+.tabs button:hover{color:var(--tx);border-color:#3b4859}
+.tabs button.on{background:rgba(76,155,232,.14);color:#a9cdf5;border-color:#3c6d9e}
+.tab{display:none}
+.tab.on{display:block}
+
+h2{font-size:19px;margin:0 0 6px}
+h2 em{font-style:normal;color:var(--dim);font-size:13px;margin-left:8px;letter-spacing:.5px}
+h3{font-size:14.5px;margin:22px 0 8px;color:#b9c6d4;font-weight:600}
+p{margin:9px 0}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.grid2{display:grid;grid-template-columns:430px 1fr;gap:22px;align-items:start}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.cv{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:6px;display:block;width:100%}
+
+.ctl{margin:13px 0}
+.ctl label{display:flex;justify-content:space-between;font-size:13.5px;color:var(--mu);margin-bottom:5px}
+.ctl label b{color:var(--tx);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+  background:#2b3646;outline:none;margin:6px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;
+  border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid #0f131b;
+  box-shadow:0 0 0 1px #3c6d9e}
+
+.chk{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13.5px;
+  border-bottom:1px dashed #232c38}
+.chk:last-child{border-bottom:0}
+#params .ctl{border-left:2px solid transparent;border-radius:5px;padding:6px 0 3px 9px;
+  margin:7px 0;cursor:pointer;transition:.12s}
+#params .ctl:hover{background:rgba(76,155,232,.05)}
+#params .ctl.sel{background:rgba(76,155,232,.09);border-left-color:var(--blue)}
+.chk input{accent-color:var(--blue);width:15px;height:15px}
+.chk .f{font-variant-numeric:tabular-nums;color:var(--tx);min-width:96px}
+.chk .a{color:var(--mu);font-size:12.5px;margin-left:auto;font-variant-numeric:tabular-nums}
+.sw{position:relative;width:34px;height:18px;background:#2b3646;border-radius:9px;
+  cursor:pointer;transition:.15s;flex:0 0 auto;margin-left:auto}
+.sw.on{background:var(--teal)}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;
+  border-radius:50%;background:#8d9aab;transition:.15s}
+.sw.on::after{left:18px;background:#0f131b}
+
+.read{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.read div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:10px 12px}
+.read .k{font-size:12px;color:var(--dim);letter-spacing:.3px}
+.read .v{font-size:19px;font-variant-numeric:tabular-nums;color:var(--tx);margin-top:2px}
+.read .v.hit{color:var(--teal)}
+.read .v.miss{color:var(--red)}
+.verdict{margin-top:10px;font-size:13.5px;padding:9px 12px;border-radius:7px;
+  background:var(--panel2);border:1px solid var(--line);color:var(--mu)}
+.verdict.hit{border-color:rgba(45,212,167,.45);color:#8ee7cd;background:rgba(45,212,167,.07)}
+.verdict.miss{border-color:rgba(242,109,109,.35);color:#f0a8a8;background:rgba(242,109,109,.06)}
+
+.note{font-size:13px;color:var(--mu);background:rgba(76,155,232,.06);
+  border-left:2px solid #3c6d9e;padding:9px 13px;border-radius:0 6px 6px 0;margin:14px 0}
+.note b{color:#a9cdf5}
+.code{background:#0c1017;border:1px solid var(--line);border-radius:7px;padding:11px 14px;
+  font-family:Consolas,"Courier New",monospace;font-size:12.5px;color:#b8c7d6;
+  overflow-x:auto;line-height:1.65;white-space:pre}
+.code .c{color:#5d6878}
+.code .k{color:var(--purple)}
+.code .n{color:var(--amber)}
+
+table.t{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+table.t th,table.t td{text-align:left;padding:6px 8px;border-bottom:1px solid #232c38}
+table.t th{color:var(--dim);font-weight:500;font-size:12px;letter-spacing:.3px}
+table.t td{color:#c8d4e0;font-variant-numeric:tabular-nums}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--mu);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.btns{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+.btns button{background:var(--panel2);border:1px solid var(--line);color:#c3d0de;
+  padding:8px 15px;border-radius:7px;cursor:pointer;font-size:13.5px;font-family:inherit}
+.btns button:hover{border-color:#46566b;color:#fff}
+.btns button.primary{background:rgba(76,155,232,.16);border-color:#3c6d9e;color:#a9cdf5}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--dim);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>两个能拖的实验台<span class="sub">FFT 与反向传播</span></h1>
+  <p class="lede">这两处是整条链路里最容易卡住的地方：FFT 为什么能把频率"分"出来，梯度到底从哪来。<br>
+  视频只能看，这里能自己拖。</p>
+</header>
+
+<div class="rule-tip">
+  <b>先预测，再拖。</b>每次调参数之前，先在心里（或纸上）说出一个具体数：质心会不会偏离原点？loss 会升还是降？然后才去拖。
+  猜错了再拖第二次——<b>那第二次才叫学会</b>。
+</div>
+
+<div class="tabs">
+  <button data-tab="t1" class="on">① DFT 就是投影</button>
+  <button data-tab="t2">② 梯度就是链式相乘</button>
+</div>
+
+<!-- ============ 实验一 ============ -->
+<section class="tab on" id="t1">
+  <h2>DFT 把信号"缠"到圆上，看质心偏不偏<em>对应讲义第 4 讲</em></h2>
+  <p>想象一段录好的信号，你把它按某个频率"缠绕"到一个圆上：第 n 个采样点，就把它转到 <span class="mono">−2π f n / Fs</span> 这个角度上。然后取所有点的重心。</p>
+  <p><b>如果 f 恰好是信号里真实存在的频率，所有点会朝同一个方向堆叠，重心就远离圆心；如果 f 对不上，点会均匀铺满一圈，重心正好回到圆心。</b>DFT 的第 k 个值，就是这个重心离圆心有多远。</p>
+
+  <div class="grid2" style="margin-top:18px">
+    <div>
+      <canvas id="cvWrap" class="cv" width="840" height="840" style="max-width:420px;margin:0 auto"></canvas>
+      <div class="legend">
+        <span><i style="background:#4c9be8"></i>采样点的缠绕位置</span>
+        <span><i style="background:#2dd4a7"></i>重心（质心）</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctl">
+        <label>探测频率 f <b><span id="fVal">100</span> Hz</b></label>
+        <input type="range" id="fRange" min="0" max="4000" step="5" value="100">
+      </div>
+
+      <h3 style="margin-top:16px">信号里有什么（可开关）</h3>
+      <div id="comps"></div>
+      <div class="chk">
+        <span class="f">宽带噪声</span>
+        <span class="a">±0.08</span>
+        <div class="sw" id="swNoise"></div>
+      </div>
+
+      <div class="read">
+        <div><div class="k">|X(f)| / N　（重心离圆心的距离）</div><div class="v" id="rmag">0.00</div></div>
+        <div><div class="k">命中判定</div><div class="v" id="rhit">—</div></div>
+      </div>
+      <div class="verdict" id="verdict">拖动上面的滑块，看圆里的图形怎么变。</div>
+    </div>
+  </div>
+
+  <h3>扫一遍频率，就得到频谱</h3>
+  <p>把"重心距离"对 f 从 0 扫到 4000 Hz 全部算一遍，就是频谱。下面这条曲线是同一段信号算出来的（不是查表，是实算）：</p>
+  <canvas id="cvSpec" class="cv" width="1900" height="440" style="height:auto"></canvas>
+  <div class="legend">
+    <span><i style="background:#f5a524"></i>信号里的真实分量位置</span>
+    <span><i style="background:#4c9be8"></i>当前探测的 f</span>
+  </div>
+
+  <div class="note">
+    <b>为什么峰值高度是幅值的一半？</b>因为一个实正弦 <span class="mono">A·sin(2πf₀t)</span> 的能量一半在 +f₀、一半在 −f₀。你把 f 调到 +f₀ 时，只收到了这一半，所以重心距离约等于 <span class="mono">A/2</span>。这是实信号频谱的常态，不是 bug——第 4 讲里"幅度谱要乘 2 补回来"说的就是这件事。
+  </div>
+
+  <h3>它和讲义里那个公式是同一件事</h3>
+  <div class="code"><span class="c"># 讲义第 4 讲：X[k] = Σ x[n]·e^(−j2πkn/N)</span>
+<span class="c"># 这个页面在做的：</span>
+X = <span class="k">sum</span>( x[n] * (cos(θ) + j·sin(θ)) <span class="k">for</span> n, θ = −2π·f·n/Fs )
+mag = <span class="k">abs</span>(X) / N      <span class="c"># 除以 N，就是"平均位置"，即质心</span>
+
+<span class="c"># 换句话说：DFT 是在量"信号和某个频率的相似程度"</span>
+<span class="c"># 本质是一次内积 / 投影，不是某种神秘的变换</span></div>
+
+  <h3>三个值得亲手试的实验</h3>
+  <table class="t">
+    <tr><th>做什么</th><th>先预测</th><th>会看到</th></tr>
+    <tr><td>只留 100 Hz 分量，把 f 拖到 100</td><td>重心会不会在圆外？</td><td>图形收成一朵花瓣，重心明显偏出</td></tr>
+    <tr><td>f 拖到 150（两个分量之间）</td><td>重心回圆心吗？</td><td>回到圆心附近，读数接近 0</td></tr>
+    <tr><td>打开宽带噪声，f 停在 100</td><td>峰值会变高还是变矮？</td><td>几乎不变——噪声在整圈均匀铺开，重心互相抵消</td></tr>
+  </table>
+  <div class="note">
+    第三条是重点：<b>这就是为什么 DFT 抗得住白噪声</b>。噪声不是被"滤掉"了，是它在每个频率上都贡献一点点、方向随机，平均下来就抵消了。而真实频率上的分量方向一致，越加越大。
+  </div>
+</section>
+
+<!-- ============ 实验二 ============ -->
+<section class="tab" id="t2">
+  <h2>梯度不是猜的，是一串"局部斜率"乘起来<em>对应讲义第 8 讲</em></h2>
+  <p>这个网络很小：2 个输入 → 2 个隐层神经元（tanh）→ 1 个输出（sigmoid），损失用平方误差。<b>9 个参数，每一个都能拖</b>。</p>
+  <p>重点不是网络本身，而是看右侧那块"链式分解"：一个参数的梯度，等于<b>误差往回传时，每一层乘上自己那一小段斜率</b>。拖动权重，你会同时看到前向值、梯度和数值验证三者一起变。</p>
+
+  <canvas id="cvNet" class="cv" width="1900" height="620" style="height:auto;margin-top:14px"></canvas>
+
+  <div class="grid2" style="margin-top:18px;grid-template-columns:1fr 1fr">
+    <div class="card">
+      <h3 style="margin-top:0">参数（拖动即重算）</h3>
+      <div id="params"></div>
+      <div class="btns">
+        <button class="primary" id="btnStep">下降一步</button>
+        <button id="btnReset">重置</button>
+      </div>
+      <div class="ctl" style="margin-top:12px">
+        <label>学习率 η <b id="lrVal">0.50</b></label>
+        <input type="range" id="lrRange" min="0.01" max="2" step="0.01" value="0.5">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="read" style="margin-top:0">
+        <div><div class="k">输出 ŷ</div><div class="v" id="rY">—</div></div>
+        <div><div class="k">目标 t</div><div class="v" style="color:var(--mu)">1.000</div></div>
+        <div><div class="k">损失 L = ½(ŷ−t)²</div><div class="v" id="rL">—</div></div>
+        <div><div class="k">本轮梯度最大绝对值</div><div class="v" id="rG">—</div></div>
+      </div>
+
+      <h3>链式分解（选中 <span class="mono" id="selName">w2₁</span>）</h3>
+      <div id="chain" class="code" style="font-size:12px"></div>
+      <div class="verdict" id="chainCheck"></div>
+    </div>
+  </div>
+
+  <h3>损失曲线</h3>
+  <canvas id="cvLoss" class="cv" width="1900" height="360" style="height:auto"></canvas>
+  <p style="font-size:13px;color:var(--mu)">点"下降一步"，参数按 <span class="mono">θ ← θ − η·∂L/∂θ</span> 更新一次。学习率拖到 2.0 再连点几次，就能看到发散——这就是"训练炸了"。</p>
+
+  <div class="note">
+    <b>拖动时注意一件事：</b>把某个权重拖过它该在的位置，梯度的符号会翻。梯度不是"往哪边走更好"的指令，它只是<b>当前这一点上，损失上升最快的方向</b>。负号才是"往下走"。
+  </div>
+
+  <h3>动手验证</h3>
+  <table class="t">
+    <tr><th>做什么</th><th>先预测</th><th>会看到</th></tr>
+    <tr><td>把 w2₁ 从 0.5 拖到 2.0</td><td>梯度会变大还是变小？</td><td>先变大，接近饱和区后变小——因为 σ′ 被压扁了</td></tr>
+    <tr><td>把 w1 全拖到 3 左右</td><td>会发生什么？</td><td>tanh 饱和，隐层梯度接近 0，前层几乎学不动（梯度消失）</td></tr>
+    <tr><td>η 拖到 2.0，连点五次下降</td><td>损失会怎么走？</td><td>来回震荡甚至变大——步长超过了谷宽</td></tr>
+  </table>
+</section>
+
+<footer>
+  与 <span class="mono">acoustic-lab</span> 配套：页面里的每个数都是现场算的，没有查表。<br>
+  验收标准仍然是那个：<b>预测对了才算学会。</b>
+</footer>
+</div>
+
+<script>
+/* ================= 通用 ================= */
+function setupCanvas(cv, W, H){
+  const r = window.devicePixelRatio || 1;
+  cv.width = Math.round(W * r);
+  cv.height = Math.round(H * r);
+  cv.style.width = '100%';
+  cv.style.height = 'auto';
+  const g = cv.getContext('2d');
+  g.setTransform(r, 0, 0, r, 0, 0);
+  return g;
+}
+const COL = {blue:'#4c9be8', teal:'#2dd4a7', amber:'#f5a524', red:'#f26d6d',
+             grid:'#232c38', axis:'#3b4859', tx:'#e6edf3', mu:'#8a96a6', dim:'#5d6878'};
+
+/* ================= 实验一：DFT ================= */
+const FS = 8000, N = 1024;
+const comps = [
+  {f:100, a:1.00, on:true},
+  {f:300, a:0.50, on:true},
+  {f:750, a:0.30, on:true}
+];
+let noiseOn = false;
+let noiseBuf = null;
+function ensureNoise(){
+  if (noiseBuf) return noiseBuf;
+  noiseBuf = new Float32Array(N);
+  let s = 12345;
+  for (let i = 0; i < N; i++){
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    noiseBuf[i] = (s / 0x7fffffff) * 2 - 1;
+  }
+  return noiseBuf;
+}
+function buildSignal(){
+  const x = new Float32Array(N);
+  for (let n = 0; n < N; n++){
+    const t = n / FS; let v = 0;
+    for (const c of comps) if (c.on) v += c.a * Math.sin(2 * Math.PI * c.f * t);
+    if (noiseOn) v += 0.08 * ensureNoise()[n];
+    x[n] = v;
+  }
+  return x;
+}
+function centroidAt(x, f){
+  const w = -2 * Math.PI * f / FS, cw = Math.cos(w), sw = Math.sin(w);
+  let cr = 1, ci = 0, re = 0, im = 0;
+  for (let n = 0; n < N; n++){
+    re += x[n] * cr; im += x[n] * ci;
+    const nr = cr * cw - ci * sw, ni = cr * sw + ci * cw; cr = nr; ci = ni;
+  }
+  return [re / N, im / N];
+}
+function spectrum(x, fMax, df){
+  const out = [];
+  for (let f = 0; f <= fMax; f += df){
+    const c = centroidAt(x, f);
+    out.push([f, Math.hypot(c[0], c[1])]);
+  }
+  return out;
+}
+
+const cvWrap = document.getElementById('cvWrap');
+const gW = setupCanvas(cvWrap, 420, 420);
+const cvSpec = document.getElementById('cvSpec');
+const gS = setupCanvas(cvSpec, 1900, 440);
+let sig = buildSignal();
+let probeF = 100;
+
+function drawWrap(){
+  const W = 420, H = 420, cx = W / 2, cy = H / 2;
+  gW.clearRect(0, 0, W, H);
+
+  let peak = 0;
+  for (const c of comps) if (c.on) peak += c.a;
+  if (noiseOn) peak += 0.08;
+  const R = 150, scale = R / Math.max(1.2, peak * 1.15);
+
+  // 圆
+  gW.strokeStyle = '#2f3b4d'; gW.lineWidth = 1;
+  gW.beginPath(); gW.arc(cx, cy, R, 0, Math.PI * 2); gW.stroke();
+  gW.beginPath(); gW.arc(cx, cy, R * 0.5, 0, Math.PI * 2); gW.strokeStyle = '#243040'; gW.stroke();
+  // 十字
+  gW.strokeStyle = '#243040';
+  gW.beginPath(); gW.moveTo(cx - R - 8, cy); gW.lineTo(cx + R + 8, cy);
+  gW.moveTo(cx, cy - R - 8); gW.lineTo(cx, cy + R + 8); gW.stroke();
+
+  // 缠绕点
+  gW.strokeStyle = 'rgba(76,155,232,.22)'; gW.lineWidth = 1;
+  gW.beginPath();
+  for (let n = 0; n < N; n++){
+    const th = -2 * Math.PI * probeF * n / FS;
+    const r = sig[n] * scale;
+    const px = cx + r * Math.cos(th), py = cy - r * Math.sin(th);
+    gW.moveTo(cx, cy); gW.lineTo(px, py);
+  }
+  gW.stroke();
+
+  // 质心
+  const c = centroidAt(sig, probeF);
+  const mag = Math.hypot(c[0], c[1]);
+  const mx = cx + c[0] * scale, my = cy - c[1] * scale;
+  gW.strokeStyle = COL.teal; gW.lineWidth = 2.5;
+  gW.beginPath(); gW.moveTo(cx, cy); gW.lineTo(mx, my); gW.stroke();
+  gW.fillStyle = COL.teal;
+  gW.beginPath(); gW.arc(mx, my, 6, 0, Math.PI * 2); gW.fill();
+  gW.beginPath(); gW.arc(cx, cy, 3, 0, Math.PI * 2);
+  gW.fillStyle = '#7a8798'; gW.fill();
+
+  // 命中判定
+  let hit = false;
+  for (const cc of comps) if (cc.on && Math.abs(cc.f - probeF) < 18) hit = true;
+
+  document.getElementById('rmag').textContent = mag.toFixed(3);
+  const rh = document.getElementById('rhit');
+  rh.textContent = hit ? '命中' : '未命中';
+  rh.className = 'v ' + (hit ? 'hit' : 'miss');
+
+  const vd = document.getElementById('verdict');
+  vd.className = 'verdict ' + (hit ? 'hit' : 'miss');
+  if (hit){
+    vd.textContent = '点都朝一边堆，重心远离圆心 —— 这个频率上确实有能量。';
+  } else {
+    vd.textContent = mag < 0.05
+      ? '点均匀铺满一圈，重心几乎回到圆心 —— 这个频率上没有成分。'
+      : '重心有一点偏移，但远不如命中时明显 —— 相邻分量的"泄漏"。';
+  }
+}
+
+function drawSpec(){
+  const W = 1900, H = 440, L = 112, Rt = 40, T = 30, B = 92;
+  gS.clearRect(0, 0, W, H);
+  const fMax = 4000;
+  const pts = spectrum(sig, fMax, 5);
+  let mx = 0; for (const p of pts) if (p[1] > mx) mx = p[1];
+  mx = Math.max(mx, 0.01);
+
+  const X = f => L + (f / fMax) * (W - L - Rt);
+  const Y = v => H - B - (v / (mx * 1.15)) * (H - T - B);
+
+  // 网格
+  gS.strokeStyle = COL.grid; gS.lineWidth = 1;
+  gS.fillStyle = COL.dim; gS.font = '28px Consolas, monospace';
+  for (let f = 0; f <= fMax; f += 500){
+    gS.beginPath(); gS.moveTo(X(f), T); gS.lineTo(X(f), H - B); gS.stroke();
+    gS.textAlign = 'center';
+    gS.fillText(String(f), X(f), H - B + 30);
+  }
+  gS.textAlign = 'center';
+  gS.fillStyle = COL.mu; gS.font = '26px "Microsoft YaHei"';
+  gS.fillText('频率 / Hz', (L + W - Rt) / 2, H - 4);
+  // y 轴数值刻度
+  gS.textAlign = 'right'; gS.fillStyle = COL.dim;
+  for (let i = 0; i <= 4; i++){
+    const v = mx * 1.15 * i / 4;
+    gS.fillText(v.toFixed(2), L - 18, H - B - (H - T - B) * i / 4 + 9);
+  }
+  gS.save(); gS.translate(20, (T + H - B) / 2); gS.rotate(-Math.PI / 2);
+  gS.textAlign = 'center';
+  gS.fillStyle = COL.mu; gS.font = '26px "Microsoft YaHei"';
+  gS.fillText('|X(f)| / N', 0, 0); gS.restore();
+
+  // 分量竖线
+  for (const c of comps) if (c.on){
+    gS.strokeStyle = 'rgba(245,165,36,.32)'; gS.lineWidth = 2;
+    gS.beginPath(); gS.moveTo(X(c.f), T); gS.lineTo(X(c.f), H - B); gS.stroke();
+  }
+
+  // 曲线
+  gS.strokeStyle = COL.blue; gS.lineWidth = 2.4; gS.beginPath();
+  pts.forEach((p, i) => i ? gS.lineTo(X(p[0]), Y(p[1])) : gS.moveTo(X(p[0]), Y(p[1])));
+  gS.stroke();
+  gS.lineTo(X(pts[pts.length - 1][0]), H - B);
+  gS.lineTo(X(pts[0][0]), H - B); gS.closePath();
+  gS.fillStyle = 'rgba(76,155,232,.10)'; gS.fill();
+
+  // 当前 f
+  gS.strokeStyle = 'rgba(76,155,232,.9)'; gS.lineWidth = 1.5;
+  gS.setLineDash([8, 6]);
+  gS.beginPath(); gS.moveTo(X(probeF), T); gS.lineTo(X(probeF), H - B); gS.stroke();
+  gS.setLineDash([]);
+  const c = centroidAt(sig, probeF);
+  const m = Math.hypot(c[0], c[1]);
+  gS.fillStyle = COL.blue;
+  gS.beginPath(); gS.arc(X(probeF), Y(m), 7, 0, Math.PI * 2); gS.fill();
+}
+
+function buildCompsUI(){
+  const box = document.getElementById('comps');
+  box.innerHTML = '';
+  comps.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'chk';
+    row.innerHTML = '<input type="checkbox" ' + (c.on ? 'checked' : '') +
+      '><span class="f">' + c.f + ' Hz</span><span class="a">幅值 ' + c.a.toFixed(2) + '</span>';
+    row.querySelector('input').addEventListener('change', e => {
+      comps[i].on = e.target.checked;
+      sig = buildSignal(); drawWrap(); drawSpec();
+    });
+    box.appendChild(row);
+  });
+}
+
+document.getElementById('fRange').addEventListener('input', e => {
+  probeF = +e.target.value;
+  document.getElementById('fVal').textContent = probeF;
+  drawWrap(); drawSpec();
+});
+document.getElementById('swNoise').addEventListener('click', e => {
+  noiseOn = !noiseOn;
+  e.currentTarget.classList.toggle('on', noiseOn);
+  sig = buildSignal(); drawWrap(); drawSpec();
+});
+
+buildCompsUI();
+drawWrap();
+drawSpec();
+
+/* ================= 实验二：反向传播 ================= */
+const NN = {
+  x: [1.0, -0.5],
+  w1: [[0.5, -0.3], [0.8, 0.2]],   // w1[i][j] : 输入 j -> 隐层 i
+  b1: [0.0, 0.0],
+  w2: [0.6, -0.9],                 // 隐层 i -> 输出
+  b2: 0.0,
+  t: 1.0
+};
+let lr = 0.5;
+let lossHist = [];
+let selParam = 'w2.0';
+
+const cvNet = document.getElementById('cvNet');
+const gN = setupCanvas(cvNet, 1900, 620);
+const cvLoss = document.getElementById('cvLoss');
+const gL = setupCanvas(cvLoss, 1900, 360);
+
+function forward(){
+  const {x, w1, b1, w2, b2} = NN;
+  const z1 = [0, 1].map(i => w1[i][0] * x[0] + w1[i][1] * x[1] + b1[i]);
+  const h = z1.map(v => Math.tanh(v));
+  const z2 = w2[0] * h[0] + w2[1] * h[1] + b2;
+  const y = 1 / (1 + Math.exp(-z2));
+  const L = 0.5 * Math.pow(y - NN.t, 2);
+  return {z1, h, z2, y, L};
+}
+function backward(){
+  const {x, w1, h, w2, y} = Object.assign({}, NN, forward());
+  const dL_dy = y - NN.t;
+  const dy_dz2 = y * (1 - y);
+  const dz2 = dL_dy * dy_dz2;
+  const dw2 = [dz2 * h[0], dz2 * h[1]];
+  const db2 = dz2;
+  const dh = [w2[0] * dz2, w2[1] * dz2];
+  const dz1 = [dh[0] * (1 - h[0] * h[0]), dh[1] * (1 - h[1] * h[1])];
+  const dw1 = [
+    [dz1[0] * x[0], dz1[0] * x[1]],
+    [dz1[1] * x[0], dz1[1] * x[1]]
+  ];
+  return {dL_dy, dy_dz2, dz2, dw2, db2, dh, dz1, dw1, h, y};
+}
+function lossAt(patch){
+  const bak = JSON.parse(JSON.stringify({w1: NN.w1, w2: NN.w2, b2: NN.b2}));
+  if (patch.w1) NN.w1 = patch.w1;
+  if (patch.w2) NN.w2 = patch.w2;
+  if (patch.b2 !== undefined) NN.b2 = patch.b2;
+  const L = forward().L;
+  NN.w1 = bak.w1; NN.w2 = bak.w2; NN.b2 = bak.b2;
+  return L;
+}
+function numGrad(get, set){
+  const eps = 1e-4;
+  const old = get();
+  set(old + eps); const a = forward().L;
+  set(old - eps); const b = forward().L;
+  set(old);
+  return (a - b) / (2 * eps);
+}
+
+function drawNet(){
+  const W = 1900, H = 620;
+  gN.clearRect(0, 0, W, H);
+  const f = forward(), b = backward();
+  const xs = [260, 260], ys = [220, 400];
+  const hx = 900, hys = [170, 450];
+  const ox = 1560, oy = 310;
+
+  const node = (x, y, label, val, color, r) => {
+    gN.beginPath(); gN.arc(x, y, r, 0, Math.PI * 2);
+    gN.fillStyle = '#161c26'; gN.fill();
+    gN.strokeStyle = color; gN.lineWidth = 2; gN.stroke();
+    gN.fillStyle = color; gN.font = '600 34px Consolas, monospace';
+    gN.textAlign = 'center'; gN.textBaseline = 'middle';
+    gN.fillText(val.toFixed(2), x, y);
+    gN.fillStyle = COL.mu; gN.font = '28px "Microsoft YaHei"';
+    gN.fillText(label, x, y - r - 26);
+  };
+  const edge = (x1, y1, x2, y2, w) => {
+    const a = Math.min(1, Math.abs(w) / 2);
+    gN.strokeStyle = w >= 0 ? 'rgba(76,155,232,' + (0.18 + a * 0.62) + ')'
+                            : 'rgba(242,109,109,' + (0.18 + a * 0.62) + ')';
+    gN.lineWidth = 1 + Math.min(6, Math.abs(w) * 2.4);
+    gN.beginPath(); gN.moveTo(x1, y1); gN.lineTo(x2, y2); gN.stroke();
+  };
+
+  for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++)
+    edge(xs[j] + 52, ys[j], hx - 55, hys[i], NN.w1[i][j]);
+  for (let i = 0; i < 2; i++)
+    edge(hx + 55, hys[i], ox - 58, oy, NN.w2[i]);
+
+  for (let j = 0; j < 2; j++) node(xs[j], ys[j], '输入 x' + (j + 1), NN.x[j], COL.mu, 52);
+  for (let i = 0; i < 2; i++) node(hx, hys[i], '隐层 h' + (i + 1) + ' (tanh)', f.h[i], COL.amber, 55);
+  node(ox, oy, '输出 ŷ (sigmoid)', f.y, COL.teal, 58);
+
+  gN.fillStyle = COL.dim; gN.font = '28px "Microsoft YaHei"'; gN.textAlign = 'left';
+  gN.fillText('线宽 = |权重|，蓝色为正、红色为负', 120, 560);
+  gN.fillStyle = COL.red; gN.textAlign = 'right';
+  gN.fillText('L = ' + f.L.toFixed(4), W - 100, 560);
+}
+
+function drawParams(){
+  const box = document.getElementById('params');
+  if (box.childElementCount) {
+    // 只更新数值与滑块位置
+    document.querySelectorAll('#params .ctl').forEach(el => {
+      const key = el.dataset.key;
+      const v = readParam(key);
+      el.querySelector('input').value = v;
+      el.querySelector('b').textContent = v.toFixed(2);
+    });
+    return;
+  }
+  const mk = (key, label) => {
+    const d = document.createElement('div');
+    d.className = 'ctl'; d.dataset.key = key;
+    d.innerHTML = '<label>' + label + ' <b>' + readParam(key).toFixed(2) + '</b></label>' +
+      '<input type="range" min="-3" max="3" step="0.01" value="' + readParam(key) + '">';
+    d.querySelector('input').addEventListener('input', e => {
+      writeParam(key, +e.target.value);
+      d.querySelector('b').textContent = (+e.target.value).toFixed(2);
+      renderAll();
+    });
+    d.addEventListener('click', () => {   // 点一下选中，右侧显示它的链式分解
+      selParam = key; renderAll();
+    });
+    box.appendChild(d);
+  };
+  mk('w1.0.0', 'w1₁₁（x1 → h1）'); mk('w1.0.1', 'w1₁₂（x2 → h1）');
+  mk('w1.1.0', 'w1₂₁（x1 → h2）'); mk('w1.1.1', 'w1₂₂（x2 → h2）');
+  mk('w2.0',  'w2₁（h1 → ŷ）');    mk('w2.1',  'w2₂（h2 → ŷ）');
+}
+function readParam(k){
+  const p = k.split('.');
+  if (p[0] === 'w2') return NN.w2[+p[1]];
+  return NN.w1[+p[1]][+p[2]];
+}
+function writeParam(k, v){
+  const p = k.split('.');
+  if (p[0] === 'w2') NN.w2[+p[1]] = v;
+  else NN.w1[+p[1]][+p[2]] = v;
+}
+
+function drawChain(){
+  const f = forward(), b = backward();
+  const nameMap = {'w2.0':'w2₁（h1 → ŷ）','w2.1':'w2₂（h2 → ŷ）',
+    'w1.0.0':'w1₁₁（x1 → h1）','w1.0.1':'w1₁₂（x2 → h1）',
+    'w1.1.0':'w1₂₁（x1 → h2）','w1.1.1':'w1₂₂（x2 → h2）'};
+  document.getElementById('selName').textContent = nameMap[selParam].split('（')[0];
+
+  const el = document.getElementById('chain');
+  let txt = '', analytic = 0, numeric = 0;
+
+  if (selParam.startsWith('w2')){
+    const i = +selParam.split('.')[1];
+    analytic = b.dw2[i];
+    numeric = numGrad(() => NN.w2[i], v => { NN.w2[i] = v; });
+    txt =
+'∂L/∂' + nameMap[selParam].split('（')[0] + '\n' +
+'   = ∂L/∂ŷ  ·  ∂ŷ/∂z2  ·  ∂z2/∂w2' + (i + 1) + '\n' +
+'   = (ŷ−t)  ·  ŷ(1−ŷ)  ·  h' + (i + 1) + '\n\n' +
+'   = (' + f.y.toFixed(3) + '−1)  ·  ' + b.dy_dz2.toFixed(3) + '  ·  ' + f.h[i].toFixed(3) + '\n' +
+'   = ' + b.dL_dy.toFixed(4) + '  ·  ' + b.dy_dz2.toFixed(4) + '  ·  ' + f.h[i].toFixed(4) + '\n' +
+'   = ' + analytic.toFixed(6);
+  } else {
+    const i = +selParam.split('.')[1], j = +selParam.split('.')[2];
+    analytic = b.dw1[i][j];
+    numeric = numGrad(() => NN.w1[i][j], v => { NN.w1[i][j] = v; });
+    txt =
+'∂L/∂' + nameMap[selParam].split('（')[0] + '\n' +
+'   = ∂L/∂ŷ · ∂ŷ/∂z2 · ∂z2/∂h' + (i + 1) + ' · ∂h' + (i + 1) + '/∂z1' + (i + 1) + ' · ∂z1' + (i + 1) + '/∂w1' + (i + 1) + (j + 1) + '\n' +
+'   = (ŷ−t) · ŷ(1−ŷ) · w2' + (i + 1) + ' · (1−h' + (i + 1) + '²) · x' + (j + 1) + '\n\n' +
+'   = (' + f.y.toFixed(3) + '−1)  ·  ' + b.dy_dz2.toFixed(3) + '  ·  ' +
+      NN.w2[i].toFixed(3) + '  ·  ' + (1 - f.h[i] * f.h[i]).toFixed(3) + '  ·  ' + NN.x[j].toFixed(3) + '\n' +
+'   = ' + analytic.toFixed(6);
+  }
+  el.textContent = txt;
+
+  const rel = Math.abs(analytic - numeric) / (Math.abs(analytic) + Math.abs(numeric) + 1e-12);
+  const vd = document.getElementById('chainCheck');
+  vd.className = 'verdict ' + (rel < 1e-3 ? 'hit' : 'miss');
+  vd.innerHTML = '解析梯度 <b>' + analytic.toFixed(8) + '</b>　·　' +
+    '数值梯度（左右各挪 1e-4）<b>' + numeric.toFixed(8) + '</b>　·　' +
+    '相对误差 <b>' + rel.toExponential(1) + '</b>' +
+    (rel < 1e-3 ? '　→ 一致，推导没写错' : '　→ 对不上，检查链式是否漏项');
+}
+
+function drawLoss(){
+  const W = 1900, H = 360, L = 90, R = 40, T = 28, B = 50;
+  gL.clearRect(0, 0, W, H);
+  gL.strokeStyle = COL.grid; gL.lineWidth = 1;
+  for (let i = 0; i <= 4; i++){
+    const y = T + (H - T - B) * i / 4;
+    gL.beginPath(); gL.moveTo(L, y); gL.lineTo(W - R, y); gL.stroke();
+  }
+  if (lossHist.length < 2){
+    gL.fillStyle = COL.dim; gL.font = '28px "Microsoft YaHei"'; gL.textAlign = 'center';
+    gL.fillText('点几次「下降一步」，这里会画出损失怎么掉下去', W / 2, H / 2);
+    return;
+  }
+  const mx = Math.max.apply(null, lossHist), mn = Math.min.apply(null, lossHist);
+  const X = i => L + (i / (lossHist.length - 1)) * (W - L - R);
+  const Y = v => H - B - ((v - mn) / Math.max(1e-6, mx - mn)) * (H - T - B);
+  gL.strokeStyle = COL.teal; gL.lineWidth = 2.6; gL.beginPath();
+  lossHist.forEach((v, i) => i ? gL.lineTo(X(i), Y(v)) : gL.moveTo(X(i), Y(v)));
+  gL.stroke();
+  gL.fillStyle = COL.teal;
+  lossHist.forEach((v, i) => {
+    gL.beginPath(); gL.arc(X(i), Y(v), 4.5, 0, Math.PI * 2); gL.fill();
+  });
+  gL.textAlign = 'left'; gL.font = '26px Consolas, monospace';
+  gL.fillStyle = COL.mu;
+  gL.fillText('L', 46, T + 8);
+  gL.fillText(mx.toFixed(4), 46, T + 34);
+  gL.fillText(mn.toFixed(4), 46, H - B);
+  gL.textAlign = 'center';
+  gL.fillStyle = COL.dim;
+  gL.fillText('第 0 步', X(0), H - 18);
+  gL.fillText('第 ' + (lossHist.length - 1) + ' 步', X(lossHist.length - 1), H - 18);
+}
+
+function renderAll(){
+  const f = forward(), b = backward();
+  document.querySelectorAll('#params .ctl').forEach(d =>
+    d.classList.toggle('sel', d.dataset.key === selParam));
+  document.getElementById('rY').textContent = f.y.toFixed(4);
+  document.getElementById('rL').textContent = f.L.toFixed(5);
+  const all = [].concat(b.dw2, b.dw1[0], b.dw1[1]);
+  document.getElementById('rG').textContent = Math.max.apply(null, all.map(Math.abs)).toFixed(4);
+  drawNet(); drawParams(); drawChain(); drawLoss();
+}
+
+document.getElementById('btnStep').addEventListener('click', () => {
+  const b = backward();
+  for (let i = 0; i < 2; i++){
+    NN.w2[i] -= lr * b.dw2[i];
+    for (let j = 0; j < 2; j++) NN.w1[i][j] -= lr * b.dw1[i][j];
+  }
+  lossHist.push(forward().L);
+  renderAll();
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  NN.w1 = [[0.5, -0.3], [0.8, 0.2]];
+  NN.w2 = [0.6, -0.9];
+  lossHist = [];
+  document.querySelectorAll('#params .ctl').forEach(d => d.remove());
+  renderAll();
+});
+document.getElementById('lrRange').addEventListener('input', e => {
+  lr = +e.target.value;
+  document.getElementById('lrVal').textContent = lr.toFixed(2);
+});
+
+/* ================= tab 切换 ================= */
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(s => s.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById(btn.dataset.tab).classList.add('on');
+    if (btn.dataset.tab === 't2') { drawNet(); drawLoss(); }
+    if (btn.dataset.tab === 't1') { drawWrap(); drawSpec(); }
+  });
+});
+
+lossHist.push(forward().L);
+renderAll();
+</script>
+</body>
+</html>
