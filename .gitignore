@@ -9,6 +9,8 @@ guide-v2/print.html
 guide-v2/_*.png
 guide-v2/_*.pdf
 guide-v2/_build_*.pdf
+guide-v2/pdf/_*.png
+guide-v2/tools/_math_check.json
 
 # Python / 系统
 __pycache__/

@@ -25,11 +25,17 @@ from math_data import FORMULAS, tag_for          # noqa: E402
 from exp_a import EXP_A                           # noqa: E402
 from exp_b import EXP_B                           # noqa: E402
 from exp_c import EXP_C                           # noqa: E402
+from topic_a import TOPIC_A                       # noqa: E402
+from topic_b import TOPIC_B                       # noqa: E402
+from topic_c import TOPIC_C                       # noqa: E402
 
 EXPANSIONS = {}
 EXPANSIONS.update(EXP_A)
 EXPANSIONS.update(EXP_B)
 EXPANSIONS.update(EXP_C)
+
+# 三个完整的新增专题 section，插在「第 14 讲」之后、「第 15 讲 收尾」之前
+TOPICS = [TOPIC_A, TOPIC_B, TOPIC_C]
 
 # ---------------------------------------------------------------- 新增样式
 EXTRA_CSS = r"""
@@ -224,6 +230,29 @@ def insert_derivations(src):
     return "".join(out)
 
 
+def insert_topics(src):
+    """把三个专题 section 插到第 15 讲之前；公式内部的裸 < > 同样做净化。"""
+    blocks = "".join(sanitize_block(t.strip()) + "\n\n" for t in TOPICS)
+    marker = '<section id="s15">'
+    if marker not in src:
+        raise RuntimeError("找不到第 15 讲，无法插入专题")
+    return src.replace(marker, blocks + marker, 1)
+
+
+NAV_TOPICS = '''  <div class="grp">工程专题与补遗</div>
+  <a href="#sA">专题 A · 变压器声纹实战</a>
+  <a href="#sB">专题 B · 经典算法补遗</a>
+  <a href="#sC">专题 C · 实验与资料索引</a>
+'''
+
+
+def insert_nav(src):
+    marker = '  <a href="#s15">第 15 讲 · 收尾与路线</a>'
+    if marker not in src:
+        raise RuntimeError("找不到导航中的第 15 讲")
+    return src.replace(marker, NAV_TOPICS + marker, 1)
+
+
 def main():
     # 幂等：始终从备份的原始 v2 版重建，避免二次运行重复注入
     if os.path.exists(BACKUP):
@@ -238,6 +267,8 @@ def main():
 
     out = replace_equations(src)
     out = insert_derivations(out)
+    out = insert_topics(out)          # 专题必须在所有原 section 处理完之后插入
+    out = insert_nav(out)
 
     for a, b in list(BARE.items()) + list(INLINE.items()):
         out = out.replace(a, b)
@@ -250,12 +281,14 @@ def main():
     out = out.replace(
         "配套 <code>acoustic-lab</code> 复现项目",
         "全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）。"
-        "配套 <code>acoustic-lab</code> 复现项目")
+        "另增<b>三个工程专题</b>：变压器声纹实战（去噪 / 特征 / 诊断）、经典算法补遗（LPC / VQ / HMM / DTW）、"
+        "动手实验清单与资料索引。配套 <code>acoustic-lab</code> 复现项目")
 
     io.open(SRC, "w", encoding="utf-8").write(out)
-    print("完成：%d 字符，mathbox %d 个，defbox %d 个，推导详解 %d 块" % (
+    print("完成：%d 字符，mathbox %d 个，defbox %d 个，推导详解 %d 块，专题 %d 个" % (
         len(out), out.count('class="mathbox"'), out.count('class="defbox"'),
-        out.count('class="derive"')))
+        out.count('class="derive"'),
+        len(re.findall(r'<section id="s[ABC]">', out))))
 
 
 if __name__ == "__main__":

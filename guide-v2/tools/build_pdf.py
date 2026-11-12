@@ -85,15 +85,15 @@ sub { vertical-align: -0.28em; } sup { vertical-align: 0.42em; }
 .toc { page-break-after: always; }
 .toc h1 { font-family: "Microsoft YaHei"; font-size: 17pt; font-weight: 700; text-align: center;
   letter-spacing: .34em; margin: 0 0 3mm; color: #10161f; }
-.toc .hint { text-align: center; font-size: 9pt; color: #77818f; margin-bottom: 10mm; }
-.toc .item { display: flex; align-items: baseline; margin: 0 0 8pt; font-size: 10.5pt; }
+.toc .hint { text-align: center; font-size: 9pt; color: #77818f; margin-bottom: 7mm; }
+.toc .item { display: flex; align-items: baseline; margin: 0 0 5.2pt; font-size: 10.2pt; }
 .toc .item .no { flex: 0 0 18mm; font-family: "Microsoft YaHei"; font-size: 9.3pt;
   color: %(accent)s; font-weight: 600; }
 .toc .item .ti { flex: 0 1 auto; }
 .toc .item .dots { flex: 1 1 auto; border-bottom: 0.7pt dotted #b3bdc9; margin: 0 1.8mm 1.5mm; }
 .toc .item .pg { flex: 0 0 7mm; text-align: right; font-variant-numeric: tabular-nums; }
-.toc .tocfoot { margin-top: 14mm; padding-top: 4mm; border-top: 0.7pt solid #dfe4ea;
-  font-size: 9pt; color: #6b7583; line-height: 1.95; }
+.toc .tocfoot { margin-top: 7mm; padding-top: 3mm; border-top: 0.7pt solid #dfe4ea;
+  font-size: 8.6pt; color: #6b7583; line-height: 1.7; }
 
 /* ---------- 正文 ---------- */
 .chap { page-break-before: always; }
@@ -285,7 +285,11 @@ def load_chapters():
 
 def chap_no(label: str) -> str:
     m = re.search(r"(\d+)", label)
-    return m.group(1) if m else "A"
+    if m:
+        return m.group(1)
+    # 新增专题的标签是「专题 A / B / C」，用字母做图表编号前缀，避免彼此重复
+    m = re.search(r"专题\s*([A-Za-z])", label)
+    return m.group(1) if m else "补"
 
 
 def transform_section(sec, ch_no):
@@ -424,7 +428,9 @@ def cover_html():
         '<tr><td class="k">适用对象</td><td>零基础，需高中物理与基础代数</td>'
         '<td class="k">配套项目</td><td>acoustic-lab/（可运行代码）</td></tr>'
         '<tr><td class="k">内容来源</td><td colspan="3">韩纪庆等《语音信号处理（第 3 版）》；'
-        '王泉《声纹技术：从核心算法到工程实践》；项目实测数据</td></tr>'
+        '王泉《声纹技术：从核心算法到工程实践》；赵力《语音信号处理（第三版）》；'
+        '梁瑞宇等《语音信号处理实验教程》；柳若边《深度学习语音识别技术实践》；'
+        '朱柯佳（2021）、陆云才等（2023）变压器声纹文献；项目实测数据</td></tr>'
         '<tr><td class="k">在线仓库</td><td colspan="3">github.com/Lzq2190/voiceprint-lab'
         '（讲义、代码、图表与数据；仓库说明见第 0 讲）</td></tr>'
         '<tr><td class="k">说　　明</td><td colspan="3">书中公式按标准形式用 KaTeX 排版并标注出处、逐条编号；'
@@ -440,7 +446,7 @@ def cover_html():
         '</div>'
         '<div class="grow"></div>'
         '<div class="foot">'
-        '<div class="org">共 16 讲 · 每讲含目标、产出、做法、误区与自检</div>'
+        '<div class="org">共 17 讲 + 3 个工程专题 · 每部分含目标、做法、推导与自检</div>'
         '<div>配套复现项目 acoustic-lab　·　全部图表为脚本实测生成</div>'
         '<div>github.com/Lzq2190/voiceprint-lab</div>'
         '<div>2026 年 11 月</div>'
@@ -457,11 +463,11 @@ def toc_html(chapters, pages):
             % (ch["label"], ch["title"], pages.get(i, 1)))
     inner = (
         '<div class="toc"><h1>目　录</h1>'
-        '<div class="hint">共 %d 讲　·　页码为正文页码</div>%s'
-        '<div class="tocfoot">每一讲均按「目标 → 产出 → 准备 → 怎么做 + 为什么 → '
-        '推导详解 → 误区与注意事项 → 自检」编排。全部公式由 KaTeX 排版并按「讲-序」编号；'
-        '推导详解给出符号表、不跳步的推导、手算数值例与代码对应。自检项可直接勾选，'
-        '用于确认是否真正掌握；配套可运行项目 acoustic-lab/ 中的脚本生成了本文全部图表与数值。</div></div>'
+        '<div class="hint">共 %d 节（17 讲 + 3 个工程专题）　·　页码为正文页码</div>%s'
+        '<div class="tocfoot">正文 17 讲按「目标 → 做法 → 推导详解 → 误区 → 自检」编排；'
+        '另含 3 个工程专题：变压器声纹实战、经典算法补遗、动手实验与资料索引。'
+        '全部公式由本地 KaTeX 排版并逐条编号，推导详解含符号表、逐步推导、数值算例与代码对应。'
+        '配套 acoustic-lab/ 生成全部图表与数值；专题引用的文献准确率非本项目实测。</div></div>'
         % (len(chapters), "".join(rows)))
     return page_html("目录", inner)
 

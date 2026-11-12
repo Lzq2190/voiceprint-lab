@@ -146,6 +146,10 @@ table.sym.compact td{text-align:center}
   <a href="#s12">第 12 讲 · 评价指标</a>
   <a href="#s13">第 13 讲 · 经典方法</a>
   <a href="#s14">第 14 讲 · 深度学习声纹</a>
+  <div class="grp">工程专题与补遗</div>
+  <a href="#sA">专题 A · 变压器声纹实战</a>
+  <a href="#sB">专题 B · 经典算法补遗</a>
+  <a href="#sC">专题 C · 实验与资料索引</a>
   <a href="#s15">第 15 讲 · 收尾与路线</a>
   <a href="#s16">附录 · 术语与文献</a>
 </nav>
@@ -154,7 +158,7 @@ table.sym.compact td{text-align:center}
 <header class="hero">
   <span class="badge">初学者向</span><span class="badge alt">动手为主</span>
   <h1>声纹信号处理 · 从零开始的学习讲义</h1>
-  <p>基于韩纪庆《语音信号处理（第3版）》与王泉《声纹技术》两书的核心知识重新组织编写。不逐章复述，而是按「一条依赖链」把两本书讲透：每步都说明<b>怎么做、为什么、要准备什么、常见误区、怎么自检</b>。全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）。配套 <code>acoustic-lab</code> 复现项目（零第三方算法依赖，仅需 numpy + Pillow），边读边跑。</p>
+  <p>基于韩纪庆《语音信号处理（第3版）》与王泉《声纹技术》两书的核心知识重新组织编写。不逐章复述，而是按「一条依赖链」把两本书讲透：每步都说明<b>怎么做、为什么、要准备什么、常见误区、怎么自检</b>。全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）。另增<b>三个工程专题</b>：变压器声纹实战（去噪 / 特征 / 诊断）、经典算法补遗（LPC / VQ / HMM / DTW）、动手实验清单与资料索引。配套 <code>acoustic-lab</code> 复现项目（零第三方算法依赖，仅需 numpy + Pillow），边读边跑。</p>
 </header>
 
 <section id="s0">
@@ -2888,6 +2892,679 @@ s_{\mathrm{PLDA}}=\ln\frac{p(\mathbf e_1,\mathbf e_2\mid H_1)}{p(\mathbf e_1\mid
     <label><input type="checkbox" data-k="q14-2"> 我能说清 AAM-softmax 相比 softmax 多了什么约束、为什么开集场景需要它。</label>
     <label><input type="checkbox" data-k="q14-3"> 我能说出至少三条从文献里提炼的工程经验。</label>
     <label><input type="checkbox" data-k="q14-4"> 我知道为什么这些论文的 99% 不能横向比较。</label>
+  </div>
+</section>
+
+<section id="sA">
+  <h2><span class="no">专题 A</span>变压器声纹：从物理机理到故障诊断</h2>
+
+  <div class="goal">
+    <div class="g">目标</div>
+    <ul>
+      <li>能推出「正常变压器为什么是 100 Hz 基频」，并说清各类缺陷怎样改变频谱。</li>
+      <li>掌握现场抗噪的三条路线（小波阈值 / 谱减法 / FastICA）及各自的适用边界。</li>
+      <li>理解小波包能量谱与 TFCC 为什么比照搬语音的 MFCC 更贴合设备声纹。</li>
+      <li>能读懂多通道 CNN + 集成学习的诊断流水线，并复述其中的维度账与实测结果。</li>
+    </ul>
+  </div>
+  <div class="goal">
+    <div class="g">产出</div>
+    <ul><li>一张「缺陷 → 物理机制 → 频域表现」对照表；一份可自己跑的去噪对比实验；一段能解释 (8, 96000) 输入怎么来的维度推导。</li></ul>
+  </div>
+
+  <div class="note"><span class="t">关于本专题的数字</span>下面标了出处的准确率（92.0% / 98.7% / 99.2% / 99.7% / 99.65% / 99.4% 等）来自上述两篇文献的<strong>自建样本库</strong>，样本数、采样率、噪声条件都和本讲义 <code>acoustic-lab</code> 的 8 kHz 合成数据不同，<b>不能当成本项目的实测结果</b>。讲义引用它们是为了说明「每一步改动带来了多少收益」以及「哪一步最容易翻车」，不是给自己的系统背书。</div>
+
+  <h3>A.1　声音从哪来：先推出 100 Hz</h3>
+  <p>变压器本体噪声不是「随机嗡嗡声」，而是有严格频率结构的确定性振动。主要来源是<strong>铁芯磁致伸缩</strong>：硅钢片在交变磁场中被周期性拉伸/压缩。关键在于磁致伸缩应变与磁感应强度的<strong>平方</strong>成正比，而电网工频是 50 Hz：</p>
+  <div class="mathbox">
+    <div class="math">\[ \varepsilon(t)\propto B^2(t)=B_m^2\sin^2(2\pi\cdot 50\,t)=\frac{B_m^2}{2}\Big[1-\cos\big(2\pi\cdot 100\,t\big)\Big] \tag{A-1} \]</div>
+    <div class="mathnote"><p>用 \(\sin^2\theta=\frac{1-\cos2\theta}{2}\) 把平方展开，频率直接<strong>翻倍</strong>：50 Hz → <b>100 Hz</b>。绕组受到的洛伦兹力 \(F=BIL\propto i^2\) 同理也含 \(2f\) 分量。所以正常声纹是一组以 100 Hz 为基频的谐波串：100 / 200 / 300 / 400 Hz……这正是第 1 讲「谐波叠加」的物理实例。</p></div>
+  </div>
+  <p>非线性（磁化曲线弯曲、铁芯饱和）会让 \(B(t)\) 不再是纯正弦，于是平方后除了 \(2f\) 还会长出 \(4f,6f,\dots\) 等高次谐波；一旦<strong>直流偏磁</strong>让工作点偏移、正负半周不对称，还会出现 50 Hz 的<strong>奇次倍频</strong> 150 / 250 / 350 Hz——本讲义合成数据里「直流偏磁」类正是这么造的（第 1 讲式 1-3、第 6 讲误区）。</p>
+
+  <table class="sym">
+    <tr><th>状态 / 缺陷</th><th>物理机制</th><th>频域表现</th><th>时域表现</th></tr>
+    <tr><td>正常运行</td><td>磁致伸缩 + 绕组电动力，\(\propto B^2\)</td><td>100 Hz 基频 + 偶次谐波，谱线稳定</td><td>近似周期、幅值平稳</td></tr>
+    <tr><td>直流偏磁</td><td>铁芯半周饱和、正负不对称</td><td>新增 150 / 250 / 350 Hz（50 Hz 奇次倍频）</td><td>波形上下不对称</td></tr>
+    <tr><td>铁芯 / 夹件松动</td><td>固有模态被电磁力激发、约束变松</td><td>谐波比例改变，出现新的窄带峰与宽带底噪</td><td>周期性变差，幅值调制</td></tr>
+    <tr><td>绕组短路冲击</td><td>瞬态电动力冲击、结构位移</td><td>宽频能量突然抬升，随后衰减</td><td>短促强脉冲，非平稳</td></tr>
+    <tr><td>局部放电（沿面/电晕/悬浮/间歇）</td><td>绝缘击穿产生压力脉冲</td><td>能量偏向高频（数 kHz 以上），基频区几乎不变</td><td>稀疏尖峰、重复率随类型变化</td></tr>
+    <tr><td>重过载</td><td>电流增大、磁通与振动增强</td><td>100 Hz 幅值显著上升，谐波相对比例变化</td><td>整体幅值变大、波形仍周期</td></tr>
+    <tr><td>油泵 / 风扇异响、冷却器</td><td>机械转动与叶片通过频率</td><td>固定低频线谱 + 与其谐波，常叠加宽带风噪</td><td>持续、准平稳</td></tr>
+  </table>
+  <div class="tip"><span class="t">和第 6 讲接上了</span>这张表解释了讲义反复强调的一句话：<b>设备声纹的判别信息集中在 100–500 Hz</b>。而 MFCC 的 Mel 滤波器组把这一段只分到 2–3 个通道，高频却分得很宽——所以照搬语音配置会丢掉主要信息。陆云才等（2023）也明确指出「梅尔频谱主要用于人声识别，和变压器这一场景并不完全相符，不利于提取变压器基频和高次倍频的信号特征」。</div>
+
+  <h3>A.2　现场为什么必须先去噪</h3>
+  <p>实验室里的合成信号干净，现场不是。陆云才等构建的声纹样本库共 <b>19 类</b>：4 类正常主变噪声（110 / 220 / 500 / ±800 kV，各 960 段）、5 种环境噪声（变电站噪声叠加雷声 / 鸟鸣 / 汽笛 / 人声 / 雨声，各 192 段）、10 类异常（短路冲击 160、沿面放电 150、电晕放电 150、间歇性放电 140、悬浮放电 150、重过载 300、直流偏磁 150、夹件松动 100、油泵异响 150、风扇异响 150 段）。采集条件是 <b>10 s、48 kHz</b>。</p>
+  <p>为什么现场用 48 kHz、而本讲义用 8 kHz？局放脉冲的高频分量在数 kHz 以上，8 kHz 采样的奈奎斯特上限只有 4000 Hz（第 2 讲式 2-2），会把最关键的放电特征直接混叠掉；48 kHz 则留出充分余量。<b>采样率是任务定义的，不是随便选的</b>——这句话在第 2 讲说过，这里有了工程上的代价演示。</p>
+  <p>朱柯佳（2021）把现场干扰分成三类，并实测出输入 SNR 常在 \([-5,\,5]\) dB：</p>
+  <table class="sym">
+    <tr><th>干扰类型</th><th>例子</th><th>特点</th><th>最合适的去噪法</th></tr>
+    <tr><td>瞬时强干扰</td><td>雷声、汽笛、人声</td><td>短时、能量高、非平稳</td><td>小波阈值 / FastICA</td></tr>
+    <tr><td>持续弱干扰</td><td>风机声、雨声</td><td>长时间、准平稳、与本体频段重叠</td><td>谱减法（但失真大）</td></tr>
+    <tr><td>混合噪声</td><td>上述叠加</td><td>频谱结构复杂</td><td>小波阈值（对不同噪声最稳）</td></tr>
+  </table>
+  <p>论文结论值得原样记住：<b>小波阈值法对不同噪声类型的效果差别不大，但受输入 SNR 影响较大；FastICA 更适合瞬时干扰与混合噪声、处理持续弱干扰效果不佳；谱减法更适合持续弱干扰，但三种方法里它的信号失真度最高；三者中小波阈值法略优于 FastICA。</b>不存在「一种去噪打天下」。</p>
+
+  <h3>A.3　去噪三法，逐个推到底</h3>
+  <h4>A.3.1　小波阈值去噪</h4>
+  <p>观测模型 \(y[n]=x[n]+d[n]\)。正交小波变换 \(W\) 是线性的，所以 \(Wy=Wx+Wd\)：有用信号的能量集中在少数大系数上，白噪声能量则摊平在所有系数上。于是去噪三步：<b>分解 → 对细节系数阈值量化 → 逆变换重构</b>。两种经典阈值函数：</p>
+  <div class="mathbox">
+    <div class="math">\[ \eta_{\mathrm{hard}}(w)=\begin{cases}w,&|w|\gt \lambda\\ 0,&|w|\le \lambda\end{cases}\qquad
+    \eta_{\mathrm{soft}}(w)=\operatorname{sgn}(w)\big(|w|-\lambda\big)_+ \tag{A-2} \]</div>
+    <div class="mathnote"><p>硬阈值在 \(w=\pm\lambda\) 处<strong>不连续</strong>，重构时容易产生振荡（吉布斯样伪影）；软阈值连续、重构平滑，但对所有保留系数都减去 \(\lambda\)，产生<strong>恒定偏差</strong>，幅值被系统性压低——论文原话是「会使得部分有效声音信号特征丢失」。</p></div>
+  </div>
+  <p>折中方案是<strong>半软阈值（firm shrinkage）</strong>：用两个阈值 \(\lambda_1\le\lambda_2\)，中间线性过渡，两端分别恒为 0 与恒等：</p>
+  <div class="mathbox">
+    <div class="math">\[ \eta_{\mathrm{firm}}(w)=\begin{cases}
+    0,&|w|\le\lambda_1\\[3pt]
+    \operatorname{sgn}(w)\,\dfrac{\lambda_2\big(|w|-\lambda_1\big)}{\lambda_2-\lambda_1},&\lambda_1\lt|w|\lt\lambda_2\\[9pt]
+    w,&|w|\ge\lambda_2
+    \end{cases} \tag{A-3} \]</div>
+    <div class="mathnote"><p>取 \(\lambda_1=\lambda_2\) 退化为硬阈值，取 \(\lambda_2\to\infty\) 退化为软阈值。朱柯佳论文的「改进阈值函数」思路与此一致：调整 \(\pm\lambda\) 附近及区间内的函数形状，<b>既连续又不留恒定偏差</b>。这里给出的是该家族的标准形式，便于自己实现；论文中具体的分段系数以原图为准。</p></div>
+  </div>
+  <p><b>阈值怎么定：</b>Donoho–Johnstone 通用阈值（VisuShrink）用 \(\lambda=\sigma\sqrt{2\ln N}\)，其中噪声标准差由最细层细节系数的绝对中位差稳健估计 \(\hat\sigma=\mathrm{MAD}/0.6745\)。Stein 无偏风险估计（SURE / rigrsure）则在低 SNR 时更省；启发式阈值（heursure）按输入 SNR 在两者间选：</p>
+  <div class="mathbox">
+    <div class="math">\[ \lambda=\sigma\sqrt{2\ln N},\qquad
+    \hat\sigma=\frac{\operatorname{median}\big(|cD_1|\big)}{0.6745},\qquad
+    \lambda_j=\hat\sigma_j\sqrt{2\ln N_j}\ \ (j=1,\dots,J) \tag{A-4} \]</div>
+    <div class="mathnote"><p>最后一式是<strong>分层阈值</strong>：不同分解层的噪声能量不同，每层用自己的 \(\hat\sigma_j\) 算一个 \(\lambda_j\)，传进去的是一个<strong>数组</strong>而不是单一数值。这正是朱柯佳论文的第二处改进；配合 A-3 的改进阈值函数，实测输出 SNR 提高约 <b>1 dB</b>，整体去噪性能提升 <b>8–9%</b>，RMSE 与 LSD 都更小、波动也更小。</p></div>
+  </div>
+
+  <h4>A.3.2　谱减法</h4>
+  <p>假设噪声加性且短时平稳，先从前导静音段估出噪声谱 \(\hat N[k]\)，再从带噪谱里减掉：</p>
+  <div class="mathbox">
+    <div class="math">\[ |\hat X[k]|^2=|Y[k]|^2-\alpha\,\big|\hat N[k]\big|^2,\qquad
+    |\hat X[k]|=\max\!\Big(|Y[k]|-\alpha\,|\hat N[k]|,\ \beta\,|Y[k]|\Big) \tag{A-5} \]</div>
+    <div class="mathnote"><p>\(\alpha\ge 1\) 是<strong>过减因子</strong>（噪声估计偏低时补偿），\(\beta|Y[k]|\) 是<strong>谱下限</strong>（防止减出负值导致相位翻转般的失真）。减完仍用带噪信号的相位 \( \angle Y[k] \) 做逆变换，因为人耳/后续特征对相位不敏感（第 1 讲式 1-6）。</p></div>
+  </div>
+  <p><b>音乐噪声</b>是谱减法的固有副作用：随机频点上被减成孤立尖峰，逆变换后听感像断续的音调。缓解办法是过减 + 谱下限、对噪声谱做时间平滑、以及多帧最小值跟踪。论文里谱减法失真度始终偏高，正与此有关。</p>
+
+  <h4>A.3.3　FastICA（盲源分离）</h4>
+  <p>把多通道观测写成 \(\mathbf y=A\mathbf s\)，目标是在只知道 \(\mathbf y\) 的情况下找 \(W\approx A^{-1}\) 使 \(\mathbf u=W\mathbf y\) 的各分量尽量<strong>统计独立</strong>（非高斯性最大）。FastICA 用负熵近似做固定点迭代：</p>
+  <div class="mathbox">
+    <div class="math">\[ \mathbf w^{+}\;\propto\;\mathbb E\!\left[\mathbf z\,g(\mathbf w^{\mathsf T}\mathbf z)\right]-\mathbb E\!\left[g'(\mathbf w^{\mathsf T}\mathbf z)\right]\mathbf w,\qquad
+    g(u)=\tanh(u)\ \text{or}\ u^3 \tag{A-6} \]</div>
+    <div class="mathnote"><p>\(\mathbf z\) 是白化后的观测。每轮更新后做对称正交化 \(\;W\leftarrow (WW^{\mathsf T})^{-1/2}W\)，防止不同分量收敛到同一个源。它要求<strong>源之间相互独立且最多一个高斯源</strong>——持续弱干扰（风机、雨声）与本体振动在频带上长期重叠、统计上难以分离，这就是论文里 FastICA 对这类噪声效果不佳的原因。</p></div>
+  </div>
+
+  <h4>A.3.4　三个评价指标，别只看 SNR</h4>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned}
+    \mathrm{SNR}_{\mathrm{out}}&=10\log_{10}\frac{\sum_n x^2[n]}{\sum_n\big(\hat x[n]-x[n]\big)^2},\qquad
+    \mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_n\big(\hat x[n]-x[n]\big)^2}\\[4pt]
+    \mathrm{LSD}&=\frac{1}{M}\sum_{m=1}^{M}\sqrt{\frac{1}{K}\sum_{k=1}^{K}\Big[20\log_{10}\big|X_m[k]\big|-20\log_{10}\big|\hat X_m[k]\big|\Big]^2}
+    \end{aligned} \tag{A-7} \]</div>
+    <div class="mathnote"><p>SNR / RMSE 看时域波形误差，<b>LSD（对数谱距离）看频谱畸变</b>——对声纹特征而言后者往往更关键：波形误差很小但某个谐波峰被削掉，特征照样崩。朱柯佳论文表 2-8 给出不同噪声类型下三法的 LSD 对比（如输入 SNR = −10 dB 的风机声：小波阈值 2.697、FastICA 2.695、谱减 2.803，数值越小越好），可以看到谱减法在各类噪声下都偏高。</p></div>
+  </div>
+
+  <h3>A.4　特征：为什么不是 MFCC，而是小波包能量 + TFCC</h3>
+  <h4>A.4.1　小波包能量谱</h4>
+  <p>第 7 讲的 DWT 每层只继续分解<strong>近似</strong>支路 \(cA\)，所以低频分辨率高、高频粗；<strong>小波包（wavelet packet）</strong>把近似<em>和</em>细节都继续分解，第 \(j\) 层得到 \(2^j\) 个<strong>等宽</strong>频带：</p>
+  <div class="mathbox">
+    <div class="math">\[ \Delta f_{\text{seg}}=\frac{F_s/2}{2^j},\qquad
+    x[n]=\sum_{m=0}^{2^j-1}s_{j,m}[n],\qquad
+    E_{j,m}=\sum_{n}\big|s_{j,m}[n]\big|^2 \tag{A-8} \]</div>
+    <div class="mathnote"><p>三层分解 → 8 个频段；五层 → 32 个频段（朱柯佳论文采用五层，得到 32 维小波包能量谱）。以 \(F_s=8\,\mathrm{kHz}\)、\(j=5\) 为例，每段宽 \(4000/32=125\,\mathrm{Hz}\)——刚好能把 100 / 200 / 300 Hz 的谐波结构分开，又比逐根谱线稳健得多。论文的三步法：<b>① 小波包分解 → ② 各频段重构信号并求总能量 → ③ 排成特征向量</b> \(T=[E_{3,0},\dots,E_{3,7}]\)。</p></div>
+  </div>
+  <p>通常再做归一化与能量熵，避免整体音量变化主导特征：</p>
+  <div class="mathbox">
+    <div class="math">\[ p_{m}=\frac{E_{j,m}}{\sum_{m'}E_{j,m'}},\qquad
+    H=-\sum_{m}p_m\log_2 p_m,\qquad 0\le H\le j \tag{A-9} \]</div>
+    <div class="mathnote"><p>能量集中在少数频带（稳态嗡鸣）→ \(H\) 小；能量摊平（局放宽带、强噪声）→ \(H\) 大。<b>单这一个标量就能粗分「周期性故障」与「宽带放电」</b>，但它丢掉了「能量落在哪一段」的信息，所以还要保留完整的 \(p_m\) 向量。</p></div>
+  </div>
+
+  <h4>A.4.2　TFCC：把 Mel 滤波器组换成设备专用的</h4>
+  <p>第 6 讲 MFCC 的流程是「功率谱 → Mel 三角滤波器组 → log → DCT」。TFCC（Transformer Sound Frequency Cepstrum Coefficients，变压器声音频率倒谱系数）保留这个骨架，只换掉<strong>频率轴的划分方式</strong>：既然判别信息在 100 Hz 基频及其低次谐波，就把滤波器中心对准谐波簇、在低频加密，而不是按人耳的 Mel 刻度。</p>
+  <div class="mathbox">
+    <div class="math">\[ E_m=\sum_{k}P[k]\,H^{\mathrm{TF}}_m[k],\qquad
+    L_m=\ln(E_m+\varepsilon),\qquad
+    c_i=\sqrt{\frac{2}{M}}\sum_{m=1}^{M}L_m\cos\!\left[\frac{\pi i}{M}\Big(m-\tfrac12\Big)\right] \tag{A-10} \]</div>
+    <div class="mathnote"><p>与第 6 讲式 6-5、6-7 的唯一差别是 \(H_m\) 换成 \(H^{\mathrm{TF}}_m\)。朱柯佳论文用<strong>遍历法</strong>筛选关键系数，得到 <b>40 维</b> TFCC，单独用于故障诊断的准确率 98.85%。<b>关键洞察：Mel 刻度是给人耳设计的，不是给变压器设计的。</b>陆云才等从另一条路得出同样结论，改用「时域 + 频域双通道」把原始频谱直接喂给网络。</p></div>
+  </div>
+
+  <h4>A.4.3　特征选择：Laplacian 得分 + Fisher 得分</h4>
+  <p>32 维小波包能量 + 40 维 TFCC = 72 维，其中大量冗余甚至噪声维度。两个互补的过滤式评分：</p>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned}
+    \text{Fisher:}\quad &S_r=\frac{\sum_{c}n_c(\mu_r^{c}-\mu_r)^2}{\sum_c n_c\big(\sigma_r^{c}\big)^2}\\[4pt]
+    \text{Laplacian:}\quad &L_r=\frac{\sum_{i,j}\big(f_{r,i}-f_{r,j}\big)^2\,S_{ij}}{\sum_{i,j}\big(f_{r,i}-f_{r,j}\big)^2\,D_{ii}}
+    \ \ \big(D_{ii}=\textstyle\sum_j S_{ij}\big)
+    \end{aligned} \tag{A-11} \]</div>
+    <div class="mathnote"><p>Fisher 看<strong>类间散度 / 类内散度</strong>，偏好「不同故障取值差得开、同一故障取值稳」的维度；Laplacian Score 用样本近邻图 \(S_{ij}\)（常用热核 \(e^{-\|x_i-x_j\|^2/t}\)）衡量该维度是否<strong>保持局部几何结构</strong>，方差小、得分低。两者一个看判别性、一个看结构保持，加权融合 \(\text{score}=\alpha\,\tilde S_r+(1-\alpha)\,\tilde L_r\)；论文实验取 \(\alpha=0.8\) 时故障诊断准确率最高。</p></div>
+  </div>
+  <p>融合选维后的<strong>小波包能量–TFCC 特征</strong>：维度比 72 低，准确率 <b>99.65%</b>（干净条件）与 <b>99.4%</b>（高噪声现场），且论文特别指出「变压器声音信号失真后对故障诊断准确率影响最小」——也就是<strong>抗噪鲁棒性</strong>比单纯的高准确率更有价值。</p>
+
+  <h4>A.4.4　一个反直觉但很重要的实验结论</h4>
+  <div class="warn"><span class="t">别把去噪当成免费午餐</span>朱柯佳论文第 4 章发现：三种去噪方法都能降低噪声，但<strong>去噪后的信号都存在一定失真度</strong>；用「未去噪的本体声音信号」训练故障模型、用「去噪后的信号」去测试，反而比反过来更好；高噪声现场下，改进小波阈值去噪后的最高诊断准确率是 <b>95.1%</b>，而换用抗噪特征（小波包能量–TFCC）能做到 <b>99.4%</b>。<b>结论：去噪主要服务于推理端，而「选对特征」带来的收益往往大于「把噪声削干净」。</b>这和讲义第 10 讲「别一上来就调网络，先按层排查」是同一个思路。</div>
+
+  <h3>A.5　诊断模型：多通道 CNN + 注意力 + 集成学习</h3>
+  <h4>A.5.1　输入怎么构造成 (8, 96000)</h4>
+  <p>陆云才等没有用「一张梅尔频谱图当图片」的常见做法，理由有二：二维时频谱要很高分辨率、内存吃不消；而 Mel 频谱是为<strong>人声</strong>设计的，压缩频率轴后不利于保留变压器基频与高次倍频。他们改成<strong>时域 + 频域双通道</strong>，让网络同时看见稳态周期结构与暂态异常：</p>
+  <table class="sym">
+    <tr><th>步骤</th><th>操作</th><th>维度账（文献设定：10 s @ 48 kHz）</th></tr>
+    <tr><td>①</td><td>对整段做 FFT 得频域信号；时域信号做均值方差归一化并抽稀到与频域等长</td><td>两路各 \(480000\) 点量级，抽稀后对齐</td></tr>
+    <tr><td>②</td><td>两路并联成双通道数据</td><td>\(2\times L\)</td></tr>
+    <tr><td>③</td><td>4 s 窗、2 s 滑动步长切段</td><td>10 s 上得到 4 段（窗口重叠 50%）</td></tr>
+    <tr><td>④</td><td>4 段 × 2 通道重新并联</td><td><b>(8, 96000)</b>；\(96000=2\,\mathrm{s}\times48\,\mathrm{kHz}\)，即抽稀到原采样率一半的长度</td></tr>
+  </table>
+  <p>这里 \(96000\) 的具体换算属于按文献参数反推，实际以原论文的预处理实现为准；<b>要学的是这套构造逻辑</b>：用「通道」承载不同视图，用「时间窗 + 重叠」把长信号切成等长样本，既扩充样本量又保留局部暂态。</p>
+
+  <h4>A.5.2　基学习器：一维 CNN + CBAM</h4>
+  <p>4 个一维卷积层，每层后接最大池化与 ReLU，并紧跟一个 CBAM（卷积块注意力模块）；之后 2 个全连接层（含 Dropout 与 ReLU）。卷积核尺寸依次为 \(64\times11\times8\)、\(192\times5\times64\)、\(384\times3\times192\)、\(256\times3\times384\)（输出通道 × 核长 × 输入通道）。CBAM 的串联结构：</p>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned}
+    M_c(F)&=\sigma\Big(\mathrm{MLP}\big(\mathrm{AvgPool}(F)\big)+\mathrm{MLP}\big(\mathrm{MaxPool}(F)\big)\Big)\\
+    M_s(F)&=\sigma\Big(\mathrm{conv}\big([\mathrm{AvgPool}_c(F);\,\mathrm{MaxPool}_c(F)]\big)\Big)\\
+    F'&=M_s\big(F\odot M_c(F)\big)\odot\big(F\odot M_c(F)\big)
+    \end{aligned} \tag{A-12} \]</div>
+    <div class="mathnote"><p>通道注意力回答「哪个特征通道重要」，空间（这里是时间轴）注意力回答「哪个时间位置重要」。现场不同电压等级、不同工况与干扰会让某些通道/时段的响应失真，CBAM 让网络自适应地把权重压到真正有判别力的部分——可以看成第 9 讲「感受野」之后再加一层<strong>可学习的软掩码</strong>。</p></div>
+  </div>
+
+  <h4>A.5.3　Stacking 集成：只在容易错的地方做二次诊断</h4>
+  <p>单纯 CNN 在正常 vs 异常二分类上，20 轮迭代后只有 <b>92.0%</b>；错误集中在「220 kV 主变噪声」与「重过载」互相混淆（两者都是大幅值、周期性、频谱形状接近）。论文的做法很务实：<strong>不把集成学习铺到所有样本上</strong>，而是——</p>
+  <div class="defbox"><div class="dh">条件触发的二次诊断（stacking）</div>
+  <ol>
+    <li>CNN 预测标签<strong>不是</strong>易混淆类 → 直接映射为「正常 / 缺陷」并输出，省时间；</li>
+    <li>预测标签<strong>是</strong>易混淆类 → CNN 不出结果，把它的<strong>预测向量</strong>与「特征分析法」的预测向量<strong>串联</strong>；</li>
+    <li>送进由 2 隐层 MLP 构成的<strong>元学习器</strong>（交叉熵损失）做综合预测，输出最终标签。</li>
+  </ol>
+  <p>基学习器捕捉非线性模式，特征分析法提供可解释的描述性证据，元学习器学会「什么时候该信谁」。这属于集成学习三大类（堆叠 / 提升 / 装袋）里的<strong>堆叠</strong>。</p></div>
+
+  <h4>A.5.4　结果阶梯：每一步改动的收益都看得见</h4>
+  <table class="sym">
+    <tr><th>场景</th><th>方法</th><th>结果</th><th>出处</th></tr>
+    <tr><td>正常 vs 异常</td><td>单独 CNN，20 轮</td><td>92.0%</td><td>陆云才 2023，图 10</td></tr>
+    <tr><td>19 类单一缺陷（训练集）</td><td>条件触发 stacking，15 轮</td><td>98.7%</td><td>同上，图 11</td></tr>
+    <tr><td>6 大类单一缺陷（测试集）</td><td>集成模型</td><td><b>99.2%</b>，其中局放与短路冲击 100%，重过载较低</td><td>同上，图 12</td></tr>
+    <tr><td>6 类任选 2 类融合 = 15 类混合缺陷</td><td>单独 CNN，20 轮</td><td>97.1%</td><td>同上，图 13</td></tr>
+    <tr><td>混合缺陷</td><td>CNN + 4 个二分类集成模型</td><td><b>99.7%</b></td><td>同上，摘要</td></tr>
+    <tr><td>高噪声现场（朱柯佳）</td><td>TFCC 单独</td><td>98.85%</td><td>朱柯佳 2021，第 5 章</td></tr>
+    <tr><td>高噪声现场</td><td>小波包能量–TFCC（选维后）</td><td>99.65%（干净）/ <b>99.4%</b>（现场）</td><td>同上</td></tr>
+    <tr><td>高噪声现场</td><td>改进小波阈值去噪后</td><td>最高 95.1%</td><td>同上</td></tr>
+  </table>
+  <p>为什么混合缺陷里「夹件松动 + 局部放电」最容易混？论文分析是<strong>两者频率及能量分布影响了识别</strong>：一个是结构松动带来的中低频调制，一个是宽带高频脉冲，混合后能量量级不同、原有特征被相互破坏。于是他们再建 4 个二分类集成模型专门处理含这两类的情况——<b>先定位错误集中在哪，再定点补模型</b>，这比盲目加深网络有效得多，也正是第 10 讲「看混淆矩阵而不是只看总准确率」的实战版。</p>
+
+  <h3>A.6　代码：把 A.3 与 A.4 跑起来</h3>
+  <pre><code>import numpy as np
+
+# --- 式(A-2)(A-3)：三种阈值函数 ---
+def shrink(w, lam, kind="soft", lam2=None):
+    a = np.abs(w)
+    if kind == "hard":
+        return np.where(a > lam, w, 0.0)
+    if kind == "soft":
+        return np.sign(w) * np.maximum(a - lam, 0.0)
+    l1, l2 = lam, (lam2 or 2 * lam)          # firm shrinkage
+    return np.where(a <= l1, 0.0,
+           np.where(a >= l2, w,
+                    np.sign(w) * l2 * (a - l1) / (l2 - l1)))
+
+# --- 式(A-4)：分层阈值 + 稳健噪声估计 ---
+def denoise_levels(coeffs, rule="visu"):
+    out = []
+    for c in coeffs:
+        sigma = np.median(np.abs(c)) / 0.6745 + 1e-12
+        lam = sigma * np.sqrt(2 * np.log(len(c)))
+        out.append(shrink(c, lam, "firm"))
+    return out                                # 每层一个 lam，不是全局一个
+
+# --- 式(A-5)：谱减法（含过减与谱下限）---
+def spectral_subtract(y, noise, n_fft=1024, alpha=1.3, beta=0.02):
+    Y = np.fft.rfft(y[:n_fft])
+    N = np.abs(np.fft.rfft(noise[:n_fft]))
+    mag = np.maximum(np.abs(Y) - alpha * N, beta * np.abs(Y))
+    return np.fft.irfft(mag * np.exp(1j * np.angle(Y)), n=n_fft)
+
+# --- 式(A-8)(A-9)：频段能量与能量熵 ---
+E = np.array([np.sum(node**2) for node in nodes])   # nodes: 2^j 个重构频段
+p = E / (E.sum() + 1e-12)
+H = -(p * np.log2(p + 1e-12)).sum()
+
+# --- 式(A-11)：Fisher 得分（过滤式特征选择）---
+def fisher_score(F, y):
+    mu = F.mean(axis=0)
+    sb = sum((y == c).sum() * (F[y == c].mean(axis=0) - mu)**2
+             for c in np.unique(y))
+    sw = sum(F[y == c].var(axis=0) * (y == c).sum()
+             for c in np.unique(y))
+    return sb / (sw + 1e-12)</code></pre>
+  <p>把 <code>nodes</code> 换成第 7 讲 <code>dwt()</code> 的多层细节/近似重构序列，就得到可运行的小波包近似版；<code>F</code> 是 \(T\times72\) 的特征矩阵，<code>y</code> 是故障标签。建议先在 <code>acoustic-lab/data/</code> 的 6 段合成声纹上跑通，再人为叠加不同 SNR 的高斯/风机噪声复现 A.2 的对照表。</p>
+
+  <div class="derive">
+    <div class="dtitle">推导详解 · 专题 A　两条最容易算错的账</div>
+    <h4>1. 从 50 Hz 到 100 Hz，再到奇次谐波</h4>
+    <p>把磁化曲线在工作点附近展开到二阶：\(B(t)=B_m\sin\omega t+\gamma B_m^2\sin^2\omega t+\cdots\)。磁致伸缩 \(\varepsilon\propto B^2\)，代入并保留到 \(\omega\) 的二阶：</p>
+    <div class="math sub">\[ \varepsilon(t)\propto \frac{B_m^2}{2}-\frac{B_m^2}{2}\cos 2\omega t
+    \;+\;\gamma B_m^3\sin\omega t\sin^2\omega t+\cdots \tag{A-13} \]</div>
+    <p>直流项不辐射声音，\(\cos 2\omega t\) 给出 100 Hz 基频；用 \(\sin\theta\sin^2\theta=\frac14(\sin\theta-\sin3\theta)\) 展开高阶项，出现 \(\sin3\omega t\) 即 150 Hz，以及更高奇次倍频。直流偏磁相当于给 \(B(t)\) 加一个常量 \(B_0\)，于是 \((B_0+B_m\sin\omega t)^2\) 里出现 \(2B_0B_m\sin\omega t\)（50 Hz）与后续奇次项——<b>这就是「直流偏磁 → 50 Hz 奇次倍频」的数学来源</b>，也是本讲义合成数据里 150/250/350 Hz 峰的依据。</p>
+    <h4>2. 频率分辨率：小波包、DFT、Mel 三者别混</h4>
+    <div class="math sub">\[ \Delta f_{\mathrm{DFT}}=\frac{F_s}{N_{\mathrm{obs}}},\qquad
+    \Delta f_{\mathrm{WP}}=\frac{F_s/2}{2^j},\qquad
+    \Delta f_{\mathrm{Mel}}\ \text{increases with } f \tag{A-14} \]</div>
+    <p>以 8 kHz、观测 0.2 s 为例：DFT 的真实分辨率是 \(1/0.2=5\,\mathrm{Hz}\)（第 4 讲式 4-6，由观测时长决定，补零不改变它）；五层小波包的每个频段是 \(4000/32=125\,\mathrm{Hz}\)（由<strong>分解层数</strong>决定，与观测时长无关，但每段内仍含足够多采样点）；Mel 滤波器在 100–500 Hz 一段只有带宽约 50–95 Hz 的少数几个三角形（第 6 讲表格）。<b>三者是不同意义上的「分辨率」，写论文或调参时混用会得出完全错误的结论。</b></p>
+    <h4>3. 类别不平衡下准确率会骗人</h4>
+    <p>陆云才样本库里正常主变噪声每类 960 段、夹件松动只有 100 段。若按样本数直接算微平均准确率，模型只要把小类全判成大类也能拿到很高的分数。正确做法是第 10 讲的宏平均 \(F_1\) 与混淆矩阵，或像论文那样<strong>专门针对易混淆类做二次诊断</strong>。看表 A.5-4 时请连同每类的样本数一起看。</p>
+  </div>
+
+  <h3>误区与注意事项</h3>
+  <div class="warn"><span class="t">误区</span>① <b>把文献准确率当成自己系统的性能。</b>样本库、采样率、噪声条件全不同，不可比。② <b>认为去噪一定提升识别率。</b>去噪必然带来失真，朱柯佳的实测是「本体信号训练 + 去噪信号测试」更优。③ <b>直接用 8 kHz 数据做局放检测。</b>4000 Hz 奈奎斯特上限会砍掉高频放电特征。④ <b>照搬 Mel 频谱图。</b>它是为人声设计的，压缩后不利于基频与倍频。⑤ <b>只报总准确率。</b>样本数 960 : 100 的不平衡下必须同时给宏 \(F_1\) 和混淆矩阵。⑥ <b>把「改进阈值函数」当成万能。</b>它只解决小波阈值自身的两个缺陷；面对持续弱干扰，谱减法或换特征可能更有效。</div>
+
+  <h3>自检</h3>
+  <div class="checklist">
+    <label><input type="checkbox" data-k="qA-1"> 我能从 \(\varepsilon\propto B^2\) 推出 100 Hz 基频，并解释直流偏磁为什么冒出 150/250/350 Hz。</label>
+    <label><input type="checkbox" data-k="qA-2"> 我能说清硬阈值、软阈值、半软阈值各自的缺陷，以及分层阈值为什么要传数组。</label>
+    <label><input type="checkbox" data-k="qA-3"> 我能解释为什么 TFCC / 小波包能量谱比照搬 MFCC 更适合设备声纹。</label>
+    <label><input type="checkbox" data-k="qA-4"> 我能复述 (8, 96000) 多通道输入的构造，以及 stacking 为什么只在易混淆类上触发。</label>
+    <label><input type="checkbox" data-k="qA-5"> 我知道「去噪后准确率 95.1%」与「换特征后 99.4%」的对比说明了什么。</label>
+  </div>
+</section>
+
+<section id="sB">
+  <h2><span class="no">专题 B</span>经典算法补遗：LPC、VQ、HMM、DTW 与它们的位置</h2>
+
+  <div class="goal">
+    <div class="g">目标</div>
+    <ul>
+      <li>补齐第 1–14 讲之间被跳过的经典方法，并说清它们各自解决什么问题、后来为什么被谁替代。</li>
+      <li>能手动推出 Yule–Walker 方程、前向算法、维纳滤波与 DTW 递推，而不是只会调库。</li>
+      <li>把「模板匹配 → 概率模型 → 深度模型」这条演进线和讲义第 11–14 讲接起来。</li>
+    </ul>
+  </div>
+  <div class="goal">
+    <div class="g">产出</div>
+    <ul><li>一张经典方法对照表；一段能跑的 Levinson–Durbin / Viterbi / DTW 代码；一次对「为什么 HMM 要取对数」的定量验证。</li></ul>
+  </div>
+
+  <div class="note"><span class="t">为什么单开一个专题</span>前面 17 讲走的是「信号 → 特征 → 神经网络 → 声纹识别」这条依赖链，为了不打断它，把<strong>线性预测、矢量量化、隐马尔可夫、动态时间规整、语音增强、语言模型</strong>这些经典分支压到了这里。它们不是过时废物：LPC 至今是语音编码与共振峰分析的基础，Viterbi 解码是 WFST 与 CTC 的前身，维纳滤波是 A.3 谱减法的理论升级版，N-gram 的平滑思想在今天的语言模型里仍在用。</div>
+
+  <h3>B.1　语音产生模型与线性预测 LPC</h3>
+  <p>第 1 讲把声音看成正弦叠加，那是<strong>信号视角</strong>；语音处理还有<strong>产生视角</strong>：声带（激励源）→ 声道（时变滤波器）→ 口唇辐射。把三者合起来，浊音可近似成一个全极点系统：</p>
+  <div class="mathbox">
+    <div class="math">\[ s[n]=\sum_{k=1}^{p}a_k\,s[n-k]+G\,e[n],\qquad
+    H(z)=\frac{S(z)}{E(z)}=\frac{G}{A(z)}=\frac{G}{1-\sum_{k=1}^{p}a_k z^{-k}} \tag{B-1} \]</div>
+    <div class="mathnote"><p>\(e[n]\) 是声门激励（浊音为周期脉冲串、清音为白噪声），\(G\) 是增益，\(p\) 是预测阶数（8 kHz 常取 \(p=10\sim12\)：每对共轭极点对应一个共振峰，再加若干补偿）。<b>线性预测的假设就是「当前样本可由前 \(p\) 个样本线性加权得到」</b>——声道是一个共鸣腔，自然带记忆。</p></div>
+  </div>
+  <p>定义预测误差 \(e[n]=s[n]-\sum_k a_k s[n-k]\)，在一帧内最小化 \(\mathcal E=\sum_n e^2[n]\)。对 \(a_i\) 求偏导并令为 0：</p>
+  <div class="mathbox">
+    <div class="math">\[ \frac{\partial\mathcal E}{\partial a_i}=0
+    \ \Longrightarrow\
+    \sum_{k=1}^{p}a_k\,R[|i-k|]=R[i],\qquad i=1,\dots,p,\qquad
+    R[i]=\sum_{n}s[n]\,s[n-i] \tag{B-2} \]</div>
+    <div class="mathnote"><p>写成矩阵就是 <strong>Yule–Walker 方程</strong> \(R_p\mathbf a=\mathbf r\)，其中 \(R_p\) 是 Toeplitz 矩阵（元素只依赖于 \(|i-k|\)）。这个结构让一般 \(O(p^3)\) 的求解降到 \(O(p^2)\)——Levinson–Durbin 递推：</p></div>
+  </div>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned}
+    E_0&=R[0],\qquad
+    k_m=\frac{R[m]-\sum_{j=1}^{m-1}a_j^{(m-1)}R[m-j]}{E_{m-1}}\\[4pt]
+    a_m^{(m)}&=k_m,\qquad
+    a_j^{(m)}=a_j^{(m-1)}-k_m\,a_{m-j}^{(m-1)}\ \ (j=1,\dots,m-1)\\[4pt]
+    E_m&=\big(1-k_m^2\big)E_{m-1}
+    \end{aligned} \tag{B-3} \]</div>
+    <div class="mathnote"><p>\(k_m\) 叫<strong>反射系数 / PARCOR 系数</strong>。只要 \(|k_m|\lt 1\)，就有 \(E_m\gt 0\) 且 \(A(z)\) 的全部根落在单位圆内 → <strong>合成滤波器必定稳定</strong>。这是 LPC 被广泛用于编码的关键性质：直接量化 \(a_k\) 可能让滤波器炸掉，量化 \(k_m\) 则只要卡住 \(|k_m|\lt 1\) 就安全。</p></div>
+  </div>
+  <p><b>手算一遍（\(p=2\)）：</b>设 \(R[0]=1,\ R[1]=0.5,\ R[2]=0.2\)。</p>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned}
+    m=1&:\ k_1=\frac{R[1]}{R[0]}=0.5,\quad a_1^{(1)}=0.5,\quad E_1=(1-0.25)\cdot1=0.75\\
+    m=2&:\ k_2=\frac{R[2]-a_1^{(1)}R[1]}{E_1}=\frac{0.2-0.25}{0.75}=-0.0667\\
+        &\quad a_2^{(2)}=-0.0667,\quad a_1^{(2)}=0.5-(-0.0667)(0.5)=0.5333\\
+        &\quad E_2=(1-0.00444)\cdot0.75=0.7467
+    \end{aligned} \tag{B-4} \]</div>
+    <div class="mathnote"><p>回代验证 \(a_1R[0]+a_2R[1]=0.5333-0.0333=0.5=R[1]\) ✓，\(a_1R[1]+a_2R[0]=0.2667-0.0667=0.2=R[2]\) ✓。预测误差能量从 1.0 降到 0.7467，说明用一个二阶模型就能解释约 25% 的样本方差。</p></div>
+  </div>
+
+  <h4>B.1.1　LPC 倒谱、共振峰与线谱对</h4>
+  <p>第 6 讲的倒谱来自「\(\log\) 功率谱 + 反变换」；用全极点模型时，可以直接从 \(a_k\) 递推出倒谱系数，不必再跑一次 FFT：</p>
+  <div class="mathbox">
+    <div class="math">\[ c_1=a_1,\qquad
+    c_n=a_n+\frac{1}{n}\sum_{k=1}^{n-1}k\,c_k\,a_{n-k}\ \ (2\le n\le p),\qquad
+    c_n=\frac{1}{n}\sum_{k=1}^{p}(n-k)\,c_{n-k}\,a_k\ \ (n\gt p) \tag{B-5} \]</div>
+    <div class="mathnote"><p>由 \(\ln H(z)=\ln G-\ln A(z)\) 两边对 \(z^{-1}\) 求导、比较系数即得（推导见本专题末尾）。LPCC 与 MFCC 目的一样——描述<strong>谱包络</strong>；区别是 MFCC 靠听觉滤波器组，LPCC 靠全极点拟合，后者对共振峰更锐利、对噪声更敏感。</p></div>
+  </div>
+  <p>把 \(A(z)=1-\sum_k a_k z^{-k}\) 求根，共轭根 \(z_i=r_i e^{j\theta_i}\) 直接给出<strong>共振峰</strong>的位置与带宽：</p>
+  <div class="mathbox">
+    <div class="math">\[ F_i=\frac{\theta_i}{2\pi}F_s,\qquad
+    B_i=-\frac{\ln r_i}{\pi}F_s \tag{B-6} \]</div>
+    <div class="mathnote"><p>例：\(F_s=8000\)、\(r=0.90,\ \theta=2\pi(500/8000)\) → \(F_1=500\,\mathrm{Hz}\)，\(B_1=-\ln(0.9)\cdot8000/\pi\approx268\,\mathrm{Hz}\)。\(r\) 越接近 1，峰越尖锐（带宽越窄）——这正是「共振」的直观含义。若改用<strong>线谱对 LSP</strong>，构造</p>
+      <p>\(P(z)=A(z)+z^{-(p+1)}A(z^{-1})\)、\(Q(z)=A(z)-z^{-(p+1)}A(z^{-1})\)，可以证明二者的根都在<strong>单位圆上且彼此交错</strong>。把 \(p\) 个实数量化成 \(p\) 个角度，插值时系统仍稳定、误差只影响附近的谱峰——所以 LPC-10、G.729 一类编码器传的是 LSP 而不是 \(a_k\)。</p></div>
+  </div>
+
+  <h3>B.2　矢量量化 VQ 与 LBG</h3>
+  <p>把一帧特征向量 \(\mathbf x\in\mathbb R^d\) 用码本 \(\mathcal C=\{\mathbf c_1,\dots,\mathbf c_K\}\) 中最近的一个码字代替：</p>
+  <div class="mathbox">
+    <div class="math">\[ Q(\mathbf x)=\mathop{\arg\min}_{1\le k\le K}d(\mathbf x,\mathbf c_k),\qquad
+    D=\frac{1}{T}\sum_{t=1}^{T}\min_k d(\mathbf x_t,\mathbf c_k),\qquad
+    d(\mathbf x,\mathbf c)=\|\mathbf x-\mathbf c\|^2 \tag{B-7} \]</div>
+    <div class="mathnote"><p>码本大小 \(K=2^b\)，每帧只传 \(b\) bit；这是第 9 讲「参数量」之外的另一种压缩思路——<strong>压缩的是数据本身，不是模型</strong>。失真测度不一定是欧氏距离：用 LPC 系数时常用 <strong>Itakura–Saito 失真</strong>，它按预测残差能量归一化，对增益变化不敏感；说话人识别里还可用「识别失真测度」，直接在度量里加入类间判别信息。</p></div>
+  </div>
+  <p><strong>LBG 算法</strong>（Linde–Buzo–Gray，也叫广义 Lloyd）是 k-means 的码本版，靠<em>逐步分裂</em>避开局部最优：</p>
+  <div class="defbox"><div class="dh">LBG 流程</div>
+  <ol>
+    <li>用全部训练向量求质心，作为 \(K=1\) 的唯一码字；</li>
+    <li><strong>分裂</strong>：每个码字 \(\mathbf c\to \mathbf c(1\pm\epsilon)\)（\(\epsilon\) 取 0.01 量级），码本大小翻倍；</li>
+    <li><strong>最近邻划分</strong>：把所有训练向量归到最近的码字；<strong>更新质心</strong>为各类均值；</li>
+    <li>重复 3 直到平均失真 \(D\) 的相对下降小于阈值（如 1%）；</li>
+    <li>若 \(K\) 未达目标，回到 2 再分裂。</li>
+  </ol>
+  <p>每次划分与质心更新都保证 \(D\) 不增，所以收敛有保证。<b>用 VQ 做说话人确认</b>：给每个注册人训一个专属码本 \(\mathcal C_c\)，测试时算总失真 \(D_c\)，取最小的那个——这是第 12 讲「打分」的一种最朴素实现，也解释了为什么后来需要 z-norm：不同人码本的失真尺度天生不同。</p></div>
+
+  <h3>B.3　隐马尔可夫模型 HMM：三个问题、三个算法</h3>
+  <p>离散 HMM 由 \(\lambda=(A,B,\pi)\) 定义：状态转移 \(a_{ij}=P(q_t=j\mid q_{t-1}=i)\)、观测发射 \(b_j(k)=P(o_t=v_k\mid q_t=j)\)、初始分布 \(\pi_i\)。语音是时序信号，GMM（第 13 讲）只建模「这一帧像谁」而<strong>丢掉了帧间顺序</strong>，HMM 补上这一维。三个基本问题：</p>
+  <table class="sym">
+    <tr><th>问题</th><th>要算什么</th><th>算法</th><th>复杂度</th></tr>
+    <tr><td>评估</td><td>\(P(O\mid\lambda)\)</td><td>前向–后向（或只用前向）</td><td>\(O(TN^2)\)</td></tr>
+    <tr><td>解码</td><td>最可能的状态序列 \(Q^*\)</td><td>Viterbi</td><td>\(O(TN^2)\)</td></tr>
+    <tr><td>学习</td><td>估计 \(\lambda\) 使 \(P(O\mid\lambda)\) 最大</td><td>Baum–Welch（EM 的特例）</td><td>每轮 \(O(TN^2)\)</td></tr>
+  </table>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned}
+    \alpha_t(j)&=\Big[\sum_{i=1}^{N}\alpha_{t-1}(i)\,a_{ij}\Big]b_j(o_t),\qquad
+    P(O\mid\lambda)=\sum_{i=1}^{N}\alpha_T(i)\\[4pt]
+    \beta_t(i)&=\sum_{j=1}^{N}a_{ij}\,b_j(o_{t+1})\,\beta_{t+1}(j),\qquad
+    \delta_t(j)=\max_i\Big[\delta_{t-1}(i)a_{ij}\Big]b_j(o_t)
+    \end{aligned} \tag{B-8} \]</div>
+    <div class="mathnote"><p>前向 \(\alpha\) 与 Viterbi \(\delta\) 只差「求和 vs 取最大」——这是同一个动态规划骨架换掉一个算子（概率和 → 最大概率路径），也叫 <strong>Viterbi 是对数域/极大域里的前向算法</strong>。\(T\) 帧、\(N\) 状态的朴素枚举是 \(N^T\)，动态规划降到 \(O(TN^2)\)。</p></div>
+  </div>
+  <div class="mathbox">
+    <div class="math">\[ \gamma_t(i)=\frac{\alpha_t(i)\beta_t(i)}{P(O\mid\lambda)},\qquad
+    \xi_t(i,j)=\frac{\alpha_t(i)\,a_{ij}\,b_j(o_{t+1})\,\beta_{t+1}(j)}{P(O\mid\lambda)},\qquad
+    \hat a_{ij}=\frac{\sum_{t=1}^{T-1}\xi_t(i,j)}{\sum_{t=1}^{T-1}\gamma_t(i)} \tag{B-9} \]</div>
+    <div class="mathnote"><p>\(\gamma_t(i)\) 是「第 \(t\) 帧处于状态 \(i\)」的后验，\(\xi_t(i,j)\) 是「\(t\to t+1\) 从 \(i\) 转到 \(j\)」的后验——与第 13 讲 GMM 的责任度 \(\gamma_{tc}\) 完全对应：<strong>Baum–Welch 就是带时序约束的 EM</strong>。E 步算 \(\gamma,\xi\)，M 步用它们重估 \(A,B,\pi\)，每轮保证似然不降。</p></div>
+  </div>
+  <div class="warn inline"><span class="t">必须取对数</span>\(\alpha_t(j)\) 是 \(2t\) 个小于 1 的数连乘，\(T=100\) 帧时双精度早已下溢为 0（\(0.5^{200}\approx10^{-60}\)，虽仍在双精度范围内，但真实发射概率常小到 \(10^{-10}\) 量级，\(T\) 稍大就归零）。工程实现要么每帧归一化并重标尺度，要么全程在对数域做 \(\ln\alpha\) 并用 log-sum-exp。<b>这与第 13 讲 GMM 的 log-sum-exp、第 8 讲 softmax 减 max 是同一类数值技巧。</b></div>
+  <p><b>和讲义主线怎么接：</b>单状态 HMM 的输出密度用 GMM，就退化成第 13 讲的 UBM；把状态数设为 1、去掉转移矩阵，就是「忽略时序」的 i-vector / x-vector 路线。<strong>深度学习声纹不是推翻了 HMM，而是用统计池化（第 14 讲式 14-1）换掉了显式状态对齐</strong>；而 ASR 侧的 HMM 则被 CTC / attention 的端到端对齐替代（见 B.6）。</p>
+
+  <h3>B.4　DTW：不用概率模型的模板匹配</h3>
+  <p>同一个词，说得快和说得慢，特征序列长度不同。DTW 用动态规划找一条<strong>非线性时间对齐路径</strong> \(W=\{(i_l,j_l)\}\)，使累计距离最小：</p>
+  <div class="mathbox">
+    <div class="math">\[ D(i,j)=d(\mathbf q_i,\mathbf c_j)+\min\Big\{D(i-1,j),\ D(i,j-1),\ D(i-1,j-1)\Big\},\qquad
+    D_{\min}=\frac{D(N,M)}{L_W} \tag{B-10} \]</div>
+    <div class="mathnote"><p>约束：单调（\(i,j\) 不减）、连续（每步最多跳 1）、边界（从 \((1,1)\) 到 \((N,M)\)），再加 <strong>Sakoe–Chiba 带</strong> \(|i-j|\le R\) 防止病态对齐并省一半计算。除以路径长度 \(L_W\) 是为了让不同长度模板可比，否则长模板天然吃亏。</p></div>
+  </div>
+  <table class="sym">
+    <tr><th></th><th>DTW</th><th>HMM</th><th>本讲义的深度模型</th></tr>
+    <tr><td>建模对象</td><td>一条（或几条）模板</td><td>概率分布 + 状态转移</td><td>可学的 embedding / 分类器</td></tr>
+    <tr><td>训练</td><td>几乎不需要</td><td>Baum–Welch 迭代</td><td>SGD + 大量数据</td></tr>
+    <tr><td>时间对齐</td><td>显式 DP 路径</td><td>隐式状态序列</td><td>注意力 / 统计池化</td></tr>
+    <tr><td>适合</td><td>孤立词、小样本、与文本相关</td><td>连续语音、中等数据</td><td>开集、变长、大数据</td></tr>
+  </table>
+  <p>赵力《语音信号处理（第三版）》第 7、8 章分别把 DTW 用于孤立字识别与说话人确认；柳若边书第 6.5 节也把 DTW 放进「语音信号处理」入门链条里。<b>它的价值不在于性能，而在于让你亲手看见「时间对齐」这件事本身</b>——理解了 DTW 的路径，再看 CTC 的 blank 折叠、注意力权重图就不会觉得抽象。</p>
+
+  <h3>B.5　增强、端点检测与基音估计的补遗</h3>
+  <h4>B.5.1　维纳滤波：谱减法的理论升级</h4>
+  <p>A.3 的谱减法是「减掉噪声功率谱」；维纳滤波从<strong>最小均方误差</strong>出发，直接导出最优增益。设 \(Y=X+N\) 且信号与噪声不相关，令 \(\hat X=H Y\)，最小化 \(\mathbb E|X-HY|^2\)，对 \(H\) 求导置零得：</p>
+  <div class="mathbox">
+    <div class="math">\[ H(k)=\frac{P_X(k)}{P_X(k)+P_N(k)}=\frac{\xi(k)}{1+\xi(k)},\qquad
+    \xi(k)=\frac{P_X(k)}{P_N(k)}\ \text{(a priori SNR)} \tag{B-11} \]</div>
+    <div class="mathnote"><p>谱减法相当于给 \(H\) 一个硬阈值式的近似，维纳增益则在 \(0\sim1\) 之间平滑过渡：\(\xi\gg1\) 时 \(H\approx1\)（几乎不处理），\(\xi\to0\) 时 \(H\to0\)（几乎全抑制）。先验 SNR 未知，工程上用<strong>决策导向</strong>估计</p>
+      <p>\(\hat\xi_t(k)=\alpha\,\dfrac{|\hat X_{t-1}(k)|^2}{P_N(k)}+(1-\alpha)\max\!\Big(\dfrac{|Y_t(k)|^2}{P_N(k)}-1,\,0\Big)\)，\(\alpha\approx0.98\)。</p>
+      <p>它同样会产生音乐噪声，但比谱减法温和。<b>把它和 A.3 的表连起来看：小波阈值、谱减、维纳、FastICA 是四条不同假设下的去噪路线，没有哪条在所有场景都赢。</b></p></div>
+  </div>
+
+  <h4>B.5.2　端点检测、基音与共振峰的其他判据</h4>
+  <p>第 3 讲用了能量 + 过零率双门限，赵力书第 5 章还列了自相关法、<strong>谱熵法</strong>、比例法、对数频谱距离法。谱熵法最直观：把每帧归一化谱当成概率分布 \(p_k=|X[k]|^2/\sum_j|X[j]|^2\)，</p>
+  <div class="mathbox">
+    <div class="math">\[ H=-\sum_{k}p_k\log_2 p_k\in[0,\log_2 K] \tag{B-12} \]</div>
+    <div class="mathnote"><p><b>噪声段谱平坦 → \(H\) 大；语音段有共振峰结构 → \(H\) 小。</b> 谱熵对<strong>幅值不敏感</strong>（归一化消掉了增益），所以在稳态噪声下比能量门限稳；代价是对谱估计的方差敏感，需配合多帧平滑。</p></div>
+  </div>
+  <p>基音检测除第 3 讲的自相关外，还有 <strong>AMDF（平均幅度差函数）</strong>与<strong>倒谱法</strong>：</p>
+  <div class="mathbox">
+    <div class="math">\[ D_{\mathrm{AMDF}}(k)=\sum_{n=0}^{N-1-k}\big|s[n]-s[n-k]\big|,\qquad
+    k_0=\mathop{\arg\min}_{k\in[k_{\min},k_{\max}]}D_{\mathrm{AMDF}}(k),\quad f_0=\frac{F_s}{k_0} \tag{B-13} \]</div>
+    <div class="mathnote"><p>与自相关 \(R(k)\) 互补：<strong>周期处 \(R(k)\) 取峰、\(D_{\mathrm{AMDF}}(k)\) 取谷</strong>。AMDF 只需加减法和绝对值，没有乘法，早年在定点 DSP 上很吃香；缺点是谷底较宽、易受幅值调制影响，所以常与自相关或倒谱法联合、并做中值平滑后处理（赵力书第 5.3.5「基音检测的后处理」）。<b>倒谱法</b>则利用「激励的周期性在倒谱域表现为 \(k_0\) 处的尖峰」，把卷积变相加后再找峰，正是第 6 讲同态解卷积的另一个用途。</p></div>
+  </div>
+
+  <h3>B.6　解码那一侧：N-gram、WFST 与端到端</h3>
+  <p>第 11 讲说过「语音识别要知道说了什么、声纹识别要知道谁说的，方向正交」。补上 ASR 这一侧的最小知识，才能理解为什么讲义的声纹打分不依赖文本内容。</p>
+  <div class="mathbox">
+    <div class="math">\[ P(W)\approx\prod_{i=1}^{n}P\big(w_i\mid w_{i-2},w_{i-1}\big),\qquad
+    \hat P_{\mathrm{MLE}}(w_3\mid w_1w_2)=\frac{C(w_1w_2w_3)}{C(w_1w_2)} \tag{B-14} \]</div>
+    <div class="mathnote"><p>三元模型的最大似然估计就是数数。问题在于没见过的三元组概率为 0，会让整句概率归零 → 必须<strong>平滑</strong>。加一平滑 \(\hat P=(C+1)/(C_{\text{context}}+V)\) 最粗糙；Good–Turing 把「出现 1 次的计数」重分配给未见事件；Kneser–Ney 更进一步，用「该词能接在多少种不同上下文之后」而不是原始计数来算回退权重。柳若边书第 8.1 节把这些做成了一条从一元到 N 元的完整链条。</p></div>
+  </div>
+  <div class="mathbox">
+    <div class="math">\[ \mathrm{PPL}(W)=2^{-\frac{1}{N}\sum_{i=1}^{N}\log_2 P(w_i\mid h_i)},\qquad
+    W^*=\mathop{\arg\max}_{W}\;P(X\mid W)\,P(W)\ \xrightarrow{\ \mathrm{WFST}\ }\ H\circ C\circ L\circ G \tag{B-15} \]</div>
+    <div class="mathnote"><p>困惑度 PPL 可理解为「每个词的等效分支数」，越小越好。传统 Kaldi 把 HMM 状态（H）、上下文（C）、词典（L）、语言模型（G）都做成加权有限状态转换器，先组合再求最短路——<strong>柳若边书第 1.9 节的 FSA/FST/WFST 就是为这里做铺垫</strong>，第 7 章的 nnet3 则把声学模型换成 DNN。</p></div>
+  </div>
+  <p><strong>端到端</strong>把这条流水线压成一个网络。CTC 引入 blank 符号与折叠映射 \(\mathcal B\)（把连续重复字符合并、去掉 blank），对<strong>所有能折叠成标签的对齐路径</strong>求和：</p>
+  <div class="mathbox">
+    <div class="math">\[ L_{\mathrm{CTC}}=-\ln\sum_{\pi\in\mathcal B^{-1}(\mathbf y)}\prod_{t=1}^{T}p(\pi_t\mid \mathbf x),\qquad
+    \mathcal B(a\!-\!\text{-}\!b\!-\!b)=\mathcal B(a\!-\!b\!-\!-\!b)=\text{ab} \tag{B-16} \]</div>
+    <div class="mathnote"><p>这个求和用前向–后向（式 B-8 的骨架）在 \(O(T\cdot|\mathbf y|)\) 内算完，<b>不需要帧级标注</b>——这正是 CTC 取代 HMM 对齐的关键。注意力式 encoder–decoder 则让解码器每步自己「看」编码器的不同时间位置，权重图其实就是一条<strong>学出来的 DTW 对齐路径</strong>（呼应 B.4）。第 14 讲的统计池化与注意力池化，用的也是同一套思想，只是目的从「输出文字」变成「输出说话人 embedding」。</p></div>
+  </div>
+
+  <h3>B.7　代码：四个算法的最小实现</h3>
+  <pre><code>import numpy as np
+
+# --- 式(B-3) Levinson-Durbin：R[0..p] -> LPC 系数、反射系数、误差能量 ---
+def levinson(R, p):
+    a = np.zeros(p + 1); a[0] = 1.0
+    E = R[0]; ks = []
+    for m in range(1, p + 1):
+        k = (R[m] - np.dot(a[1:m], R[m-1:0:-1])) / E
+        old = a.copy()
+        a[m] = k
+        for j in range(1, m):
+            a[j] = old[j] - k * old[m-j]
+        E *= (1 - k*k); ks.append(k)
+    return -a[1:], np.array(ks), E     # 注意 A(z)=1-sum(a_k z^-k) 的符号
+
+# --- 式(B-5) LPC 倒谱 ---
+def lpc_cepstrum(a, n_ceps):
+    p = len(a); c = np.zeros(n_ceps)
+    c[0] = a[0]
+    for n in range(1, n_ceps):
+        if n <= p:
+            c[n] = a[n] + sum(k*c[k]*a[n-k] for k in range(1, n)) / n
+        else:
+            c[n] = sum((n-k)*c[n-k]*a[k] for k in range(1, p+1)) / n
+    return c
+
+# --- 式(B-8) 前向 + Viterbi（对数域）---
+def forward_log(A, B, pi, obs):
+    T, N = len(obs), A.shape[0]
+    la = np.log(pi + 1e-300) + np.log(B[:, obs[0]] + 1e-300)
+    for t in range(1, T):
+        # log-sum-exp 取代 sum，避免下溢
+        m = la.max()
+        la = np.log(np.exp(la - m) @ A + 1e-300) + m + np.log(B[:, obs[t]] + 1e-300)
+    m = la.max()
+    return m + np.log(np.exp(la - m).sum())
+
+def viterbi_log(A, B, pi, obs):
+    T, N = len(obs), A.shape[0]
+    d = np.log(pi + 1e-300) + np.log(B[:, obs[0]] + 1e-300); psi = []
+    for t in range(1, T):
+        s = d[:, None] + np.log(A + 1e-300)
+        psi.append(s.argmax(axis=0)); d = s.max(axis=0) + np.log(B[:, obs[t]] + 1e-300)
+    path = [int(d.argmax())]
+    for p in reversed(psi): path.append(int(p[path[-1]]))
+    return path[::-1]
+
+# --- 式(B-10) DTW（带 Sakoe-Chiba 带）---
+def dtw(Q, C, R=None):
+    N, M = len(Q), len(C); R = R or max(N, M)
+    D = np.full((N+1, M+1), np.inf); D[0, 0] = 0.0
+    for i in range(1, N+1):
+        for j in range(max(1, int(i*M/N)-R), min(M, int(i*M/N)+R)+1):
+            d = np.linalg.norm(Q[i-1] - C[j-1])
+            D[i, j] = d + min(D[i-1, j], D[i, j-1], D[i-1, j-1])
+    return D[N, M]
+
+# --- 式(B-7) LBG 的一次「划分 + 更新」---
+def lbg_step(X, C):
+    lab = np.argmin(((X[:, None, :] - C[None, :, :])**2).sum(-1), axis=1)
+    return np.array([X[lab == k].mean(axis=0) if (lab == k).any() else C[k]
+                     for k in range(len(C))])
+
+# --- 式(B-11)(B-13) 维纳增益 / AMDF ---
+def wiener(Y, PN, alpha=0.98):
+    post = np.abs(Y)**2 / (PN + 1e-12)
+    H = np.empty_like(Y); prev = np.zeros_like(PN)
+    for t in range(len(Y)):
+        xi = alpha*prev/(PN+1e-12) + (1-alpha)*np.maximum(post[t]-1, 0)
+        H[t] = xi/(1+xi); prev = (H[t]**2)*np.abs(Y[t])**2
+    return H * Y
+
+def amdf(x, fmin=80, fmax=400, fs=8000):
+    lo, hi = int(fs/fmax), int(fs/fmin)
+    D = np.array([np.abs(x[k:] - x[:-k]).mean() for k in range(lo, hi+1)])
+    return fs/(lo + D.argmin()), lo + D.argmin()</code></pre>
+
+  <div class="derive">
+    <div class="dtitle">推导详解 · 专题 B　四个「为什么」</div>
+    <h4>1. Yule–Walker 方程怎么来的</h4>
+    <p>令 \(e[n]=s[n]-\sum_{k=1}^p a_k s[n-k]\)，\(\mathcal E=\sum_n e^2[n]\)。对 \(a_i\) 求偏导：</p>
+    <div class="math sub">\[ \frac{\partial\mathcal E}{\partial a_i}
+    =-2\sum_n e[n]\,s[n-i]=0
+    \ \Longrightarrow\
+    \sum_n s[n]s[n-i]=\sum_{k=1}^{p}a_k\sum_n s[n-k]s[n-i] \tag{B-17} \]</div>
+    <p>右边内层求和正是 \(R[|i-k|]\)（自相关法用加窗帧、零填充外的值），于是得到式 (B-2)。<b>注意这是「自相关法」的解</b>；若不对帧外补零、改用协方差法，矩阵不再 Toeplitz，就不能用 Levinson–Durbin，要直接解一般线性方程——赵力书第 4.6.2 节、韩纪庆书第 4.2 节对这两种解法有专门比较。</p>
+    <h4>2. 反射系数为什么保证稳定</h4>
+    <p>由式 (B-3)，\(E_m=(1-k_m^2)E_{m-1}\)。误差能量必为正，故 \(|k_m|\lt 1\)；反过来，若所有 \(|k_m|\lt 1\)，递推出的 \(A(z)\) 所有根都在单位圆内（这是 Schur–Cohn 稳定判据的等价形式）。因此<strong>只要约束反射系数，合成滤波器就不会发散</strong>——这就是编码器宁可传 \(k_m\) / LSP 也不直接量化 \(a_k\) 的原因。</p>
+    <h4>3. LPC 倒谱递推怎么推</h4>
+    <p>对 \(\ln H(z)=\ln G-\ln A(z)\) 两边取 \(z^{-1}\) 的导数，并利用 \(\ln H(z)=\sum_{n\ge1}c_n z^{-n}\)（忽略直流项）：</p>
+    <div class="math sub">\[ \frac{\mathrm d}{\mathrm d z^{-1}}\ln H(z)
+    =-\frac{A'(z^{-1})}{A(z^{-1})}
+    \ \Longrightarrow\
+    \sum_{n\ge1}n c_n z^{-n-1}
+    =\frac{\sum_{k=1}^{p}k a_k z^{-k-1}}{1-\sum_{k=1}^{p}a_k z^{-k}} \tag{B-18} \]</div>
+    <p>两边乘 \(A(z^{-1})\) 并比较 \(z^{-n-1}\) 的系数，即得 \(n c_n=n a_n+\sum_{k=1}^{n-1}k a_k c_{n-k}\)，整理就是式 (B-5)。<b>这说明 LPCC 与 MFCC 是同一件事的两种算法路径</b>：一个从全极点模型的系数直接递推，一个从谱的 DCT 得到，目标都是「谱包络的低维表示」。</p>
+    <h4>4. 维纳增益为什么是 MMSE 最优</h4>
+    <p>令 \(\hat X=HY\)，\(J(H)=\mathbb E|X-HY|^2=\mathbb E|X|^2-2H\,\mathrm{Re}\,\mathbb E[XY^*]+H^2\mathbb E|Y|^2\)。对 \(H\) 求导置零：</p>
+    <div class="math sub">\[ H^*=\frac{\mathbb E[XY^*]}{\mathbb E|Y|^2}
+    =\frac{P_X}{P_X+P_N}=\frac{\xi}{1+\xi},\qquad
+    J_{\min}=\frac{P_XP_N}{P_X+P_N} \tag{B-19} \]</div>
+    <p>用了信号与噪声不相关（\(\mathbb E[XN^*]=0\)）。可见维纳滤波是<strong>线性 MMSE 估计</strong>，而谱减法只是它的一种粗略近似，这解释了 A.3 里谱减法失真度最高的现象。</p>
+  </div>
+
+  <h3>误区与注意事项</h3>
+  <div class="warn"><span class="t">误区</span>① <b>把 LPC 阶数当越大越好。</b>\(p\) 过大拟合噪声、谱峰虚假分裂；8 kHz 一般 10–12 阶。② <b>直接量化 \(a_k\) 做编码。</b>可能让 \(A(z)\) 根跑到单位圆外，合成时发散；应量化反射系数或 LSP。③ <b>HMM 不取对数。</b>几十帧连乘必然下溢，且症状隐蔽（概率全 0 但不报错）。④ <b>DTW 忘记按路径长度归一化。</b>长模板系统性吃亏。⑤ <b>把 CTC 的 blank 当成「静音」。</b>它是允许重复字符与无对齐输出的占位符，与声学静音无关。⑥ <b>以为经典方法都过时了。</b>Viterbi、log-sum-exp、反射系数、维纳增益这些结构今天仍在深度模型内部。</div>
+
+  <h3>自检</h3>
+  <div class="checklist">
+    <label><input type="checkbox" data-k="qB-1"> 我能从最小化预测误差推出 Yule–Walker 方程，并用 B-4 的数字验算一遍 Levinson–Durbin。</label>
+    <label><input type="checkbox" data-k="qB-2"> 我能说明为什么 \(|k_m|\lt 1\) 保证滤波器稳定，以及 LSP 为什么更适合量化。</label>
+    <label><input type="checkbox" data-k="qB-3"> 我能写出前向算法与 Viterbi 的递推，并说出它们只差一个算子。</label>
+    <label><input type="checkbox" data-k="qB-4"> 我能解释 DTW 的路径约束、谱熵 VAD 为什么抗增益变化、AMDF 与自相关为何互补。</label>
+    <label><input type="checkbox" data-k="qB-5"> 我能把 CTC 的 blank 折叠、注意力权重、统计池化三者串成一条「时间对齐」的演进线。</label>
+  </div>
+</section>
+
+<section id="sC">
+  <h2><span class="no">专题 C</span>动手实验清单与资料索引</h2>
+
+  <div class="goal">
+    <div class="g">目标</div>
+    <ul>
+      <li>把前面 17 讲 + 专题 A/B 的每一条结论，都变成一条<strong>能自己跑、能判对错</strong>的实验。</li>
+      <li>知道每本参考书各自贡献了什么，遇到卡点时能直接定位到该翻哪一本、哪一章。</li>
+      <li>养成「先预测结果 → 再跑 → 对不上就找根因」的习惯，而不是把代码跑通就算学完。</li>
+    </ul>
+  </div>
+  <div class="goal">
+    <div class="g">产出</div>
+    <ul><li>一张打了勾的实验记录表；一份自己写的「参数 → 现象」笔记；能说清每个验收标准的数字是怎么来的。</li></ul>
+  </div>
+
+  <h3>C.1　教材实验体系与本讲义的对应</h3>
+  <p>梁瑞宇、赵力、魏昕《语音信号处理实验教程》是赵力《语音信号处理（第 3 版）》的配套实验教材，共 13 章、基于 MATLAB。它给的是<strong>实验编排</strong>，本讲义给的是<strong>为什么这么做 + 手写实现</strong>，两者正好互补：</p>
+  <table class="sym">
+    <tr><th>教程章节</th><th>实验内容</th><th>对应本讲义</th><th>本项目的替代做法</th></tr>
+    <tr><td>第 1 章</td><td>MATLAB 基础教程</td><td>第 0 讲</td><td><code>python run.py --check</code> 取代 MATLAB 环境</td></tr>
+    <tr><td>第 2 章</td><td>语音信号处理基础实验</td><td>第 1–2 讲</td><td><code>src/wav.py</code> 手写 WAV 读写与 6 类合成声纹</td></tr>
+    <tr><td>第 3 章</td><td>语音信号分析实验</td><td>第 3–5 讲</td><td>能量 / 过零率 / 自相关 / STFT 全套手写</td></tr>
+    <tr><td>第 4 章</td><td>语音信号特征提取实验</td><td>第 6–7 讲</td><td>MFCC(13/39)、Mel 滤波器组、小波与 EMD</td></tr>
+    <tr><td>第 5 章</td><td>语音增强实验</td><td>专题 A.3 / B.5</td><td>谱减、维纳、小波阈值三种可对比实现</td></tr>
+    <tr><td>第 6 章</td><td>语音编码实验</td><td>专题 B.1 / B.2</td><td>LPC / 反射系数 / LSP / VQ 码本</td></tr>
+    <tr><td>第 7 章</td><td>语音合成与转换实验</td><td>专题 B.1（源–滤波器模型）</td><td>用全极点模型反过来合成，验证 \(H(z)\)</td></tr>
+    <tr><td>第 8 章</td><td>语音隐藏实验</td><td>第 4 讲（频域）、第 5 讲（时频）</td><td>可作为拓展：在谱里嵌信息再看可恢复性</td></tr>
+    <tr><td>第 9 章</td><td>声源定位实验</td><td>第 3 讲（互相关）</td><td>把自相关推广成互相关估时延 \(\tau\)</td></tr>
+    <tr><td>第 10 章</td><td>语音识别实验</td><td>专题 B.3 / B.4 / B.6</td><td>DTW、Viterbi、WFST 概念验证</td></tr>
+    <tr><td>第 11 章</td><td>说话人识别实验</td><td>第 11–14 讲</td><td>VQ / GMM-UBM / i-vector / embedding 四类打分对照</td></tr>
+    <tr><td>第 12 章</td><td>语音情感识别实验</td><td>第 10 讲（特征与评估）</td><td>换标签重跑同一套特征 + BPNN/CNN</td></tr>
+    <tr><td>第 13 章</td><td>实用语音信号处理平台</td><td>第 15 讲</td><td>把前面各模块串成一条命令行流水线</td></tr>
+  </table>
+  <div class="tip"><span class="t">怎么用这张表</span>教程用 MATLAB，本讲义用纯 Python + numpy + Pillow，<strong>没有第三方算法库</strong>。如果你的目的是「真正理解」，建议先按本讲义手搓一遍，再去对照教程里的 MATLAB 实现——两边结果应当一致，不一致就是最有价值的学习点。</div>
+
+  <h3>C.2　15 个可自己跑的实验</h3>
+  <p>每个实验都写清<strong>改什么、预期看到什么、怎么算通过</strong>。所有实验都在 <code>acoustic-lab/</code> 里做，先用 <code>python run.py --check</code> 确认基线，再单独改动一个参数——<b>一次只动一个变量</b>，否则现象无法归因。</p>
+
+  <div class="mathbox">
+    <div class="math">\[ \varepsilon_{\mathrm{rel}}=\frac{\big\|g_{\text{ours}}-g_{\text{ref}}\big\|}{\big\|g_{\text{ours}}\big\|+\big\|g_{\text{ref}}\big\|+\epsilon}\lt 10^{-10},\qquad
+    \mathrm{macro}F_1=\frac{1}{C}\sum_{c=1}^{C}\frac{2P_cR_c}{P_c+R_c} \tag{C-1} \]</div>
+    <div class="mathnote"><p>左边是所有「对拍类」实验的通用验收线（第 8 讲梯度检查、第 4 讲 DFT 对拍都用它）；右边是类别不平衡时必须补报的指标（第 10 讲、专题 A.5.4）。</p></div>
+  </div>
+
+  <h4>第一组：基础层（E1–E5）</h4>
+  <table class="sym">
+    <tr><th>编号</th><th>改动</th><th>预期现象</th><th>验收标准</th></tr>
+    <tr><td>E1 混叠</td><td>把含 1000 Hz 分量的信号按 800 Hz 重采样</td><td>峰跑到 200 Hz，且再怎么增加采样点数也回不来</td><td>用 \(f_{\mathrm{alias}}=\min_k|f-kF_s|\) 手算得 200 Hz（第 2 讲式 2-3）</td></tr>
+    <tr><td>E2 量化</td><td>量化位数 16 → 8 → 4 bit</td><td>波形出现台阶，底噪抬升</td><td>SNR 依 \(6.02B+1.76\) 约 98 / 50 / 26 dB（式 2-4、推导 2-11）</td></tr>
+    <tr><td>E3 加窗</td><td>汉明窗 ↔ 矩形窗，对非整周期正弦做谱</td><td>矩形窗旁瓣约 −13 dB 且主峰降约 3.9 dB；汉明窗旁瓣约 −43 dB</td><td>量出两者旁瓣差 \(\ge 25\,\mathrm{dB}\)</td></tr>
+    <tr><td>E4 DFT 对拍</td><td>自己写 \(X[k]=\sum_n x[n]W_N^{kn}\)，与 <code>np.fft.fft</code> 比</td><td>逐点几乎相同</td><td>最大绝对偏差 \(\lt 10^{-12}\)（本仓库实测 \(1.4\times10^{-12}\)）</td></tr>
+    <tr><td>E5 补零</td><td>256 点补到 1024 点，信号含 100 Hz 与 120 Hz</td><td>谱线从 31.25 Hz 变「密」到 7.8 Hz，但两个峰仍糊在一起</td><td>能说出真实分辨率由 \(T_{\rm obs}\) 决定（式 4-6 / 4-13）</td></tr>
+  </table>
+
+  <h4>第二组：特征层（E6–E10）</h4>
+  <table class="sym">
+    <tr><th>编号</th><th>改动</th><th>预期现象</th><th>验收标准</th></tr>
+    <tr><td>E6 预加重</td><td>\(\alpha:0\to0.97\)</td><td>100 Hz 基频被明显压低</td><td>按 \(|H|^2=(1-\alpha)^2+4\alpha\sin^2(\omega/2)\) 算出低频约 −26 dB（专题 A / 第 6 讲式 6-9）</td></tr>
+    <tr><td>E7 Mel 通道账</td><td>打印 26 个滤波器中心频率，数 100–500 Hz 内有几个</td><td>只有 2–3 个通道覆盖最关键的谐波区</td><td>能复算 \(m(f)=2595\log_{10}(1+f/700)\) 与第 6 讲前 10 个中心频率表</td></tr>
+    <tr><td>E8 差分 vs 维度</td><td>13 维静态 → 30 维静态 → 13+Δ+ΔΔ（39 维），各跑同一分类器</td><td>加维度收益很小，加差分明显变好</td><td>复现韩书表 3-3 的结论（加差分约降 20% 误识），并解释最小二乘斜率（式 6-15）</td></tr>
+    <tr><td>E9 阈值函数</td><td>对同一含噪信号分别用硬 / 软 / 半软阈值</td><td>硬阈值重构有振荡；软阈值整体幅值偏低；半软两者都缓解</td><td>同时报 RMSE 与 LSD，说明为什么只看 SNR 会漏掉谱畸变（专题 A 式 A-7）</td></tr>
+    <tr><td>E10 谱减法</td><td>调过减因子 \(\alpha=1.0\to2.0\)、谱下限 \(\beta\)</td><td>\(\alpha\) 太大出现音乐噪声、谱峰被削</td><td>画出「去噪后」与「原始」的谐波峰高对比，指出哪一列判别信息丢了</td></tr>
+  </table>
+
+  <h4>第三组：模型与经典算法（E11–E15）</h4>
+  <table class="sym">
+    <tr><th>编号</th><th>改动</th><th>预期现象</th><th>验收标准</th></tr>
+    <tr><td>E11 学习率</td><td>\(\eta:0.1\to2.0\)，连点「下降一步」</td><td>先震荡、后发散甚至 NaN</td><td>能用 \(\eta\lt 2/\lambda_{\max}\) 解释（第 10 讲）；<code>labs.html</code> 第二个实验台可直接拖</td></tr>
+    <tr><td>E12 梯度检查</td><td>关掉 dropout，对每个权重做中心差分</td><td>解析梯度与数值梯度一致</td><td>绝对误差 \(\lt 10^{-10}\)；近零元素要用式 C-1 的相对误差判据，别被 \(5\times10^{-6}\) 吓到</td></tr>
+    <tr><td>E13 LPC 阶数</td><td>\(p=4,8,12,20\)，画 \(1/|A(e^{j\omega})|\) 与 MFCC 包络叠加</td><td>低阶平滑欠拟合，过高出现虚假谱峰</td><td>用 B-6 从根算出前 3 个共振峰频率，与谱峰位置对上</td></tr>
+    <tr><td>E14 VQ 码本</td><td>码本大小 \(K=2,4,\dots,256\)，画平均失真 \(D\) 曲线</td><td>单调下降、边际收益递减；注意过拟合</td><td>每次 LBG 迭代 \(D\) 不增；报告每帧比特数 \(b=\log_2K\)</td></tr>
+    <tr><td>E15 时间对齐</td><td>同一段语音快放/慢放，分别跑 DTW 与 Viterbi</td><td>得到可解释的对齐路径，快放版路径被压缩</td><td>手算一个 \(3\times3\) 的 DTW 网格，与代码输出逐格一致（式 B-10）</td></tr>
+  </table>
+  <div class="note"><span class="t">实验记录模板</span>每条实验记四行：<b>预测</b>（我以会看到什么）→ <b>实测</b>（实际数字/截图）→ <b>差异</b>（对不上的地方）→ <b>根因</b>（哪条公式或哪行代码）。第 0 讲说过「预测—打脸」的过程才是真正记住的地方；没有第一行的实验记录等于没做。</div>
+
+  <h3>C.3　资料来源索引</h3>
+  <p>本讲义的知识点来自下列资料。按仓库约定，<strong>原书全文与从电子书提取的文本均不入库</strong>（版权内容），仓库只包含自己撰写的讲义、自己手写的算法实现、以及由脚本实测生成的图表与数值。</p>
+  <table class="sym">
+    <tr><th>资料</th><th>形态</th><th>本次用于</th><th>对应章节</th></tr>
+    <tr><td>韩纪庆、张磊、郑铁然《语音信号处理（第 3 版）》</td><td>EPUB，可提取全文</td><td>理论根基：产生模型、短时分析、同态解卷积、Mel 倒谱、线性预测、LPC 倒谱</td><td>第 1–7 讲、专题 B.1 / B.5</td></tr>
+    <tr><td>王泉《声纹技术：从核心算法到工程实践》</td><td>MOBI，可提取全文</td><td>工程视角：预处理、评价指标、GMM-UBM、i-vector、深度学习声纹</td><td>第 11–14 讲</td></tr>
+    <tr><td>赵力《语音信号处理（第三版）》</td><td>PDF 扫描版，仅目录可用</td><td><strong>知识地图</strong>：矢量量化、HMM、LPC/LSP、端点检测、基音/共振峰、语音增强、DTW、说话人识别各分支</td><td>专题 B 全篇、第 3/5 讲延伸</td></tr>
+    <tr><td>梁瑞宇、赵力、魏昕《语音信号处理实验教程》</td><td>PDF，可提取</td><td>13 章实验体系与编排</td><td>专题 C.1、各讲「动手」部分</td></tr>
+    <tr><td>柳若边《深度学习语音识别技术实践》</td><td>EPUB，可提取</td><td>Kaldi / WFST / FST、DTW、VAD、端到端、N-gram 与平滑、困惑度</td><td>专题 B.4 / B.6</td></tr>
+    <tr><td>宋知用《MATLAB 语音信号分析与合成（第 2 版）》</td><td>PDF 扫描版</td><td>仅作「MATLAB 实现路线」的参照，未转录正文</td><td>专题 C.1 对照</td></tr>
+    <tr><td>姜囡《语音信号识别技术与实践》</td><td>PDF 扫描版</td><td>识别系统结构的旁证，未转录正文</td><td>第 11 讲</td></tr>
+    <tr><td>朱柯佳《高噪声环境下变压器声纹特征提取方法研究》（2021，硕士论文）</td><td>PDF，字符定位需重排</td><td><strong>专题 A 主体</strong>：三种去噪法对比、改进/分层阈值、小波包能量谱、TFCC、Laplacian/Fisher 选维、现场实测数字</td><td>专题 A.2–A.4、A.6</td></tr>
+    <tr><td>陆云才等《基于声纹特征和集成学习的变压器缺陷诊断方法》（2023）</td><td>PDF，可提取</td><td><strong>专题 A 主体</strong>：19 类样本库、多通道时频输入、CNN+CBAM、stacking 二次诊断、单一/混合缺陷实测结果</td><td>专题 A.1 / A.5</td></tr>
+  </table>
+  <div class="warn inline"><span class="t">一句提醒</span>三本扫描版 PDF 没有文本层，本次只用它们的目录做知识地图，正文公式全部按标准教材形式自行推导，没有从扫描件 OCR 后照抄。专题 A 里朱柯佳论文的「改进阈值函数」也一样：讲义给出的是同家族的<strong>半软阈值标准形式</strong>并说明思路，不是原论文图中分段公式的逐字转录。</div>
+
+  <h3>C.4　从讲义到现场：十条检查清单</h3>
+  <div class="defbox"><div class="dh">上线前逐条过</div>
+  <ol>
+    <li><b>采样率是不是任务定的？</b>局放要数 kHz 以上，8 kHz 不够（专题 A.2）。</li>
+    <li><b>抗混叠滤波在 ADC 之前吗？</b>采样后再补已经晚了（第 2 讲式 2-10）。</li>
+    <li><b>预处理有没有压掉判别频段？</b>预加重 \(\alpha=0.97\) 会把 100 Hz 压掉约 26 dB。</li>
+    <li><b>分帧/帧移是否满足重叠相加？</b>无重叠会让重构失真（第 5 讲式 5-5）。</li>
+    <li><b>特征是不是照搬语音配置？</b>Mel 在低频只给 2–3 个通道（第 6 讲、专题 A.4）。</li>
+    <li><b>去噪有没有引入失真？</b>同时报 SNR、RMSE、LSD，不要只看波形像不像。</li>
+    <li><b>划分是不是按「段/设备」分组？</b>按帧随机切会让指标虚高（第 10 讲）。</li>
+    <li><b>类别不平衡有没有报宏 \(F_1\)？</b>960 : 100 的样本比会骗人（专题 A.5.4）。</li>
+    <li><b>阈值是在开发集上选的吗？</b>在测试集上调阈值等于作弊（第 12 讲）。</li>
+    <li><b>换设备/换工况后还稳吗？</b>CMN、z-norm、域适配至少做一个（第 6/12 讲）。</li>
+  </ol></div>
+
+  <h3>自检</h3>
+  <div class="checklist">
+    <label><input type="checkbox" data-k="qC-1"> 我能不看讲义，把 15 个实验里任意 5 个的「预期现象 + 验收数字」说出来。</label>
+    <label><input type="checkbox" data-k="qC-2"> 我知道遇到「频谱突然多出不该有的峰」「换设备就崩」「指标虚高」分别该翻哪一讲。</label>
+    <label><input type="checkbox" data-k="qC-3"> 我能说清哪些资料是扫描版、为什么讲义没有照抄它们的公式。</label>
+    <label><input type="checkbox" data-k="qC-4"> 我已经真的跑过至少 5 个实验，并写下了「预测 / 实测 / 差异 / 根因」四行记录。</label>
   </div>
 </section>
 
