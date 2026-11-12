@@ -131,6 +131,11 @@ Windows 上 PDF 常被预览器占用，替换失败时它会明确提示并存�
 > 注意：`render_light_figs.py` 会直接 import 兄弟目录 `../acoustic-lab/src/`，
 > `build_pdf.py` 会读 `../acoustic-lab/outputs/waveform_data.csv`。所以这两个目录必须保持同级。
 
+**推送**：国内网络下 `git push` 常因本机代理挡住 `github.com:443` 而失败（`502` / SSL EOF），
+但 `api.github.com` 通常可直连。此时用 `python tools/push_github_api.py`，它通过 Git Data API
+把最近一次本地 commit 推到远端 `main`；token 从系统 Git 凭据动态读取，不写进文件也不打印。
+脚本比较父提交的目录树而非 commit sha，因此用它推送之后仍可继续正常迭代。
+
 ---
 
 ## 关于参考教材与版权
