@@ -115,6 +115,16 @@ table.sym.compact td{text-align:center}
 .derive .warn{font-size:14px}
 .derive strong,.derive b{color:#fff}
 .mathnote code,.derive code,.defbox code{background:#222d3f;color:#ffd580}
+/* ============ 理论桥接块（郑君里《信号与系统》） ============ */
+.bridge{margin:16px 0 30px;border:1px solid #3a4a63;border-left:3px solid #7ee0b8;
+  border-radius:10px;background:linear-gradient(180deg,#131d2b,#111925);padding:14px 20px 16px}
+.bridge .btitle{font-size:14.5px;font-weight:700;color:#7ee0b8;letter-spacing:.02em;
+  margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #33506a}
+.bridge p{font-size:14.4px;line-height:1.85;color:#d3dded}
+.bridge strong,.bridge b{color:#fff}
+.bridge .mathbox{margin:12px 0 6px}
+.bridge .note{margin:10px 0 0}
+@media (max-width:900px){.bridge{padding:12px 14px 14px}}
 @media (max-width:900px){.symgrid{grid-template-columns:1fr}.derive{padding:4px 14px 16px}}
 
 </style>
@@ -146,6 +156,9 @@ table.sym.compact td{text-align:center}
   <a href="#s12">第 12 讲 · 评价指标</a>
   <a href="#s13">第 13 讲 · 经典方法</a>
   <a href="#s14">第 14 讲 · 深度学习声纹</a>
+  <div class="grp">理论根基 · 郑君里《信号与系统》</div>
+  <a href="#sD">专题 D · 连续 LTI 与变换域</a>
+  <a href="#sE">专题 E · z 域、DFT 与滤波器</a>
   <div class="grp">工程专题与补遗</div>
   <a href="#sA">专题 A · 变压器声纹实战</a>
   <a href="#sB">专题 B · 经典算法补遗</a>
@@ -158,7 +171,7 @@ table.sym.compact td{text-align:center}
 <header class="hero">
   <span class="badge">初学者向</span><span class="badge alt">动手为主</span>
   <h1>声纹信号处理 · 从零开始的学习讲义</h1>
-  <p>基于韩纪庆《语音信号处理（第3版）》与王泉《声纹技术》两书的核心知识重新组织编写。不逐章复述，而是按「一条依赖链」把两本书讲透：每步都说明<b>怎么做、为什么、要准备什么、常见误区、怎么自检</b>。全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）。另增<b>三个工程专题</b>：变压器声纹实战（去噪 / 特征 / 诊断）、经典算法补遗（LPC / VQ / HMM / DTW）、动手实验清单与资料索引。配套 <code>acoustic-lab</code> 复现项目（零第三方算法依赖，仅需 numpy + Pillow），边读边跑。</p>
+  <p>基于韩纪庆《语音信号处理（第3版）》与王泉《声纹技术》两书的核心知识重新组织编写。不逐章复述，而是按「一条依赖链」把两本书讲透：每步都说明<b>怎么做、为什么、要准备什么、常见误区、怎么自检</b>。全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）与<b>理论桥接</b>（把该讲结论钉回郑君里《信号与系统》的具体章节与定理）。另增<b>五个专题</b>：理论根基（连续 LTI / z 域与数字滤波器）、变压器声纹实战（去噪 / 特征 / 诊断）、经典算法补遗（LPC / VQ / HMM / DTW）、动手实验清单与资料索引。配套 <code>acoustic-lab</code> 复现项目（零第三方算法依赖，仅需 numpy + Pillow），边读边跑。</p>
 </header>
 
 <section id="s0">
@@ -397,6 +410,16 @@ Lp = 20 * np.log10(np.sqrt(np.mean(x**2)) / 2e-5 + 1e-12)</code></pre>
 <li>「相位听不出来」只对<b>单个稳态纯音</b>成立；多分量叠加、瞬态、双耳定位时相位是可听的。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §1.2–§1.4、§3.2</div>
+<p>第 1 讲说「任何复杂声音都能拆成正弦波之和」，这句话的严格版本是傅里叶级数，而它能成立的根本原因只有一条：<strong>复指数是 LTI 系统的特征函数</strong>。把 \(e^{j\omega t}\) 送进冲激响应为 \(h\) 的系统：</p>
+<div class="mathbox">
+  <div class="math">\[ \int h(\tau)e^{j\omega(t-\tau)}\mathrm{d}\tau=e^{j\omega t}\underbrace{\int h(\tau)e^{-j\omega\tau}\mathrm{d}\tau}_{H(\omega)} \tag{Z1-1} \]</div>
+  <div class="mathnote"><p>输出仍是 \(e^{j\omega t}\)，只被乘了一个复数 \(H(\omega)\)——<b>形状不变，只改幅度和相位</b>。这就是为什么「用正弦分解信号」在 LTI 世界里不是一种选择，而是唯一自然的坐标系：每个谐波各自独立通过系统，互不干扰。反过来，任何非线性环节（整流、限幅、AGC）都会立刻破坏这条性质，产生新的频率成分。</p></div>
+</div>
+<p>教材 §1.4 用 \(\delta(t)\) 与 \(u(t)\) 建立「基本单元」，§3.2 再把它展开成 FS：\(x(t)=\sum_n C_n e^{jn\omega_1 t}\)，系数 \(C_n=\frac{1}{T}\int_{-T/2}^{T/2}x(t)e^{-jn\omega_1t}\mathrm{d}t\) 就是「信号与第 \(n\) 次谐波的内积」。<b>专题 A 里变压器 100 / 200 / 300 Hz 的谐波串，正是这个式子的物理实例</b>：磁致伸缩的平方非线性决定了哪些 \(C_n\) 非零，而不是随便出现的峰。</p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>把"频率高"当成"声音大"。</b>频率和振幅是两个独立维度：高频可以很小声，低频可以很大声。② <b>以为基频决定音色。</b>决定音色的是谐波比例。③ <b>把"采样点数多"当成"信息多"。</b>采样率不够时，点再多也只是把混叠后的假信号画得更细（第 2 讲会算给你看）。</div>
 
@@ -607,6 +630,16 @@ frames = frames * win</code></pre>
 <li><b>短时平稳假设：</b>25 ms 窗对稳态嗡鸣成立，对「敲击 / 放电脉冲」这类瞬态不成立，需要更短窗或小波（第 7 讲）。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §3.10–§3.11、§5.9–§5.10</div>
+<p>第 2 讲的核心结论「\(F_s\gt2f_m\) 才能无失真」在这里有完整证明链：抽样 = 乘冲激串 → 频域周期复制 (D-12) → 不重叠条件 (D-13) → 理想低通取出原谱 → sinc 内插 (D-16)。补一个常被忽略的点：<strong>整个采样–量化链条里，只有量化是非线性、不可逆的</strong>。</p>
+<div class="mathbox">
+  <div class="math">\[ x_q[n]=Q\big(x(nT_s)\big)=x(nT_s)+e[n],\qquad e[n]\sim U\Big(-\frac{\Delta}{2},\frac{\Delta}{2}\Big) \tag{Z2-1} \]</div>
+  <div class="mathnote"><p>把量化误差建模成与信号<strong>不相关</strong>的均匀白噪声，才有第 2 讲那条 \(\mathrm{SNR}=6.02B+1.76\) dB。这个假设成立需要三个条件：信号跨越多个量化级、采样点之间足够「去相关」、无过载削顶。<b>失效场景很具体</b>：小信号（只用到 2–3 个量化级）时误差与信号强相关，会出现谐波失真；信号接近满量程时削顶产生大量高次谐波——两者都会让实测 SNR 明显低于公式值。</p></div>
+</div>
+<p>教材 §5.10 的 PCM 把这条链补全：抽样 → 量化 → 编码 → 传输 → 解码 → 内插。工程上 8 kHz / 16 bit 的电话语音，理论上限 4 kHz、实际可用 3.4 kHz，就是因为抗混叠与重建滤波器都需要过渡带（见 D.8 的佩利–维纳准则）。</p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>"采样率越高越好"。</b>超过信号最高频率两倍的部分不带来新信息，只带来存储与算力开销。② <b>"加窗会丢信息"。</b>加窗是抑制截断造成的高频泄漏，不是丢信息；真正丢信息的是一次只看一小段。③ <b>"帧长越短越好"。</b>帧太短 → 频率分辨率差（后面 MFCC 就分不开相邻谐波）；帧太长 → 违背短时平稳假设。25 ms 是无数实验折中出来的经验值。④ <b>忘记 int16 的 32767 上限</b>，导致削波。⑤ <b>把奈奎斯特上限当可用带宽</b>。8 kHz 的 4000 Hz 是理论极限，实际留 10%–20% 给抗混叠过渡带，用到 3.4 kHz 就算满了。</div>
 
@@ -763,6 +796,16 @@ def pitch(x, fs, fmin=80, fmax=400):
 <ul><li><b>直流偏置</b>：哪怕只有 0.01 的直流，也会让过零率几乎归零。必须先去均值或预加重。</li>
 <li><b>倍周期 / 半周期错误</b>：自相关在 \(2P,3P\) 处同样有峰，在 \(P/2\) 处对某些波形也有较强峰。取「第一个超过阈值的峰」比取全局最大更稳。</li>
 <li><b>帧长不够</b>：要可靠看到 \(f_{\min}=80\,\mathrm{Hz}\) 的一个周期，帧长至少 \(F_s/f_{\min}=100\) 点（12.5 ms @8 kHz），实务上取 2–3 个周期以上。</li></ul>
+</div>
+
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §6.6–§6.8</div>
+<p>第 3 讲的三个时域特征，在理论上其实只依赖两个量：<strong>能量</strong>与<strong>自相关</strong>。教材 §6.7 的维纳–辛钦定理把后者与功率谱连成一对傅里叶变换：</p>
+<div class="mathbox">
+  <div class="math">\[ R_x[m]=\sum_n x[n]x[n-m]\ \longleftrightarrow\ S_x(\omega)=\big|X(e^{j\omega})\big|^2 \tag{Z3-1} \]</div>
+  <div class="mathnote"><p>于是「时域测周期」与「频域看谐波」是同一件事的两种算法：自相关在基音周期处出现峰，等价于功率谱在谐波处出现梳状结构。<b>这也解释了为什么自相关比直接找峰值稳健</b>：它把整段信号的能量都用来投票，而不是只看某一个峰。</p></div>
+</div>
+<p>过零率则对应功率谱的<strong>二阶矩</strong>。对零均值高斯过程，\(\mathbb{E}[\text{ZCR}]=2\sqrt{m_2/m_0}\)（式 D-29），离散计算时把积分换成求和：\(m_0=\sum_k S[k]\)、\(m_2=\sum_k (kF_s/N)^2S[k]\)。这意味着：<b>过零率不是「高频含量的粗糙指标」，而是一个有明确量纲的谱矩估计</b>；当信号被宽带噪声污染时，\(m_2\) 被抬高，过零率虚高，双门限端点检测就会把噪声段判成语音——这正是第 3 讲「误区」里那条的定量解释。</p>
 </div>
 
   <h3>误区与注意事项</h3>
@@ -994,6 +1037,16 @@ X = np.concatenate([Xe + T, Xe - T])</code></pre>
 <li>浮点误差：DFT 基矩阵是 \(O(N^2)\) 内存，\(N=8192\) 时约 1 GB（complex128），大点数必须走 FFT。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §3.8，下册 §9.3、§9.5</div>
+<p>第 4 讲从「DFT 定义」直接开算，容易让人以为它是凭空规定的。真实的逻辑链是：<strong>FS → DFS → DFT</strong>，而 DFT 只是 z 变换在单位圆上的 \(N\) 点等间隔采样 (E-10)：</p>
+<div class="mathbox">
+  <div class="math">\[ X[k]=X(z)\Big|_{z=e^{j2\pi k/N}},\qquad k=0,1,\dots,N-1 \tag{Z4-1} \]</div>
+  <div class="mathnote"><p><b>这一条解释了三件常被误解的事：</b>① 补零不提高分辨率——它只是让你在同样的连续谱上多采几个点；② 频谱以 \(2\pi\) 为周期——因为 \(e^{j\omega}\) 本身以 \(2\pi\) 为周期；③ 实序列共轭对称——\(X[N-k]=X^*[k]\)，所以单边谱只取前 \(N/2+1\) 点，且要乘 \(2/N\) 补偿被丢掉的一半能量。</p></div>
+</div>
+<p><b>把本讲义的参数代进去算一次：</b>帧长 200 点、补零到 \(N=512\)、\(F_s=8000\)。频率栅格间隔是 \(8000/512=15.625\) Hz，但<strong>真实分辨能力</strong>由窗长决定：矩形窗主瓣宽 \(2F_s/N_{\text{frame}}=2\times8000/200=80\) Hz。所以「能分辨两个相隔 20 Hz 的峰」是错觉——那只是栅格密，不是分辨率高。这条区分，是第 4 讲与专题 E.5 的交汇点。</p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>补零 = 提高分辨率。</b>错，分辨率由观测时长决定。② <b>忘记 2/N 归一化。</b>③ <b>把 X[0] 当"频率 0 的分量"却不知它是直流/均值×N。</b>④ <b>拿负频率当"另一种信号"。</b>实信号的负频率只是共轭镜像，没有新信息。⑤ <b>FFT 点数随便取非 2 的幂。</b>能用但慢，实时系统会要命。</div>
 
@@ -1144,6 +1197,16 @@ print(wsum.min(), wsum.max())              # 应近似常数、且 > 0</code></p
 <li>补零到 \(N\gt L\) 只让频率轴变密，<b>不改变本讲的 \(\Delta f\)</b>（回到式 4-13）。</li>
 <li>STFT 是<b>线性</b>时频表示，多分量交叉项不会像 Wigner–Ville 分布那样产生伪影，但也换来分辨率受限。</li>
 <li>对数显示会压缩强弱差异，做定量幅值比较时必须回到线性域。</li></ul>
+</div>
+
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §6.10、§5.4</div>
+<p>第 5 讲用「傅里叶尺度性质」说明窗长与频率分辨率的矛盾，教材给的是更强的结论：由柯西–施瓦茨不等式与帕塞瓦尔定理可证</p>
+<div class="mathbox">
+  <div class="math">\[ \Delta t\cdot\Delta\omega\geq\frac12\quad\Longleftrightarrow\quad \Delta t\cdot\Delta f\geq\frac{1}{4\pi} \tag{Z5-1} \]</div>
+  <div class="mathnote"><p>等号<strong>仅当</strong> \(x(t)\) 为高斯函数时成立。教材同时给出工程版本：理想低通的阶跃响应上升时间 \(t_r\) 与带宽 \(B\) 满足 \(t_rB=1\)——注意这是「响应速度 vs 带宽」的另一种说法，与 (Z5-1) 同源。<b>算到账：</b>25 ms 窗（\(\Delta t\approx12.5\) ms）给出 \(\Delta f\geq1/(4\pi\times0.0125)\approx6.4\) Hz 的理论下界；而矩形窗实际主瓣是 80 Hz，相差一个数量级——因为矩形窗远非高斯，且工程上还要压旁瓣。所以「理论下界」与「实际窗的主瓣」是两回事，不能混着引用。</p></div>
+</div>
+<p>教材 §5.4 还指出理想低通不可实现（(D-23) 非因果）。这直接说明：<strong>STFT 不可能有「既无限窄又无限短」的分析窗</strong>，因为那要求一个理想的分频器。Gabor 变换选高斯窗，就是在给定 \(\Delta t\) 下取到 (Z5-1) 等号的最优解。</p>
 </div>
 
   <h3>误区与注意事项</h3>
@@ -1404,6 +1467,24 @@ T=\left\lfloor\frac{4000-200}{80}\right\rfloor+1=48\ \text{帧}\\
 <b>照搬语音的 26 通道配置会把最关键的频带只分到 2–3 个通道</b>。可改用线性滤波器组、或把 Mel 下限抬到 50 Hz 后加密低频通道。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》下册 §8.9、§9.10、§10.7</div>
+<p>MFCC 常被当成一串「工程配方」背下来。用系统语言看，它的每一步都有明确身份：</p>
+<table class="sym">
+  <tr><th>步骤</th><th>系统语言</th><th>教材</th></tr>
+  <tr><td>预加重</td><td>一阶 FIR 高通，零点 \(z=0.97\)</td><td>§10.7、§8.8</td></tr>
+  <tr><td>分帧加窗</td><td>时域相乘 ⇒ 频域与窗谱卷积（<b>这一步破坏 LTI</b>）</td><td>§3.8</td></tr>
+  <tr><td>FFT</td><td>z 变换单位圆上 \(N\) 点采样</td><td>§9.5</td></tr>
+  <tr><td>Mel 滤波器组</td><td>并联带通组，中心频率按 Mel 分布</td><td>§10.2</td></tr>
+  <tr><td>取 log</td><td>同态变换，把卷积变成加法（<b>非线性</b>）</td><td>—</td></tr>
+  <tr><td>DCT</td><td>偶延拓后的正交变换，去相关</td><td>§9.10</td></tr>
+</table>
+<div class="mathbox">
+  <div class="math">\[ \underbrace{x[n]\ast h[n]}_{\text{声道}\,\times\,\text{激励}}\ \xrightarrow{\ \log\ }\ \log X+\log H\ \xrightarrow{\ \text{DCT}\ }\ \text{倒谱} \tag{Z6-1} \]</div>
+  <div class="mathnote"><p><b>关键洞察：</b>整条链路只有「加窗」和「取 log」两处<strong>不是 LTI</strong>。加窗把长信号切成短段，用「短时平稳」近似时变系统；取 log 则是同态解卷积的核心，把两个相乘的频谱变成相加，从而能用低通（DCT 截断）把慢变的声道包络 \(H\) 与快变的激励谐波 \(X\) 分开。<b>所以 MFCC 不是「随便设计的特征」，而是「在短时平稳假设下，用同态变换做一次近似解卷积」。</b>这也解释了它为什么对信道/麦克风差异有一定鲁棒性——信道是乘性的，取 log 后变成加性偏置，DCT 后集中在低阶，丢掉 c0 就削掉了一大半。</p></div>
+</div>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>照搬语音的预加重到设备声纹。</b>会把 100 Hz 基频相对压低，等于扔掉主要判别信息。② <b>只取 13 维静态 MFCC 就下结论。</b>不加 Δ/ΔΔ 会白白多出约 20% 的误识。③ <b>以为 Mel 滤波器越多越好。</b>太多会引入冗余和过拟合，26 是语音的经验值；设备声纹常取 24–40，需实验。④ <b>忘了 CMN。</b>换一套录音设备就崩。⑤ <b>把 c_0 当特征用却不理解它。</b>c_0 近似总能量，对增益敏感。</div>
 
@@ -1630,6 +1711,16 @@ while True:
 <li>信号长度必须远大于最大小波尺度，否则 \(a\) 大的尺度卷积边界占满整段，系数全是端点伪影（画 CWT 图时应标出「影响锥」cone of influence 并裁掉）。</li>
 <li>DWT 每层降采样使长度减半，长度非 2 的幂时需做对称延拓（<code>mode='symmetric'</code>），否则重构长度对不上。</li>
 <li>EMD 没有正交性保证，各 IMF 能量之和不必等于原信号能量，做能量特征时要先验证。</li></ul>
+</div>
+
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §5.6、§6.3–§6.4</div>
+<p>第 7 讲讲小波与 EMD「用另一组基看信号」，教材 §6.3 的正交函数分解给了统一框架：任何信号都可以在一组<strong>完备正交函数集</strong>上展开，\(x=\sum_n c_n\varphi_n\)，\(c_n=\langle x,\varphi_n\rangle/\|\varphi_n\|^2\)。傅里叶用复指数，小波用伸缩平移的母小波，EMD 则用<strong>数据驱动</strong>的 IMF——它不是预先给定的基，这也是 EMD 难以做严格正交性证明的原因。</p>
+<div class="mathbox">
+  <div class="math">\[ z(t)=x(t)+j\hat{x}(t),\qquad \hat{x}(t)=x(t)\ast\frac{1}{\pi t},\qquad a(t)=|z(t)|,\ \ f_i(t)=\frac{1}{2\pi}\frac{\mathrm{d}}{\mathrm{d}t}\arg z(t) \tag{Z7-1} \]</div>
+  <div class="mathnote"><p>教材 §5.6 的希尔伯特变换正是 EMD 最后一步「Hilbert 谱」的数学基础：对每个 IMF 构造解析信号，得到<strong>包络</strong> \(a(t)\) 与<strong>瞬时频率</strong> \(f_i(t)\)，才能画出「时间–频率–能量」三维图。<b>边界提醒</b>：瞬时频率只对<strong>单分量、窄带</strong>信号有物理意义；直接把原始多分量信号送进希尔伯特变换会得到负频率等无意义结果——这正是 EMD 必须先分解、再对每个 IMF 单独做希尔伯特变换的原因。</p></div>
+</div>
+<p>教材 §6.4 的帕塞瓦尔定理还保证了小波/EMD 分解不「漏能量」：只要基是完备的，各尺度系数平方和就等于总能量。诊断里用「小波包能量谱」做特征（专题 A），前提正是这一条。</p>
 </div>
 
   <h3>误区与注意事项</h3>
@@ -1900,6 +1991,16 @@ for i in range(W.size):
 <li>数值梯度检查要关掉 dropout、固定 batch，否则两次前向的随机性会污染差分。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §2.7，下册 §7.6</div>
+<p>第 8 讲的 BPNN 看上去与信号与系统无关，其实它的<strong>前向计算就是一个多层复合函数</strong>，而反向传播是链式法则——两者都不满足 LTI。这一点必须说清，否则很容易把「卷积定理」「频域滤波」误用到神经网络上。</p>
+<div class="mathbox">
+  <div class="math">\[ \mathbf{h}^{(l)}=\sigma\big(W^{(l)}\mathbf{h}^{(l-1)}+\mathbf{b}^{(l)}\big)\ \Longrightarrow\ \frac{\partial L}{\partial W^{(l)}}=\boldsymbol{\delta}^{(l)}\big(\mathbf{h}^{(l-1)}\big)^{\mathsf T} \tag{Z8-1} \]</div>
+  <div class="mathnote"><p><b>哪里破坏了 LTI：</b>① \(\sigma(\cdot)\) 是非线性（ReLU、sigmoid）；② 权重随训练变化，是时变的。所以神经网络<strong>没有</strong>一个固定的 \(H(\omega)\)，也不能用卷积定理分析。但仍有一条与 LTI 相通的直觉：<b>反向传播是把误差信号「反向通过」一层层线性系统（\(W^{\mathsf T}\)）并逐层乘上局部增益 \(\sigma'\)</b>；若这些增益的乘积长期小于 1 就梯度消失，大于 1 就梯度爆炸——这与 E.8 的反馈稳定性判据是同构的。</p></div>
+</div>
+<p>教材 §2.7 与 §7.6 的卷积表示在这里还有一个用处：<strong>梯度检查</strong>本质是数值微分 \(\big(L(\theta+\epsilon)-L(\theta-\epsilon)\big)/2\epsilon\)，它是线性近似，与解析梯度在 \(\epsilon\to0\) 时一致。所以第 8 讲强调「同时报相对误差与绝对误差」——近零梯度处相对误差会被放大，这是数值微分的固有性质，不是反向传播写错了。</p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>权重全零初始化。</b>对称性不破，隐层神经元永远学成一样。② <b>忘记除 batch 大小。</b>梯度随 batch 线性放大，学习率等于白设。③ <b>softmax 不减最大值。</b>数值溢出变成 nan。④ <b>只用相对误差判断梯度。</b>近零梯度会误报（见上文）。⑤ <b>把 sigmoid 用于深层网络。</b>梯度消失，改用 ReLU。</div>
 
@@ -2096,6 +2197,16 @@ for idx, (i, j) in enumerate(positions):
 <li>把「语谱图」当普通图像做二维卷积时，两个轴的物理含义不同（时间 vs 频率），平移不变性在时间轴成立、在频率轴<b>不成立</b>（100 Hz 的峰挪到 3 kHz 是完全不同的故障）。因此更严谨的做法是频率轴不共享权重，或只用一维时间卷积。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》下册 §7.6、§9.4</div>
+<p>第 9 讲说 CNN 的卷积层「在做一个可学习的滤波器」。严格说，深度学习框架实现的是<strong>互相关</strong>而不是卷积：</p>
+<div class="mathbox">
+  <div class="math">\[ y[i,j]=\sum_{u,v}w[u,v]\,x[i+u,j+v]\quad(\text{互相关})\ \ \text{vs}\ \ \sum_{u,v}w[u,v]\,x[i-u,j-v]\quad(\text{卷积}) \tag{Z9-1} \]</div>
+  <div class="mathnote"><p>只差一个核翻转。因为核是学习出来的，翻转与否等价于参数重命名，不影响表达能力——但如果你要用 FFT 加速、或把训练好的核当「滤波器」去做频域分析，就必须先翻转，否则相位全错。<b>与教材 (E-11) 的联系：</b>把多通道、多核的求和展开，CNN 一层就是若干组「卷积和 + 偏置 + 非线性」；<code>im2col</code> 只是把这一步改写成矩阵乘法，数学上没变。</p></div>
+</div>
+<p>另一个精确的对应是<strong>感受野与卷积长度</strong>：第 \(l\) 层的等效核长度是前几层的组合，\(L_l=L_{l-1}+(k_l-1)\)（无空洞、stride=1）。这与 D.3 的「卷积输出长度 = 输入 + 核 − 1」是同一个加法。所以深层堆叠相当于一个很长的 FIR，只是中间插了非线性——这也是为什么 CNN 能同时看到「局部纹理（底层）」和「全局结构（深层）」。</p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>输出尺寸算错。</b>永远先用公式算一遍再跑代码，别靠"看起来差不多"。② <b>col2im 时直接 reshape。</b>重叠位置必须累加。③ <b>池化反向传播把梯度全给最大值位置还是平均分？</b>最大池化只把梯度给最大值那一个位置，其余为 0。④ <b>以为卷积核越大越好。</b>两个 3×3 的感受野等于一个 5×5，但参数更少、非线性更多，所以现代网络偏爱小核堆叠。</div>
 
@@ -2266,6 +2377,15 @@ if wait >= patience: break</code></pre>
 <li>验证集被反复用于调参，本质上也会「过拟合到验证集」；超参数调得多时，应再留一个最终测试集。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》下册 §11.4–§11.5</div>
+<p>第 10 讲讲「学习率太大 loss 会炸」，教材第 11 章的反馈稳定性给出了严格解释。把梯度下降写成闭环递推并在极小点附近线性化：</p>
+<div class="mathbox">
+  <div class="math">\[ w_{t+1}-w^*=(I-\eta H)(w_t-w^*)\ \Longrightarrow\ \text{收敛}\iff \big|1-\eta\lambda_i\big|\lt1\ \ \forall i\ \iff\ 0\lt\eta\lt\frac{2}{\lambda_{\max}} \tag{Z10-1} \]</div>
+  <div class="mathnote"><p>这就是教材 §11.4 根轨迹的离散版：增益 \(\eta\) 增大时，「闭环极点」\(1-\eta\lambda_i\) 从 1 向 −1 移动，越过 −1 就进入单位圆外，开始振荡发散。<b>三个可直接用的推论：</b>① 学习率上限由<strong>最大曲率</strong>决定，与平均曲率无关——所以数据里只要有一小撮「陡方向」就会限制步长；② 条件数 \(\lambda_{\max}/\lambda_{\min}\) 越大，收敛越慢（病态）；③ 动量/Adam 相当于给闭环加阻尼与自适应增益，本质是在改极点位置。第 10 讲的「学习率预热」「梯度裁剪」都能在这条式子里找到位置。</p></div>
+</div>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>只报准确率。</b>类别不平衡时毫无意义。② <b>先标准化再划分。</b>数据泄漏。③ <b>同一录音切段后随机划分。</b>等于考原题。④ <b>用测试集调参。</b>⑤ <b>看到 AUC=1 就高兴。</b>先怀疑数据太简单。</div>
 
@@ -2381,6 +2501,15 @@ if wait >= patience: break</code></pre>
 <ul><li>注册数据太少 → 模型无法覆盖本人的音素/工况变化，FR 飙升。i-vector 与 x-vector 正是为解决少样本注册而生。</li>
 <li>训练与部署的信道不一致（不同麦克风、不同距离、不同采样率）→ 分数分布整体平移，全局阈值失效，必须做分数归一化或域适配。</li>
 <li>时间漂移：设备老化、麦克风灵敏度变化会让人几个月后「不像自己」，需要模板更新机制。</li></ul>
+</div>
+
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §6.9</div>
+<p>第 11 讲把声纹确认描述成「注册模板 vs 测试语音，算一个相似度再比阈值」。教材 §6.9 的匹配滤波器证明了这个做法在什么意义下最优：在加性白噪声中，使判决时刻输出信噪比最大的滤波器是</p>
+<div class="mathbox">
+  <div class="math">\[ h(t)=K\,s^*(t_m-t),\qquad \rho_{\max}=\frac{2E}{N_0} \tag{Z11-1} \]</div>
+  <div class="mathnote"><p>也就是说，<strong>「与模板做相关」不是一种启发式，而是白噪声下的最优检测器</strong>；它与模板的能量成正比、与噪声谱密度成反比，且与波形细节无关。这给声纹工程三个直接结论：① 打分要对<strong>能量归一化</strong>，否则模板能量不同会让分数不可比（对应第 12 讲的分数归一化 ZT-norm）；② 噪声不是白的（信道、背景人声），所以匹配滤波只是上界，真实系统要靠 Channel 补偿；③ 多模板/多条件注册，相当于用多个 \(s_k\) 分别匹配再融合，逼近「未知波形」下的广义似然比检验。</p></div>
+</div>
 </div>
 
   <h3>误区与注意事项</h3>
@@ -2580,6 +2709,15 @@ s_norm = (s - imp_scores.mean()) / imp_scores.std()</code></pre>
 <li>归一化队列要与目标模型同域，否则估计出的 \(\mu,\sigma\) 反而引入偏差。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §6.9，下册 §9.4</div>
+<p>第 12 讲的 EER、DCF 是「判决层」的指标，而它们的可分性来自「表示层」的信噪比。把 (Z11-1) 接过来：匹配滤波输出的信噪比 \(\rho_{\max}=2E/N_0\) 决定了两个分布（同人 / 异人）的重叠程度。若把两个得分分布近似为等方差高斯，均值间隔 \(d\)、标准差 \(\sigma\)，则</p>
+<div class="mathbox">
+  <div class="math">\[ \mathrm{EER}=\Phi\!\Big(-\frac{d}{2\sigma}\Big),\qquad d'=\frac{d}{\sigma}\ \text{（可分性）} \tag{Z12-1} \]</div>
+  <div class="mathnote"><p>\(\Phi\) 是标准正态分布函数。这条式子把「EER 1%」翻译成一个可操作的物理量：<b>\(d'=2\Phi^{-1}(0.99)\approx4.65\)</b>，即同人/异人均值要拉开近 5 个标准差。它同时解释了为什么「换信道后 EER 暴涨」——信道失配让同人分布的方差 \(\sigma\) 变大（而不是均值 \(d\) 变小），所以补偿手段（CMVN、PLDA 自适应）主要是在<strong>压方差</strong>。第 12 讲的 DCF 加权（\(C_{\text{miss}}\) 与 \(C_{\text{fa}}\) 不等）则是在这条 ROC 上按代价选工作点，数学上是贝叶斯风险最小化，与教材 §6.9 的「最小错误概率判决」同一逻辑。</p></div>
+</div>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>把 EER 当"总体错误率"。</b>它是单方向错误率，总体约为 2 倍。② <b>用机器学习教材的 ROC 读法去读声纹 ROC。</b>轴和结论都相反。③ <b>拿 EER 直接定阈值。</b>EER 点只是"两类等错"，不一定是你的最优工作点，要用 DCF。④ <b>不做分数归一化就比较不同人的性能。</b></div>
 
@@ -2752,6 +2890,16 @@ M 步在 \(q\) 固定下是带权极大似然：对 \(\boldsymbol\mu_c\) 求偏�
 <li>i-vector 的 \(T\) 必须在与测试同域的大规模数据上训练；跨域（录音设备不同）时性能下降明显，需要域适配。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》上册 §4.9–§4.10、§5.6</div>
+<p>第 13 讲的 GMM-UBM 用一堆高斯分量描述声纹，每个分量的协方差矩阵刻画「能量在频谱上怎么分布」。这在系统语言里就是<strong>一组二阶谐振系统</strong>：</p>
+<div class="mathbox">
+  <div class="math">\[ H_k(s)=\frac{\omega_{n,k}^2}{s^2+2\zeta_k\omega_{n,k}s+\omega_{n,k}^2},\qquad Q_k=\frac{1}{2\zeta_k},\ \ B_k\approx\frac{\omega_{n,k}}{Q_k} \tag{Z13-1} \]</div>
+  <div class="mathnote"><p>共振峰越窄（\(Q\) 越高、阻尼越小），在频谱上越是尖峰；GMM 的一个分量若在某个频带方差很小，就相当于一个高 \(Q\) 的谐振。所以「GMM 分量数」与「能分辨多少个共振峰」是相关的——分量太少，相邻共振峰会被一个宽高斯糊在一起。<b>i-vector 的 Total Variability 空间</b>则相当于给这组谐振器加了一个低维的「全局调节旋钮」，用几十维描述「这个人的声道整体偏长还是偏短」。</p></div>
+</div>
+<p>倒谱（第 6 讲）与教材 §4.10 的最小相位也有直接关系：只有当声道系统是最小相位（零极点都在单位圆内），倒谱的因果部分才完整携带声道信息，且逆滤波稳定。这就是为什么 MFCC 用 DCT 取前 13 维（低阶倒谱）就能近似还原声道包络——高阶项对应激励的快速变化，丢掉它们相当于做了一次低通平滑。</p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>以为 GMM 的 C 越大越好。</b>数据不够时高斯越多越容易过拟合，UBM 常用 512–2048 是数据量决定的。② <b>i-vector 维度越高越好。</b>400 维是经验值，太高会引入信道噪声。③ <b>跳过 UBM 直接训每人一个 GMM。</b>小样本必崩。④ <b>拿不同年份的 EER 直接比。</b>数据集条件不同。</div>
 
@@ -2883,6 +3031,16 @@ s_{\mathrm{PLDA}}=\ln\frac{p(\mathbf e_1,\mathbf e_2\mid H_1)}{p(\mathbf e_1\mid
 <li>域不匹配（训练用 16 kHz 电话语音、测试用 8 kHz 设备声）影响远大于模型结构差异，优先做数据/前端对齐。</li></ul>
 </div>
 
+  <div class="bridge">
+<div class="btitle">理论桥接 · 郑君里《信号与系统》下册 §12.2–§12.5</div>
+<p>第 14 讲的 x-vector 用 TDNN + 统计池化把变长帧序列压成一个定长嵌入。用状态变量的语言，这就是一个<strong>离散状态空间模型</strong>在跑：</p>
+<div class="mathbox">
+  <div class="math">\[ \mathbf{x}[n+1]=A\mathbf{x}[n]+B\mathbf{u}[n],\qquad \mathbf{y}=C\mathbf{x}[n]+D\mathbf{u}[n],\qquad \mathbf{e}=\text{Pool}\big(\{\mathbf{x}[n]\}\big) \tag{Z14-1} \]</div>
+  <div class="mathnote"><p>TDNN 的膨胀卷积相当于让 \(A\) 具有稀疏的、跨多帧的结构（感受野变大）；统计池化则把整段轨迹的均值与标准差汇总——用教材的话说，是在<strong>估计状态的充分统计量</strong>。教材 §12.6–§12.7 的可控性/可观性在这里有直观对应：如果某维状态对输入完全不敏感（不可控），它对嵌入就没有贡献，等于白占维度；如果它对输出不可见（不可观），训练信号传不回去，梯度会很小。<b>这正是「嵌入维度不是越大越好」的理论解释。</b></p></div>
+</div>
+<p>再往远看一步：RNN 就是 (Z14-1) 加非线性激活，LSTM 的门控是在给 \(A\) 加可学习的遗忘因子，Kalman 滤波是线性高斯下的最优状态估计，而 S4/Mamba 这类状态空间模型直接把 \(A\) 参数化成结构化矩阵、用卷积形式并行训练。<strong>声纹里的「帧 → 句」聚合，与这些模型做的是同一件事：从一条状态轨迹里提取一个定长摘要。</strong></p>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>以为统计池化只是"求平均"。</b>标准差那一半同样重要，它携带"波动程度"信息。② <b>在闭集任务上用 triplet 损失。</b>没必要，softmax 更快更好。③ <b>照抄论文的超参数。</b>数据规模差一个数量级，学习率、层数都要重调。④ <b>把不同论文的准确率排榜。</b>数据集条件不同，比较无意义。</div>
 
@@ -2892,6 +3050,620 @@ s_{\mathrm{PLDA}}=\ln\frac{p(\mathbf e_1,\mathbf e_2\mid H_1)}{p(\mathbf e_1\mid
     <label><input type="checkbox" data-k="q14-2"> 我能说清 AAM-softmax 相比 softmax 多了什么约束、为什么开集场景需要它。</label>
     <label><input type="checkbox" data-k="q14-3"> 我能说出至少三条从文献里提炼的工程经验。</label>
     <label><input type="checkbox" data-k="q14-4"> 我知道为什么这些论文的 99% 不能横向比较。</label>
+  </div>
+</section>
+
+<section id="sD">
+  <h2><span class="no">专题 D</span>信号与系统（上）：连续时间 LTI 与变换域</h2>
+
+  <div class="goal">
+    <div class="g">目标</div>
+    <ul>
+      <li>能把讲义里所有「滤波器、加窗、分帧、频谱」操作，追溯到一条统一的定理：LTI 系统的卷积表示与卷积定理。</li>
+      <li>能自己推出抽样定理与 sinc 内插恢复，说清 8 kHz 为什么对应 4 kHz 上限、3.4 kHz 又是从哪来的。</li>
+      <li>会用零极点几何法读频率响应，理解共振峰、最小相位、稳定性这些词在声纹特征里到底指什么。</li>
+      <li>能用帕塞瓦尔定理和柯西–施瓦茨不等式，推出匹配滤波器与测不准原理，不再把「窗长不能两全」当口号。</li>
+    </ul>
+  </div>
+  <div class="goal">
+    <div class="g">产出</div>
+    <ul><li>一张「讲义操作 → 信号与系统定理 → 教材章节」映射表；三组手算到底的数值例（卷积和、帕塞瓦尔、预加重频响）；一份可自己复算的定理清单。</li></ul>
+  </div>
+
+  <div class="note"><span class="t">这本教材怎么读</span>郑君里《信号与系统》第三版分上下两册，共 12 章、160 条目录条目。上册（第 1–6 章）讲<strong>连续时间</strong>：LTI 系统、傅里叶变换、拉普拉斯变换、通信系统、信号矢量空间；下册（第 7–12 章）讲<strong>离散时间</strong>：差分方程、z 变换、DFT、数字滤波器、反馈与状态变量，见专题 E。本讲义原先是「从声音出发往特征走」的工程顺序，这两个专题是<strong>回头补地基</strong>：不是另起炉灶，而是把第 1–14 讲用到的每一个结论都挂回严格的理论出处。教材是扫描版（无文本层），所以下面的推导是按目录框架、用本讲义的符号重写标准结论，<b>不是原文转录</b>；书页里的记法 \(\operatorname{Sa}(x)=\sin x/x\) 与 \(\omega_s=2\pi/T_s\) 予以保留。</div>
+
+  <h3>D.1　一张地图：讲义的每个动作，背后是哪条定理</h3>
+  <p>先建立对应关系，后面每一节都是把这张表里的某一行展开成推导。看懂这张表，就能明白「信号与系统」不是另一门课，而是本讲义所有公式的语法。</p>
+  <table class="sym">
+    <tr><th>讲义里在做的事</th><th>背后真正的定理</th><th>郑君里章节</th><th>本专题</th></tr>
+    <tr><td>预加重 \(y[n]=x[n]-0.97x[n-1]\)</td><td>一阶 FIR 差分方程 / 系统函数零点</td><td>§2.2, §4.6, §8.8</td><td>D.2, D.7, E.4</td></tr>
+    <tr><td>分帧后乘汉明窗</td><td>时域相乘 \(\leftrightarrow\) 频域卷积（泄漏的根源）</td><td>§3.8, §5.4</td><td>D.4</td></tr>
+    <tr><td>加窗后做 FFT 得频谱</td><td>DFT 是 z 变换单位圆上的等间隔采样</td><td>§9.3, §9.5</td><td>E.5</td></tr>
+    <tr><td>8 kHz 采样、4 kHz 上限</td><td>抽样信号的傅里叶变换 + 抽样定理</td><td>§3.10, §3.11, §5.9</td><td>D.6</td></tr>
+    <tr><td>Mel / Gammatone 滤波器组</td><td>带通滤波、二阶谐振系统、物理可实现性</td><td>§4.9, §5.5, §10.2</td><td>D.7, D.8, E.7</td></tr>
+    <tr><td>短时能量、自相关、过零率</td><td>相关函数 \(\leftrightarrow\) 功率谱（维纳–辛钦）、谱矩</td><td>§6.6–§6.8</td><td>D.9</td></tr>
+    <tr><td>STFT 窗长不能同时兼顾时频</td><td>测不准原理（柯西–施瓦茨 + 帕塞瓦尔）</td><td>§6.10</td><td>D.9</td></tr>
+    <tr><td>模板匹配 / 余弦打分 / DTW</td><td>匹配滤波器使输出信噪比最大</td><td>§6.9</td><td>D.9</td></tr>
+    <tr><td>共振峰、LPC、倒谱</td><td>二阶谐振极点 / 全极点模型 / 最小相位</td><td>§4.9, §4.10, §8.8</td><td>D.7, E.4</td></tr>
+    <tr><td>EMD 的瞬时频率、包络</td><td>希尔伯特变换与解析信号</td><td>§5.6</td><td>D.8</td></tr>
+    <tr><td>CNN 的卷积层</td><td>卷积和（严格说是互相关，差一个翻转）</td><td>§2.7, §7.6</td><td>D.3, E.1</td></tr>
+    <tr><td>训练发散 / IIR 递归爆炸</td><td>稳定性判据（极点位置、奈奎斯特）</td><td>§4.11, §11.5</td><td>E.8</td></tr>
+  </table>
+
+  <h3>D.2　冲激信号与 LTI：卷积表示是「推」出来的，不是「定义」出来的</h3>
+  <h4>1. 符号对照表</h4>
+  <table class="sym"><tr><th>符号</th><th>含义</th><th>本讲义对应</th></tr>
+  <tr><td>\(\delta(t)\)</td><td>单位冲激（狄拉克函数）</td><td>单位样值 \(\delta[n]\)</td></tr>
+  <tr><td>\(u(t)\)</td><td>单位阶跃</td><td>窗的起点</td></tr>
+  <tr><td>\(h(t)\)</td><td>冲激响应：\(\delta(t)\) 通过系统后的输出</td><td>滤波器系数向量</td></tr>
+  <tr><td>\(x(t),y(t)\)</td><td>输入、输出</td><td>波形、滤波后波形</td></tr>
+  <tr><td>\(H(\omega)\), \(H(s)\)</td><td>频率响应、系统函数</td><td>预加重、Mel 滤波器</td></tr>
+  <tr><td>\(\ast\)</td><td>卷积运算</td><td><code>np.convolve</code></td></tr>
+  </table>
+
+  <h4>2. 从 δ 的筛选性质到卷积积分（四步，一步都不跳）</h4>
+  <p>狄拉克函数不是普通函数，而是由它的<strong>筛选性质</strong>定义的广义函数：\(\delta(t)=0\ (t\neq0)\)、\(\int_{-\infty}^{\infty}\delta(t)\,\mathrm{d}t=1\)，于是对任意在 \(t\) 处连续的 \(x\)：</p>
+  <div class="mathbox">
+    <div class="math">\[ \int_{-\infty}^{\infty}x(\tau)\,\delta(t-\tau)\,\mathrm{d}\tau=x(t) \tag{D-1} \]</div>
+    <div class="mathnote"><p>把 \(x\) 拆成「无穷多个加权的移位冲激」——这是全部 LTI 理论的第一块砖。离散版更直观：\(x[n]=\sum_k x[k]\,\delta[n-k]\)，就是把每个样点单独拎出来。</p></div>
+  </div>
+  <p><b>第 1 步（分解）</b>：由 (D-1)，输入可写成 \(x(t)=\int x(\tau)\delta(t-\tau)\mathrm{d}\tau\)。<br>
+  <b>第 2 步（时不变）</b>：系统对 \(\delta(t)\) 的响应是 \(h(t)\)；时不变性保证对 \(\delta(t-\tau)\) 的响应就是 \(h(t-\tau)\)，形状不变、只平移。<br>
+  <b>第 3 步（齐次性）</b>：分量 \(x(\tau)\delta(t-\tau)\mathrm{d}\tau\) 的响应是 \(x(\tau)h(t-\tau)\mathrm{d}\tau\)。<br>
+  <b>第 4 步（可加性 / 叠加积分）</b>：把所有分量的响应加起来：</p>
+  <div class="mathbox">
+    <div class="math">\[ y(t)=\int_{-\infty}^{\infty}x(\tau)\,h(t-\tau)\,\mathrm{d}\tau=(x\ast h)(t) \tag{D-2} \]</div>
+    <div class="mathnote"><p><b>结论：</b>「线性 + 时不变」这两条看似朴素的性质，<strong>唯一地</strong>决定了系统只能是卷积。所以只要你在讲义里看到「滤波器」，它背后一定有一个 \(h\)；只要 \(h\) 有限长，就是 FIR；只要反馈递归，就是 IIR。反过来，<b>任何非线性或时变操作都不再能用一次卷积描述</b>——例如取绝对值、取 \(\log\)（MFCC 第 5 步）、ReLU、批归一化，这也是为什么神经网络不能简单套用频域分析。</p></div>
+  </div>
+  <p>两个必须记住的附加条件：<strong>因果性</strong>要求 \(h(t)=0\ (t\lt 0)\)（响应不能早于激励）；<strong>BIBO 稳定</strong>要求 \(\int_{-\infty}^{\infty}|h(t)|\,\mathrm{d}t\lt \infty\)（§4.11）。后者在离散域变成 \(\sum_n|h[n]|\lt \infty\)，是 IIR 是否会炸的判据。</p>
+
+  <h4>3. 零输入响应与零状态响应：为什么微分方程要分两半解</h4>
+  <p>§2.5 把全响应拆成两部分，这个拆法在声纹里对应「设备本底噪声 / 由激励产生的信号」：</p>
+  <div class="mathbox">
+    <div class="math">\[ y(t)=\underbrace{y_{zi}(t)}_{\text{零输入：由初始状态产生}}+\underbrace{y_{zs}(t)}_{\text{零状态：}x\ast h} \tag{D-3} \]</div>
+    <div class="mathnote"><p>零输入响应满足齐次微分方程（由系统极点决定，与输入无关）；零状态响应才是 (D-2) 的卷积。§2.4 专门处理「起始点跳变」：电容电压、电感电流不能突变，所以要从 \(0^-\) 状态换算出 \(0^+\) 状态。工程含义：<b>一段录音开头几个样点的异常，往往是滤波器初始状态没清零</b>，与信号本身无关。</p></div>
+  </div>
+
+  <h4>4. 手算例：预加重其实是一个零点在 \(z=0.97\) 的一阶高通</h4>
+  <p>第 6 讲第 1 步用 \(y[n]=x[n]-0.97\,x[n-1]\)。写成卷积形式，冲激响应只有两个抽头：</p>
+  <div class="mathbox">
+    <div class="math">\[ h[n]=\delta[n]-0.97\,\delta[n-1],\qquad H(e^{j\omega})=1-0.97e^{-j\omega} \tag{D-4} \]</div>
+    <div class="mathnote"><p>\(\omega=2\pi f/F_s\)，\(F_s=8000\) Hz。幅度的平方可直接展开：\(|H|^2=1+0.97^2-2\cdot0.97\cos\omega=1.9409-1.94\cos\omega\)。代四个频率算到底：</p>
+    <table class="sym compact">
+      <tr><th>\(f\) (Hz)</th><th>\(\omega\)</th><th>\(\cos\omega\)</th><th>\(|H|^2\)</th><th>\(|H|\)</th><th>dB</th></tr>
+      <tr><td>0</td><td>0</td><td>1.0000</td><td>0.0009</td><td>0.0300</td><td>−30.5</td></tr>
+      <tr><td>1000</td><td>\(\pi/4\)</td><td>0.7071</td><td>0.5691</td><td>0.7544</td><td>−2.45</td></tr>
+      <tr><td>2000</td><td>\(\pi/2\)</td><td>0</td><td>1.9409</td><td>1.3932</td><td>+2.88</td></tr>
+      <tr><td>4000</td><td>\(\pi\)</td><td>−1</td><td>3.8809</td><td>1.9700</td><td>+5.89</td></tr>
+    </table>
+    <p>直流被压掉 30 dB，高频抬起约 6 dB，正是「补偿声门激励 −6 dB/oct 的频谱倾斜」所需。对照代码 <code>mfcc()</code> 里的 <code>x[1:] - preemph*x[:-1]</code>：它就是这个 \(h\) 的逐点实现，没有任何额外魔法。</p></div>
+  </div>
+
+  <h3>D.3　卷积怎么算：图解法、性质与一次手算对拍</h3>
+  <p>§2.7 给出的图解四步是：<b>换元</b>（把 \(x(\tau),h(\tau)\) 都画成 \(\tau\) 的函数）→ <b>翻转</b>（\(h(-\tau)\)）→ <b>平移</b>（\(h(t-\tau)\)）→ <b>相乘积分</b>（重叠面积）。离散版就是卷积和：</p>
+  <div class="mathbox">
+    <div class="math">\[ y[n]=\sum_{k=-\infty}^{\infty}x[k]\,h[n-k],\qquad \operatorname{len}(y)=\operatorname{len}(x)+\operatorname{len}(h)-1 \tag{D-5} \]</div>
+    <div class="mathnote"><p><b>手算到底：</b>取 \(x=[1,2,3]\)、\(h=[1,-1]\)（即一阶差分）。长度应为 \(3+2-1=4\)。</p>
+    <table class="sym compact">
+      <tr><th>\(n\)</th><th>参与求和的项</th><th>\(y[n]\)</th></tr>
+      <tr><td>0</td><td>\(x[0]h[0]=1\cdot1\)</td><td>1</td></tr>
+      <tr><td>1</td><td>\(x[0]h[1]+x[1]h[0]=1\cdot(-1)+2\cdot1\)</td><td>1</td></tr>
+      <tr><td>2</td><td>\(x[1]h[1]+x[2]h[0]=2\cdot(-1)+3\cdot1\)</td><td>1</td></tr>
+      <tr><td>3</td><td>\(x[2]h[1]=3\cdot(-1)\)</td><td>−3</td></tr>
+    </table>
+    <p>得 \(y=[1,1,1,-3]\)。用 <code>np.convolve([1,2,3],[1,-1])</code> 可一行验证。<b>注意长度</b>：卷积会「长出」\(L_h-1\) 个点，这正是 CNN 需要 <code>pad</code>、以及 STFT 分帧必须截断/补零的原因之一。</p></div>
+  </div>
+  <p>§2.8 的性质每一条都有工程后果：</p>
+  <table class="sym">
+    <tr><th>性质</th><th>公式</th><th>在讲义里的用处</th></tr>
+    <tr><td>交换律</td><td>\(x\ast h=h\ast x\)</td><td>级联滤波器可以换顺序，预加重与抗混叠的先后不影响结果</td></tr>
+    <tr><td>结合律</td><td>\((x\ast h_1)\ast h_2=x\ast(h_1\ast h_2)\)</td><td>多级滤波器可合并成一个等效 \(h\)，省一次循环</td></tr>
+    <tr><td>分配律</td><td>\(x\ast(h_1+h_2)=x\ast h_1+x\ast h_2\)</td><td>Mel 滤波器组的输出可看作一组并联子带之和</td></tr>
+    <tr><td>与 \(\delta\) 卷积</td><td>\(x\ast\delta(t-t_0)=x(t-t_0)\)</td><td>纯延时系统 \(h(t)=\delta(t-t_0)\)，只改相位不改幅度</td></tr>
+    <tr><td>微分性质</td><td>\((x\ast h)'=x'\ast h=x\ast h'\)</td><td>差分与平滑可交换顺序；过零率对高频噪声敏感的理论解释</td></tr>
+  </table>
+  <div class="defbox"><div class="dh">一个容易混的点：卷积 vs 互相关</div>
+  <p>互相关 \(R_{xh}[\ell]=\sum_n x[n]\,h[n+\ell]\) <strong>不翻转</strong>核，卷积 \(y[n]=\sum_k x[k]h[n-k]\) <strong>要翻转</strong>。CNN 里所谓「卷积」实际算的是互相关（核不翻转），但因为核是可学习参数，翻转与否只是参数重标号，不影响表达能力。若要用 FFT 加速真正的卷积，记得先把核翻转；这也是 §7.7「解卷积（反卷积）」要处理的问题：已知 \(y\) 和 \(h\) 反求 \(x\)，在频域是 \(X=Y/H\)，一旦 \(H\) 有小值就会把噪声放大，必须正则化。</p></div>
+
+  <h3>D.4　卷积定理：整个频域处理的地基</h3>
+  <p>§3.8 称它是「通信系统和信号处理研究领域中应用最广的傅里叶变换性质之一」，这个评价不为过。采用本讲义的变换约定：</p>
+  <div class="mathbox">
+    <div class="math">\[ X(\omega)=\int_{-\infty}^{\infty}x(t)e^{-j\omega t}\mathrm{d}t,\qquad x(t)=\frac{1}{2\pi}\int_{-\infty}^{\infty}X(\omega)e^{j\omega t}\mathrm{d}\omega \tag{D-6} \]</div>
+  </div>
+  <h4>1. 时域卷积 \(\leftrightarrow\) 频域相乘（不跳步的证明）</h4>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned} \mathcal{F}\{x\ast h\} &amp;=\int_{-\infty}^{\infty}\Big[\int_{-\infty}^{\infty}x(\tau)h(t-\tau)\mathrm{d}\tau\Big]e^{-j\omega t}\mathrm{d}t \\ &amp;\overset{u=t-\tau}{=}\int_{-\infty}^{\infty}x(\tau)\Big[\int_{-\infty}^{\infty}h(u)e^{-j\omega(u+\tau)}\mathrm{d}u\Big]\mathrm{d}\tau \\ &amp;=\Big[\int x(\tau)e^{-j\omega\tau}\mathrm{d}\tau\Big]\Big[\int h(u)e^{-j\omega u}\mathrm{d}u\Big]=X(\omega)\,H(\omega) \end{aligned} \tag{D-7} \]</div>
+    <div class="mathnote"><p>只用了「交换积分次序 + 变量代换」。物理含义：<b>复指数 \(e^{j\omega t}\) 是 LTI 系统的特征函数</b>——送进一个正弦，出来还是同频正弦，只被乘上复数 \(H(\omega)\)。所以「滤波」在时域是卷积，在频域只是逐点乘法。这就是 STFT、Mel 滤波、频域去噪能够成立的全部理由。</p></div>
+  </div>
+  <h4>2. 时域相乘 \(\leftrightarrow\) 频域卷积（以及 \(1/2\pi\) 从哪来）</h4>
+  <div class="mathbox">
+    <div class="math">\[ \mathcal{F}\{x(t)\cdot w(t)\}=\frac{1}{2\pi}\,(X\ast W)(\omega)=\frac{1}{2\pi}\int_{-\infty}^{\infty}X(\theta)W(\omega-\theta)\mathrm{d}\theta \tag{D-8} \]</div>
+    <div class="mathnote"><p>系数 \(1/2\pi\) 来自 (D-6) 里逆变换的归一化：把 \(x,w\) 都写成逆变换再相乘，对两个频率变量做卷积时会多出一次 \((1/2\pi)^2\)，与外层正变换的 \(2\pi\) 抵消后剩一个 \(1/2\pi\)。<b>离散周期版</b>则变成 \((1/N)\) 的圆周卷积（见 E.5）。</p></div>
+  </div>
+  <p><b>直接后果（这条最重要）：</b>分帧加窗 \(x_w[n]=x[n]\cdot w[n]\) 的频谱不是 \(X\)，而是 \(X\) 与窗谱 \(W\) 的卷积。哪怕 \(x\) 是纯净单频（\(X\) 是一根 \(\delta\) 谱线），加窗后也会变成「\(\delta\) 被 \(W\) 抹开」的形状——这就是第 4 讲反复强调的<strong>频谱泄漏</strong>。窗谱的主瓣宽度与旁瓣电平决定了分辨率和动态范围的一对矛盾：</p>
+  <div class="mathbox">
+    <div class="math">\[ W(\omega)=e^{-j\omega(N-1)/2}\,\frac{\sin(N\omega/2)}{\sin(\omega/2)},\qquad \Delta\omega_{\text{主瓣}}=\frac{4\pi}{N} \tag{D-9} \]</div>
+    <div class="mathnote"><p><b>算到底：</b>本讲义 <code>stft(frame=200, n_fft=512, Fs=8000)</code>。矩形窗主瓣宽 \(4\pi/200=0.0628\) rad，占一个 \(2\pi\) 周期的比例是 \(0.0628/(2\pi)=0.01\)，换算成频率 \(0.01\times8000=80\) Hz；第一旁瓣约 −13.2 dB。换汉明窗，主瓣加倍到 \(8\pi/N\) 即 160 Hz，但第一旁瓣压到约 −42.7 dB。所以<b>选窗不是选「更好」，是选「要分辨率还是要动态范围」</b>。第 5 讲的窗长账在这里得到严格解释。</p></div>
+  </div>
+
+  <h3>D.5　傅里叶的四种形态：为什么教材要用一整章讲「离散性与周期性」</h3>
+  <p>§9.2 用一张四象限表把四种变换统一起来，规律只有一句：<strong>时域周期性 \(\leftrightarrow\) 频域离散性；时域离散性 \(\leftrightarrow\) 频域周期性</strong>。</p>
+  <table class="sym">
+    <tr><th>时域</th><th>频域</th><th>变换</th><th>谱的样子</th><th>本讲义用在哪</th></tr>
+    <tr><td>连续、周期</td><td>离散、非周期</td><td>傅里叶级数 FS</td><td>一根根谱线 \(n\omega_1\)</td><td>第 1 讲谐波叠加、变压器 100 Hz 谐波串</td></tr>
+    <tr><td>连续、非周期</td><td>连续、非周期</td><td>傅里叶变换 FT</td><td>连续谱密度</td><td>D.4 全部推导</td></tr>
+    <tr><td>离散、周期</td><td>离散、周期</td><td>离散傅里叶级数 DFS</td><td>周期谱线</td><td>E.5 引出 DFT</td></tr>
+    <tr><td>离散、非周期</td><td>连续、周期</td><td>序列傅里叶变换 DTFT</td><td>以 \(2\pi\) 为周期</td><td>§8.9、补零为什么只改显示密度</td></tr>
+    <tr><td>离散、有限长</td><td>离散、有限长</td><td>DFT（DFS 取主值）</td><td>\(N\) 个频点</td><td>第 4 讲 <code>fft()</code></td></tr>
+  </table>
+  <h4>1. 从 FS 到 FT：谱线怎么变成谱密度</h4>
+  <div class="mathbox">
+    <div class="math">\[ C_n=\frac{1}{T}\int_{-T/2}^{T/2}x(t)e^{-jn\omega_1 t}\mathrm{d}t=\frac{1}{T}X(n\omega_1),\quad \omega_1=\frac{2\pi}{T} \tag{D-10} \]</div>
+    <div class="mathnote"><p>令 \(T\to\infty\)：谱线间隔 \(\omega_1\to0\)，\(C_n\to0\)，但 \(T C_n=X(n\omega_1)\) 保持有限。于是「离散谱线」稠密成「连续谱密度」，\(x(t)=\sum_n C_n e^{jn\omega_1t}\) 的求和变成 (D-6) 的积分。<b>所以 FT 不是另一套公式，而是 FS 在周期趋于无穷时的极限。</b>这解释了第 4 讲里「DFT 的频率分辨率 \(\Delta f=F_s/N\)」的来历：\(N\) 点 DFT 等价于把信号当成一个周期 \(T=N/F_s\) 的周期序列，基频就是 \(F_s/N\)。</p></div>
+  </div>
+  <h4>2. 常用变换对（沿用教材附录二、附录三的记法）</h4>
+  <table class="sym">
+    <tr><th>时域</th><th>频域</th><th>为什么在讲义里重要</th></tr>
+    <tr><td>\(\operatorname{rect}(t/\tau)\)</td><td>\(\tau\operatorname{Sa}(\omega\tau/2)\)</td><td>矩形窗的频谱，泄漏的形状由它决定</td></tr>
+    <tr><td>\(\delta(t)\)</td><td>1</td><td>冲激含全部频率，白噪声的理论原型</td></tr>
+    <tr><td>\(u(t)\)</td><td>\(\dfrac{1}{j\omega}+\pi\delta(\omega)\)</td><td>教材式 (3-49)；积分环节的 \(\delta\) 项不能漏</td></tr>
+    <tr><td>\(e^{-at}u(t),\ a\gt 0\)</td><td>\(\dfrac{1}{a+j\omega}\)</td><td>一阶低通，单极点系统的原型</td></tr>
+    <tr><td>\(\cos\omega_0t\)</td><td>\(\pi[\delta(\omega-\omega_0)+\delta(\omega+\omega_0)]\)</td><td>第 1 讲纯音、第 2 讲混叠验证</td></tr>
+    <tr><td>\(e^{-\alpha t^2}\)</td><td>\(\sqrt{\pi/\alpha}\,e^{-\omega^2/(4\alpha)}\)</td><td>高斯是唯一取到测不准下界的波形</td></tr>
+  </table>
+  <h4>3. §3.10 抽样信号的傅里叶变换：一个双重求和</h4>
+  <p>教材上册书页 162（PDF 第 178 页）用周期矩形脉冲抽样做例子，先对时域周期延拓、再对频域周期延拓，得到双重求和。一般结论更简洁：抽样脉冲串 \(\delta_T(t)=\sum_n\delta(t-nT_s)\) 本身是周期的，其 FS 系数全为 \(1/T_s\)：</p>
+  <div class="mathbox">
+    <div class="math">\[ \delta_T(t)=\frac{1}{T_s}\sum_{m=-\infty}^{\infty}e^{jm\omega_s t},\quad \omega_s=\frac{2\pi}{T_s}=2\pi F_s \tag{D-11} \]</div>
+  </div>
+  <p>把它乘上 \(x(t)\) 再取傅里叶变换，每个复指数分量只造成一次频移：</p>
+  <div class="mathbox">
+    <div class="math">\[ X_s(\omega)=\mathcal{F}\{x(t)\delta_T(t)\}=\frac{1}{T_s}\sum_{m=-\infty}^{\infty}X(\omega-m\omega_s) \tag{D-12} \]</div>
+    <div class="mathnote"><p><b>这就是第 2 讲采样定理那张「频谱被周期性复制」图的严格版本。</b>注意三个细节：① 幅度被统一缩放 \(1/T_s\)；② 复制间隔是 \(\omega_s\)（对应 \(F_s\)）；③ 复制的是完整双边谱，正负频率各一份。教材 §3.10 的双重求和只是把它作用在「先周期延拓过的 \(f_1(t)\)」上，多了一层 \(n\) 的求和，本质相同。</p></div>
+  </div>
+
+  <h3>D.6　抽样定理与理想恢复：sinc 内插不是「插值技巧」，是唯一正确解</h3>
+  <p>§3.11 开门见山地提出两个问题：<b>如何从抽样信号恢复原连续信号？在什么条件下才能无失真地恢复？</b>答复就是抽样定理。设 \(X(\omega)=0\) 当 \(|\omega|\gt \omega_m\)（带限），由 (D-12)：</p>
+  <div class="mathbox">
+    <div class="math">\[ \omega_s\geq 2\omega_m\quad\Longleftrightarrow\quad F_s\geq 2f_m \tag{D-13} \]</div>
+    <div class="mathnote"><p>相邻两份复制谱刚好不重叠。取等号时称<strong>奈奎斯特率</strong> \(F_s=2f_m\)。此时只要用一个理想低通把中间那一份切出来，就能无失真恢复——注意「无失真」是<b>数学上精确相等</b>，不是「听起来差不多」。</p></div>
+  </div>
+  <h4>1. 恢复滤波器的冲激响应与内插公式（完整推导）</h4>
+  <div class="mathbox">
+    <div class="math">\[ H_r(\omega)=\begin{cases}T_s,&amp;|\omega|\lt\omega_m\\ 0,&amp;\text{otherwise}\end{cases} \tag{D-14} \]</div>
+  </div>
+  <p>取逆变换（用 \(\operatorname{Sa}(x)=\sin x/x\)）：</p>
+  <div class="mathbox">
+    <div class="math">\[ \begin{aligned} h_r(t)&amp;=\frac{1}{2\pi}\int_{-\omega_m}^{\omega_m}T_s e^{j\omega t}\mathrm{d}\omega=\frac{T_s}{\pi t}\sin(\omega_m t)=\frac{T_s\omega_m}{\pi}\operatorname{Sa}(\omega_m t) \end{aligned} \tag{D-15} \]</div>
+  </div>
+  <p>抽样信号是 \(x_s(t)=\sum_n x(nT_s)\delta(t-nT_s)\)，与 \(h_r\) 卷积即得<strong>惠特克–香农内插公式</strong>：</p>
+  <div class="mathbox">
+    <div class="math">\[ x(t)=\sum_{n=-\infty}^{\infty}x(nT_s)\,\frac{T_s\omega_m}{\pi}\,\operatorname{Sa}\big(\omega_m(t-nT_s)\big) \overset{F_s=2f_m}{=}\sum_n x(nT_s)\,\operatorname{sinc}\Big(\frac{t-nT_s}{T_s}\Big) \tag{D-16} \]</div>
+    <div class="mathnote"><p>其中 \(\operatorname{sinc}(u)=\sin(\pi u)/(\pi u)\)。取等号时 \(T_s=\pi/\omega_m\)，系数 \(T_s\omega_m/\pi=1\)，且 \(\operatorname{Sa}(\omega_m(t-nT_s))=\operatorname{sinc}((t-nT_s)/T_s)\)。<b>关键性质：</b>在第 \(k\) 个样点处，\(\operatorname{sinc}(k-n)=\delta[k-n]\)，所以内插曲线精确穿过所有样点，而样点之间由全体样点共同决定——这是「采样值含有完整信息」的构造性证明，不只是存在性断言。</p></div>
+  </div>
+  <h4>2. 算到账：8 kHz / 4 kHz / 3.4 kHz 三个数字的关系</h4>
+  <table class="sym">
+    <tr><th>量</th><th>数值</th><th>来历</th></tr>
+    <tr><td>\(F_s\)</td><td>8000 Hz</td><td>本讲义 <code>wav.FS</code>，也是电话语音标准</td></tr>
+    <tr><td>\(T_s=1/F_s\)</td><td>0.125 ms</td><td>样点间隔</td></tr>
+    <tr><td>奈奎斯特频率 \(F_s/2\)</td><td><b>4000 Hz</b></td><td>(D-13)，任何 4000 Hz 以上成分都会折叠回来</td></tr>
+    <tr><td>工程可用带宽</td><td>约 3400 Hz</td><td>抗混叠滤波器必须留 600 Hz 过渡带，见 D.8</td></tr>
+    <tr><td>DFT 分辨率 \(\Delta f=F_s/N\)</td><td>15.625 Hz（\(N=512\)）</td><td>(D-10) 的离散版</td></tr>
+  </table>
+  <p>混叠的定量式：输入 \(f_{in}\gt F_s/2\) 时，观测到的频率是把它按 \(F_s\) 折叠回 \([0,F_s/2]\) 的结果：</p>
+  <div class="mathbox">
+    <div class="math">\[ f_{\text{alias}}=\big|f_{in}-kF_s\big|,\quad k=\operatorname{round}(f_{in}/F_s),\qquad f_{\text{alias}}\in[0,F_s/2] \tag{D-17} \]</div>
+    <div class="mathnote"><p><b>手算：</b>6000 Hz → \(k=1\) → \(|6000-8000|=2000\) Hz；9000 Hz → \(k=1\) → 1000 Hz；13000 Hz → \(k=2\) → \(|13000-16000|=3000\) Hz。第 2 讲的混叠实验、以及「8 kHz 下 2000 Hz 以上成分注定是假的」那句被纠正过的话，都以此式为准（正确上限是 4000 Hz）。</p></div>
+  </div>
+  <h4>3. 三条失效边界（比背定理更重要）</h4>
+  <div class="defbox"><div class="dh">抽样定理在什么情况下「不成立」</div>
+  <ol>
+    <li><b>非带限信号</b>：真实声压总有高于 \(F_s/2\) 的成分（开关瞬态、摩擦、局部放电脉冲）。所以 ADC 前<strong>必须有模拟抗混叠低通</strong>，否则采样后再用数字滤波也救不回来——折叠已经发生了。</li>
+    <li><b>理想低通不可实现</b>：(D-15) 的 \(h_r(t)\) 在 \(t\lt 0\) 处非零（非因果），且 \(\operatorname{Sa}\) 衰减仅 \(1/t\)，无穷长。真实恢复用零阶保持 + 补偿，或过采样 + 短 FIR。</li>
+    <li><b>采样时刻抖动</b>：定理假设严格等间隔。时钟抖动 \(\sigma_t\) 引入的噪声功率约 \(\sigma_t^2\int\omega^2|X|^2\mathrm{d}\omega\)，对高频成分伤害更大；变压器在线监测的长线缆、低成本 ADC 尤其要注意。</li>
+  </ol></div>
+  <p>§5.9「从抽样信号恢复连续时间信号」与 §5.10「PCM」把这条链条接到工程：抽样 → 量化 → 编码 → 传输 → 解码 → 内插恢复。第 2 讲已推过量化 SNR 的 \(6.02B+1.76\) dB，这里补上的是它两端（抽样与内插）的严格依据。</p>
+
+  <h3>D.7　s 域：系统函数、零极点与共振峰的物理来源</h3>
+  <h4>1. 拉普拉斯变换与收敛域（§4.2）</h4>
+  <div class="mathbox">
+    <div class="math">\[ X(s)=\int_{-\infty}^{\infty}x(t)e^{-st}\mathrm{d}t,\qquad s=\sigma+j\omega \tag{D-18} \]</div>
+    <div class="mathnote"><p>比 FT 多了一个实部 \(\sigma\)，相当于给 \(x(t)\) 先乘 \(e^{-\sigma t}\) 再变换。好处：许多 FT 不收敛的信号（如 \(e^{at}u(t),\ a\gt 0\)）只要选合适的 \(\sigma\) 就能收敛。<b>ROC（收敛域）不是附带说明，而是变换的一部分</b>：同一个代数式 \(1/(s-a)\) 配不同 ROC 代表完全不同的时域信号（右边序列 / 左边序列），见 E.2。</p></div>
+  </div>
+  <h4>2. 系统函数与零极点（§4.6–§4.8）</h4>
+  <div class="mathbox">
+    <div class="math">\[ H(s)=\frac{Y(s)}{X(s)}=K\,\frac{\prod_{i=1}^{M}(s-z_i)}{\prod_{k=1}^{N}(s-p_k)},\qquad Y(s)=H(s)X(s) \tag{D-19} \]</div>
+    <div class="mathnote"><p>这是 (D-7) 在 s 域的写法：卷积仍变乘法。<b>零点</b> \(z_i\) 是让 \(H=0\) 的 \(s\)，<b>极点</b> \(p_k\) 是让 \(H\to\infty\) 的 \(s\)。教材 §4.7 用部分分式说明：每个极点 \(p_k=\sigma_k+j\omega_k\) 对应时域的一个模态 \(e^{p_k t}=e^{\sigma_k t}e^{j\omega_k t}\)。</p></div>
+  </div>
+  <table class="sym">
+    <tr><th>极点位置</th><th>时域模态</th><th>系统行为</th><th>声纹里的例子</th></tr>
+    <tr><td>\(\operatorname{Re}p\lt 0\)（左半平面）</td><td>\(e^{\sigma t}\) 衰减振荡</td><td>稳定、有阻尼</td><td>声道共振峰、机械阻尼振动</td></tr>
+    <tr><td>\(\operatorname{Re}p=0\)（虚轴）</td><td>等幅振荡</td><td>临界稳定（边界稳定系统）</td><td>理想正弦、无阻尼谐振</td></tr>
+    <tr><td>\(\operatorname{Re}p\gt 0\)（右半平面）</td><td>指数增长</td><td>不稳定</td><td>自激振荡、递归滤波器爆炸</td></tr>
+  </table>
+  <h4>3. 零极点几何法读频响（§4.8，教材上册书页 228）</h4>
+  <p>令 \(s=j\omega\)（前提：ROC 包含虚轴，§4.13），把每个因子看成从零点/极点指向 \(j\omega\) 的向量：</p>
+  <div class="mathbox">
+    <div class="math">\[ |H(j\omega)|=|K|\,\frac{\prod_i|j\omega-z_i|}{\prod_k|j\omega-p_k|},\qquad \angle H(j\omega)=\angle K+\sum_i\arg(j\omega-z_i)-\sum_k\arg(j\omega-p_k) \tag{D-20} \]</div>
+    <div class="mathnote"><p><b>一句话读图：</b>当 \(j\omega\) 扫过虚轴、路过某个极点附近时，分母向量变短 → 幅度出现<strong>峰</strong>；路过零点附近时分子变短 → 出现<strong>陷波</strong>。极点越贴近虚轴，峰越尖越高。教材 §4.8 从正弦激励 \(e(t)=E_m\sin\omega_0t\) 出发，用部分分式（式 4-103~4-105）严格导出 \(H(j\omega_0)=H_0e^{j\varphi_0}\)，结论与几何法一致。</p></div>
+  </div>
+  <h4>4. 二阶谐振系统：共振峰就是一对靠近虚轴的极点（§4.9）</h4>
+  <div class="mathbox">
+    <div class="math">\[ H(s)=\frac{\omega_n^2}{s^2+2\zeta\omega_n s+\omega_n^2},\qquad p_{1,2}=-\zeta\omega_n\pm j\omega_n\sqrt{1-\zeta^2},\qquad Q=\frac{1}{2\zeta} \tag{D-21} \]</div>
+    <div class="mathnote"><p>当 \(j\omega\) 走到 \(\omega_n\sqrt{1-2\zeta^2}\) 附近出现谐振峰，3 dB 带宽 \(B\approx\omega_n/Q=2\zeta\omega_n\)。<b>手算例：</b>共振峰 \(f_n=1000\) Hz（\(\omega_n=2\pi\cdot1000\approx6283\) rad/s）、\(\zeta=0.05\) ⇒ \(Q=10\)、\(B=2\cdot0.05\cdot1000=100\) Hz、极点实部 \(-\zeta\omega_n\approx-314\) s\(^{-1}\)、包络衰减时间常数 \(1/314\approx3.18\) ms。<b>这正是第 6 讲 MFCC 能捕捉「共振峰」、专题 B 的 LPC 用全极点模型描述声道的物理原因</b>：声道就是若干组这样的二阶谐振并联。变压器铁芯/绕组的机械谐振也用同一个式子描述，只是 \(f_n\) 换成 100 Hz 及其谐波。</p></div>
+  </div>
+  <h4>5. 全通、最小相位与稳定性（§4.10–§4.11）</h4>
+  <table class="sym">
+    <tr><th>概念</th><th>零极点条件</th><th>性质</th><th>讲义里的位置</th></tr>
+    <tr><td>稳定（因果连续系统）</td><td>全部极点在左半平面</td><td>\(\int|h|\lt \infty\)，BIBO</td><td>§4.11、E.8</td></tr>
+    <tr><td>最小相位</td><td>零点与极点都在左半平面</td><td>逆系统也稳定因果；同幅频下相位滞后最小</td><td>倒谱、同态解卷积（第 6 讲）</td></tr>
+    <tr><td>全通函数</td><td>零点与极点关于虚轴镜像</td><td>\(|H(j\omega)|\equiv1\)，只改相位</td><td>相位均衡、混响模拟</td></tr>
+    <tr><td>拉氏 ↔ 傅氏</td><td>ROC 含虚轴</td><td>\(X(j\omega)=X(s)|_{s=j\omega}\)</td><td>§4.13；否则 FT 会出现 \(\delta\) 项，如 \(u(t)\)</td></tr>
+  </table>
+  <p><b>回到预加重：</b>(D-4) 的 \(H(z)=1-0.97z^{-1}=(z-0.97)/z\)，零点 \(z=0.97\)、极点 \(z=0\)，两者都在单位圆内（离散域），所以它是<strong>最小相位</strong>系统，逆系统 \(1/(1-0.97z^{-1})\) 稳定——这就是为什么 MFCC 流程里预加重可以无损反变换，而第 6 讲「同态解卷积」要求信号满足最小相位假设才有意义。</p>
+
+  <h3>D.8　无失真传输、物理可实现性与希尔伯特变换</h3>
+  <h4>1. 无失真传输条件（§5.3）</h4>
+  <div class="mathbox">
+    <div class="math">\[ y(t)=K\,x(t-t_0)\ \Longleftrightarrow\ H(j\omega)=K\,e^{-j\omega t_0}\ \Longleftrightarrow\ |H|=\text{const},\ \ \varphi(\omega)=-\omega t_0 \tag{D-22} \]</div>
+    <div class="mathnote"><p>幅度必须<strong>对所有频率一视同仁</strong>，相位必须是<strong>过原点的直线</strong>（斜率即群延时 \(t_0=-d\varphi/d\omega\)）。幅频不平坦叫<em>幅度失真</em>，相频非线性叫<em>相位/群延时失真</em>。工程含义：一个「好听/好用」的采集通道，比一个「频响范围很宽」的通道更重要；变压器在线监测换麦克风后特征漂移，往往就是幅频不平坦导致的。</p></div>
+  </div>
+  <h4>2. 理想低通为什么造不出来（§5.4–§5.5）</h4>
+  <div class="mathbox">
+    <div class="math">\[ H_{LP}(j\omega)=\begin{cases}1,&amp;|\omega|\lt\omega_c\\0,&amp;|\omega|\gt \omega_c\end{cases}\ \Longrightarrow\ h_{LP}(t)=\frac{\omega_c}{\pi}\operatorname{Sa}(\omega_c t),\quad t\in(-\infty,\infty) \tag{D-23} \]</div>
+  </div>
+  <p>§5.5 的佩利–维纳（Paley–Wiener）准则给出物理可实现性的严格判据：</p>
+  <div class="mathbox">
+    <div class="math">\[ \int_{-\infty}^{\infty}\frac{\big|\ln|H(j\omega)|\big|}{1+\omega^2}\,\mathrm{d}\omega\lt \infty \tag{D-24} \]</div>
+    <div class="mathnote"><p>若 \(|H|\) 在任一有限频带上<strong>严格等于 0</strong>，则 \(\ln|H|\to-\infty\) 使积分发散。结论极为实用：<b>理想低通、理想带阻、理想「砖墙」抗混叠滤波器在物理上都不存在</b>，任何实际滤波器都必须有过渡带。这就把 D.6 里「4 kHz 是理论上限、3.4 kHz 才是工程带宽」补成了闭环：600 Hz 是留给过渡带的价格。同理，Mel 滤波器组若做成完全不重叠的矩形，也违背此准则。</p></div>
+  </div>
+  <h4>3. 希尔伯特变换与解析信号（§5.6）</h4>
+  <div class="mathbox">
+    <div class="math">\[ \hat{x}(t)=x(t)\ast\frac{1}{\pi t},\qquad \mathcal{F}\{\hat{x}\}=-j\,\operatorname{sgn}(\omega)\,X(\omega),\qquad z(t)=x(t)+j\hat{x}(t) \tag{D-25} \]</div>
+    <div class="mathnote"><p>希尔伯特变换就是「正频率移相 \(-90^\circ\)、负频率移相 \(+90^\circ\)」的全通移相器。解析信号的频谱 \(Z(\omega)=2X(\omega)u(\omega)\) 只保留正频率，于是可以定义<b>包络</b> \(a(t)=|z(t)|\)、<b>瞬时相位</b> \(\phi(t)=\arg z(t)\)、<b>瞬时频率</b> \(f_i(t)=\frac{1}{2\pi}\frac{\mathrm{d}\phi}{\mathrm{d}t}\)。这正是第 7 讲 EMD 做 Hilbert 谱、以及 Gammatone 滤波器提取包络的理论依据。§5.6 还指出：因果稳定系统的幅频与相频不是独立的，二者由希尔伯特变换互相约束（Kramers–Kronig 关系）——所以「只改幅度不改相位」的滤波器同样造不出来。</p></div>
+  </div>
+
+  <h3>D.9　矢量空间视角：正交、帕塞瓦尔、相关、匹配滤波与测不准</h3>
+  <p>§6 把信号看成<strong>矢量</strong>，前 5 章的所有变换都变成「换一组正交基」。这是理解 DFT / DCT / 小波 / Gammatone 为什么能互相替代的统一语言。</p>
+  <h4>1. 内积、正交分解与帕塞瓦尔定理（§6.2–§6.4）</h4>
+  <div class="mathbox">
+    <div class="math">\[ \langle x,y\rangle=\int_{-\infty}^{\infty}x(t)y^*(t)\mathrm{d}t,\quad \|x\|^2=E_x=\langle x,x\rangle,\quad c_n=\frac{\langle x,\varphi_n\rangle}{\|\varphi_n\|^2} \tag{D-26} \]</div>
+  </div>
+  <div class="mathbox">
+    <div class="math">\[ E_x=\int_{-\infty}^{\infty}|x(t)|^2\mathrm{d}t=\frac{1}{2\pi}\int_{-\infty}^{\infty}|X(\omega)|^2\mathrm{d}\omega=\sum_n|c_n|^2\|\varphi_n\|^2 \tag{D-27} \]</div>
+    <div class="mathnote"><p><b>帕塞瓦尔定理 = 能量守恒</b>：换基不改变矢量长度。所以「时域能量」与「频域能量」必然相等，第 3 讲短时能量与第 4 讲频谱能量是同一个量的两种算法。<b>DFT 版手算对拍</b>（第 4 讲的 \(X[k]=\sum_{n=0}^{N-1}x[n]e^{-j2\pi kn/N}\)）：取 \(x=[1,2,3,4]\)，\(N=4\)。</p>
+    <table class="sym compact">
+      <tr><th>量</th><th>计算</th><th>结果</th></tr>
+      <tr><td>时域 \(\sum|x[n]|^2\)</td><td>\(1+4+9+16\)</td><td><b>30</b></td></tr>
+      <tr><td>\(X[0]\)</td><td>\(1+2+3+4\)</td><td>10 → \(|X|^2=100\)</td></tr>
+      <tr><td>\(X[1]\)</td><td>\(1-2j-3+4j=-2+2j\)</td><td>\(|X|^2=8\)</td></tr>
+      <tr><td>\(X[2]\)</td><td>\(1-2+3-4=-2\)</td><td>\(|X|^2=4\)</td></tr>
+      <tr><td>\(X[3]\)</td><td>\(-2-2j\)</td><td>\(|X|^2=8\)</td></tr>
+      <tr><td>频域 \(\frac{1}{N}\sum|X[k]|^2\)</td><td>\((100+8+4+8)/4\)</td><td><b>30</b> ✓</td></tr>
+    </table>
+    <p>这个 \(1/N\) 就是第 4 讲「单边谱要乘 \(2/N\)」里那个 \(1/N\) 的正式出处；可用 <code>fft()</code> 与 <code>dft()</code> 直接对拍。</p></div>
+  </div>
+  <h4>2. 相关函数与功率谱（§6.6–§6.8，维纳–辛钦）</h4>
+  <div class="mathbox">
+    <div class="math">\[ R_x(\tau)=\int_{-\infty}^{\infty}x(t)x^*(t-\tau)\mathrm{d}t\ \longleftrightarrow\ S_x(\omega)=|X(\omega)|^2 \tag{D-28} \]</div>
+    <div class="mathnote"><p><b>自相关与能量谱是一对傅里叶变换</b>。第 3 讲用自相关测基音周期，第 4 讲用频谱看谐波，原来算的是同一件事的两面。对功率信号，§6.8 进一步给出「信号通过 LTI 系统后 \(S_y(\omega)=|H(\omega)|^2S_x(\omega)\)」——<b>滤波器只改功率谱的形状，不改它的随机性结构</b>，这是维纳滤波（专题 B）与谱减法（专题 A）共用的出发点。</p></div>
+  </div>
+  <p>一个常被跳过但很有用的推论：对零均值平稳高斯信号，<strong>过零率的期望由功率谱的二阶矩决定</strong>（Rice 公式）：</p>
+  <div class="mathbox">
+    <div class="math">\[ \mathbb{E}[\text{ZCR}]=2\sqrt{\frac{m_2}{m_0}},\qquad m_0=\int_0^{\infty}S(f)\mathrm{d}f,\ \ m_2=\int_0^{\infty}f^2S(f)\mathrm{d}f \tag{D-29} \]</div>
+    <div class="mathnote"><p><b>验算：</b>纯正弦 \(f_0\) 的 \(S(f)\) 是一根 \(\delta\)，\(m_2/m_0=f_0^2\) ⇒ ZCR \(=2f_0\)，与「每周期过零两次」一致。白噪声的 \(m_2/m_0\) 由带宽决定，带宽越宽过零越密。<b>所以第 3 讲「过零率反映高频成分」不是经验，是可以定量预测的结论</b>；也解释了为什么高频噪声会让端点检测的双门限失效。</p></div>
+  </div>
+  <h4>3. 匹配滤波器（§6.9）：模板打分为什么是最优的</h4>
+  <p>教材上册书页 375 把问题说得很清楚：已知信号波形 \(s(t)\)，要设计一个滤波器，使某一判决时刻 \(t_m\) 的<strong>输出信噪比</strong> \(\rho=s_o^2(t_m)/\mathbb{E}[n_o^2(t_m)]\)（式 6-166）最大。设噪声为白噪声、双边功率谱密度 \(N_0/2\)：</p>
+  <div class="mathbox">
+    <div class="math">\[ \rho=\frac{\Big|\frac{1}{2\pi}\int H(\omega)S(\omega)e^{j\omega t_m}\mathrm{d}\omega\Big|^2}{\frac{N_0}{2}\cdot\frac{1}{2\pi}\int|H(\omega)|^2\mathrm{d}\omega}\ \overset{\text{C-S}}{\leq}\ \frac{2E}{N_0},\qquad E=\frac{1}{2\pi}\int|S(\omega)|^2\mathrm{d}\omega \tag{D-30} \]</div>
+    <div class="mathnote"><p>分子用柯西–施瓦茨不等式放缩：\(|\int AB|^2\leq\int|A|^2\int|B|^2\)，取 \(A=H\)、\(B=S e^{j\omega t_m}\)。等号成立当且仅当两者成比例，即</p>
+    <p style="text-align:center">\(H(\omega)=K\,S^*(\omega)e^{-j\omega t_m}\ \Longleftrightarrow\ h(t)=K\,s^*(t_m-t)\)（因果化要求 \(t_m\geq\) 信号时长）。</p>
+    <p><b>物理含义：</b>把模板<strong>时间反转并取共轭</strong>当冲激响应，在 \(t=t_m\) 时刻所有频率分量同相叠加，输出瞬时功率达到最大；与信号能量 \(E\) 成正比、与噪声谱密度成反比，<b>与波形具体形状无关</b>。声纹里的模板匹配、余弦打分、DTW 对齐后求相似，都是这个结论在「离散 / 非白噪声 / 波形不完全已知」条件下的近似；也解释了为什么第 12 讲的分数归一化（ZT/AT-norm）必须做——不同模板的 \(E\) 不同，\(\rho\) 的量纲就不同。</p></div>
+  </div>
+  <h4>4. 测不准原理（§6.10）：第 5 讲那句话的严格证明</h4>
+  <p>教材明确说：证明测不准原理所需的依据就是本章「反复运用的<strong>柯西–施瓦茨不等式</strong>和<strong>帕塞瓦尔定理</strong>」，物理本质是能量受限与能量守恒；书中还给出工程版 \(t_r B=1\)（理想低通阶跃响应上升时间与带宽之积）。标准推导如下。</p>
+  <p>定义能量归一化下的时宽与带宽（设 \(\bar{t}=\bar{\omega}=0\)，不失一般性）：</p>
+  <div class="mathbox">
+    <div class="math">\[ (\Delta t)^2=\frac{1}{E}\int t^2|x(t)|^2\mathrm{d}t,\qquad (\Delta\omega)^2=\frac{1}{2\pi E}\int\omega^2|X(\omega)|^2\mathrm{d}\omega \tag{D-31} \]</div>
+  </div>
+  <p>由帕塞瓦尔与 \(\mathcal{F}\{x'(t)\}=j\omega X(\omega)\)，有 \(\frac{1}{2\pi}\int\omega^2|X|^2\mathrm{d}\omega=\int|x'(t)|^2\mathrm{d}t\)。对 \(t\,x(t)\) 与 \(x'(t)\) 用柯西–施瓦茨：</p>
+  <div class="mathbox">
+    <div class="math">\[ \Big|\int t\,x(t)\,x'^*(t)\mathrm{d}t\Big|^2\leq\Big(\int t^2|x|^2\mathrm{d}t\Big)\Big(\int|x'|^2\mathrm{d}t\Big)=E^2(\Delta t)^2(\Delta\omega)^2 \tag{D-32} \]</div>
+  </div>
+  <p>左边取实部：\(\operatorname{Re}\int t x x'^*\mathrm{d}t=\frac{1}{2}\int t\frac{\mathrm{d}}{\mathrm{d}t}|x|^2\mathrm{d}t=-\frac{1}{2}\int|x|^2\mathrm{d}t=-E/2\)（分部积分，边界项为 0），故 \(E^2/4\leq E^2(\Delta t)^2(\Delta\omega)^2\)：</p>
+  <div class="mathbox">
+    <div class="math">\[ \Delta t\cdot\Delta\omega\ \geq\ \frac{1}{2}\qquad\Longleftrightarrow\qquad \Delta t\cdot\Delta f\ \geq\ \frac{1}{4\pi} \tag{D-33} \]</div>
+    <div class="mathnote"><p>等号当且仅当 \(x'(t)=-\alpha t\,x(t)\)，解为<strong>高斯函数</strong> \(x(t)=Ce^{-\alpha t^2/2}\)，与 D.5 表中「高斯 ↔ 高斯」一致。<b>算到账：</b>取 STFT 窗长 25 ms（\(\Delta t\approx12.5\) ms 量级），则 \(\Delta f\geq1/(4\pi\cdot0.0125)\approx6.4\) Hz——这只是理论下界；实际矩形窗主瓣 80 Hz（D.9 前算过），因为矩形窗远非高斯，且工程上还要顾及旁瓣。<b>结论：</b>第 5 讲「窗长不能同时兼顾时间和频率」不是妥协，是 (D-33) 的硬下界；Gabor 变换选高斯窗，正是为了取到等号。</p></div>
+  </div>
+
+  <h3>D.10　公式 ↔ 代码：这些定理落在 acoustic-lab 的哪一行</h3>
+  <table class="sym">
+    <tr><th>定理</th><th>公式</th><th>代码位置</th><th>可做的对拍实验</th></tr>
+    <tr><td>卷积表示</td><td>(D-2), (D-5)</td><td><code>mfcc()</code> 的预加重；<code>db4_dwt()</code> 的滤波抽取</td><td>手算 \([1,2,3]\ast[1,-1]\) 与 <code>np.convolve</code> 比较</td></tr>
+    <tr><td>卷积定理</td><td>(D-7), (D-8)</td><td><code>stft()</code> 的 <code>fr * hamming</code></td><td>纯音加矩形窗，观察旁瓣 −13.2 dB；换汉明看 −42.7 dB</td></tr>
+    <tr><td>帕塞瓦尔</td><td>(D-27)</td><td><code>fft()</code> / <code>dft()</code></td><td>验证 \(\sum|x|^2=\frac{1}{N}\sum|X|^2\)，用 <code>--check</code></td></tr>
+    <tr><td>抽样定理</td><td>(D-12), (D-13), (D-17)</td><td><code>wav.FS=8000</code>，合成信号</td><td>注入 6000 Hz，看谱峰落在 2000 Hz</td></tr>
+    <tr><td>零极点 / 谐振</td><td>(D-20), (D-21)</td><td><code>mel_filterbank()</code>、<code>gammatone_filters()</code></td><td>改中心频率，看子带峰值位置线性移动</td></tr>
+    <tr><td>正交分解</td><td>(D-26), (D-27)</td><td><code>dct_matrix()</code>、<code>haar_dwt()</code></td><td>检查 \(D D^{\mathsf T}=I\)、小波重构 RMSE</td></tr>
+    <tr><td>解析信号</td><td>(D-25)</td><td><code>emd()</code> 之后的 Hilbert 谱</td><td>对单个 IMF 求包络，看是否等于调幅包络</td></tr>
+  </table>
+
+  <h3>D.11　边界与失效条件</h3>
+  <div class="defbox"><div class="dh">把这套理论用错，通常错在这六处</div>
+  <ol>
+    <li><b>对非线性/时变系统套卷积定理</b>：MFCC 里的 \(\log\)、神经网络里的 ReLU、AGC 自动增益，都不满足 LTI，(D-7) 不成立。</li>
+    <li><b>忘记 ROC</b>：看到 \(1/(s-a)\) 就写 \(e^{at}u(t)\)，但配左边 ROC 时是 \(-e^{at}u(-t)\)。离散域见 E.2。</li>
+    <li><b>把奈奎斯特率当「可用带宽」</b>：4000 Hz 是折叠边界，不是可分辨带宽；抗混叠过渡带必须留（D.8）。</li>
+    <li><b>认为加窗只是「防止边界不连续」</b>：加窗在频域是卷积 (D-8)，会抹开所有谱线，包括本来干净的那些。</li>
+    <li><b>用零极点几何法时忽略 ROC 是否含虚轴</b>：不满足时 \(H(j\omega)\) 根本不存在（系统不稳定），几何法给出的是发散解。</li>
+    <li><b>把匹配滤波器的 \(2E/N_0\) 直接套到声纹打分</b>：它假设白噪声、波形已知、单次判决；真实声纹是信道失配 + 非白噪声，所以要channel补偿与分数归一化。</li>
+  </ol></div>
+
+  <h3>自检</h3>
+  <div class="checklist">
+    <label><input type="checkbox" data-k="qD-1"> 我能不看讲义，从 δ 的筛选性质四步推出卷积积分 (D-2)，并说出「线性」「时不变」各用在哪一步。</label>
+    <label><input type="checkbox" data-k="qD-2"> 我能推出卷积定理 (D-7)，并解释为什么分帧加窗必然导致频谱泄漏、以及 \(1/2\pi\) 系数的来历。</label>
+    <label><input type="checkbox" data-k="qD-3"> 我能用 (D-12) 推出抽样定理，写出 sinc 内插公式，并算清 8 kHz / 4 kHz / 3.4 kHz 三者的关系。</label>
+    <label><input type="checkbox" data-k="qD-4"> 我能在 s 平面上画出二阶谐振系统的极点，说明 \(Q\)、带宽、衰减时间常数怎么算，并联系共振峰。</label>
+    <label><input type="checkbox" data-k="qD-5"> 我能用帕塞瓦尔定理手算验证 \(N=4\) 的 DFT 能量守恒，并说清 \(1/N\) 与单边谱 \(2/N\) 的关系。</label>
+    <label><input type="checkbox" data-k="qD-6"> 我能说出匹配滤波器的最优冲激响应和最大输出信噪比，以及测不准原理取等号时为什么一定是高斯窗。</label>
+  </div>
+</section>
+
+<section id="sE">
+  <h2><span class="no">专题 E</span>信号与系统（下）：z 域、DFT 与数字滤波器</h2>
+
+  <div class="goal">
+    <div class="g">目标</div>
+    <ul>
+      <li>能说清「数字信号」在 z 平面上的全部含义：单位圆、收敛域、极点位置各自对应什么物理事实。</li>
+      <li>能自己从 DFS 推出 DFT，理解为什么 DFT 是「有损的」、圆周卷积在什么条件下等于线性卷积。</li>
+      <li>会判断一个差分方程（滤波器）稳不稳定，知道 FIR 与 IIR 的本质差别在哪一个极点。</li>
+      <li>能把声纹流程里的四个滤波器（抗混叠、预加重、Mel 组、工频陷波）对应到设计方法与公式。</li>
+      <li>看得懂反馈系统与状态变量这套语言，知道它和训练发散、RNN、Kalman 是同一套数学。</li>
+    </ul>
+  </div>
+  <div class="goal">
+    <div class="g">产出</div>
+    <ul><li>一张 z 平面到频率响应的读图法、一份 DFS→DFT→FFT 的完整链条推导、一张 12 章 → 17 讲的全映射表。</li></ul>
+  </div>
+
+  <div class="note"><span class="t">承接专题 D</span>专题 D 讲连续时间：卷积、傅里叶、拉普拉斯、抽样。本专题讲离散时间，两者是<strong>平行结构</strong>：卷积 \(\leftrightarrow\) 卷积和、拉普拉斯 \(\leftrightarrow\) z 变换、傅里叶 \(\leftrightarrow\) DTFT、微分方程 \(\leftrightarrow\) 差分方程。教材下册第 7–12 章依次是：时域分析、z 域分析、DFT 与离散正交变换、模拟与数字滤波器、反馈系统、状态变量。读完会发现，讲义第 4 讲的 <code>fft()</code> 落在第 9 章，第 6 讲的滤波器组落在第 10 章，第 10 讲的「训练发散」其实和第 11 章的稳定性判据是同构的。</div>
+
+  <h3>E.1　序列、差分方程与卷积和</h3>
+  <h4>1. 从微分方程到差分方程</h4>
+  <p>连续系统的输入输出由微分方程描述，离散系统由差分方程描述。一般 N 阶线性常系数形式（§7.3）：</p>
+  <div class="mathbox">
+    <div class="math">\[ \sum_{k=0}^{N}a_k\,y[n-k]=\sum_{m=0}^{M}b_m\,x[n-m],\qquad a_0=1 \tag{E-1} \]</div>
+    <div class="mathnote"><p>把 \(a_0\) 归一化为 1 后可以<strong>递推</strong>求解：\(y[n]=-\sum_{k=1}^{N}a_k y[n-k]+\sum_{m=0}^{M}b_m x[n-m]\)。这个式子就是「IIR 滤波器的直接 I 型实现」：当前输出由<strong>过去的输出</strong>（\(a_k\) 项）和<strong>当前与过去的输入</strong>（\(b_m\) 项）共同决定。<b>有 \(a_k\ (k\geq1)\) 非零 = 有反馈 = 有非零极点 = IIR</b>；若全部 \(a_k=0\)，就退化成 FIR 卷积。</p></div>
+  </div>
+  <h4>2. 单位样值响应与卷积和（§7.5–§7.6）</h4>
+  <div class="mathbox">
+    <div class="math">\[ h[n]=\mathcal{T}\{\delta[n]\},\qquad y[n]=\sum_{k=-\infty}^{\infty}x[k]\,h[n-k]=x[n]\ast h[n] \tag{E-2} \]</div>
+    <div class="mathnote"><p>推导与 (D-2) 完全同构：\(\delta[n]\) 的筛选性质 \(x[n]=\sum_k x[k]\delta[n-k]\)，再用线性 + 时不变。因果性 \(h[n]=0\ (n\lt0)\)，稳定性 \(\sum_n|h[n]|\lt\infty\)。</p></div>
+  </div>
+  <h4>3. 解卷积（§7.7）：为什么频域除法会炸</h4>
+  <div class="mathbox">
+    <div class="math">\[ y[n]=x[n]\ast h[n]\ \Longrightarrow\ x[n]=y[n]\ast h^{-1}[n],\qquad H^{-1}(z)=\frac{1}{H(z)} \tag{E-3} \]</div>
+    <div class="mathnote"><p>时域可以递推反求：\(x[n]=(y[n]-\sum_{k\geq1}h[k]x[n-k])/h[0]\)。频域更直观：\(X=Y/H\)。<b>问题在于</b>：若 \(H(e^{j\omega})\) 在某个频点接近 0（比如预加重的低频端，\(|H(0)|=0.03\)），除法会把该频段的噪声放大 \(1/0.03\approx33\) 倍。这就是「反卷积必须正则化」的根源，也是第 6 讲同态解卷积为什么不直接除、而要取 \(\log\) 再低通——把除法变成减法，再把「慢变的部分」平滑掉。</p></div>
+  </div>
+
+  <h3>E.2　z 变换：收敛域才是本体</h3>
+  <div class="mathbox">
+    <div class="math">\[ X(z)=\sum_{n=-\infty}^{\infty}x[n]\,z^{-n},\qquad z=re^{j\omega} \tag{E-4} \]</div>
+  <div class="mathnote"><p>把 \(z=re^{j\omega}\) 代入：\(X(re^{j\omega})=\sum_n x[n]r^{-n}e^{-j\omega n}\)，即<strong>先给序列乘一个指数权 \(r^{-n}\)，再做 DTFT</strong>。所以 z 变换是「带衰减因子的傅里叶变换」，\(r\) 选得合适就能让原本不收敛的序列收敛。这就是 ROC（收敛域）的由来。</p></div>
+  </div>
+  <table class="sym">
+    <tr><th>序列</th><th>\(X(z)\)</th><th>ROC</th><th>说明</th></tr>
+    <tr><td>\(\delta[n]\)</td><td>1</td><td>全 z 平面</td><td>只有 \(n=0\) 一项</td></tr>
+    <tr><td>\(u[n]\)</td><td>\(\dfrac{1}{1-z^{-1}}\)</td><td>\(|z|\gt1\)</td><td>单位圆上不收敛（临界）</td></tr>
+    <tr><td>\(a^n u[n]\)</td><td>\(\dfrac{1}{1-az^{-1}}\)</td><td>\(|z|\gt|a|\)</td><td>右边序列，极点 \(z=a\)</td></tr>
+    <tr><td>\(-a^n u[-n-1]\)</td><td>\(\dfrac{1}{1-az^{-1}}\)</td><td>\(|z|\lt|a|\)</td><td><b>同一代数式，左边序列</b></td></tr>
+    <tr><td>\(n\,a^n u[n]\)</td><td>\(\dfrac{az^{-1}}{(1-az^{-1})^2}\)</td><td>\(|z|\gt|a|\)</td><td>重极点，对应 \(n\) 的多项式因子</td></tr>
+    <tr><td>有限长序列</td><td>\(\sum_{n=N_1}^{N_2}x[n]z^{-n}\)</td><td>除 \(z=0,\infty\) 外全平面</td><td>DFT 的原型</td></tr>
+  </table>
+  <div class="defbox"><div class="dh">四种 ROC 形态（§8.3）</div>
+  <ol>
+    <li><b>右边序列</b>（因果）：ROC 是最外层极点以外的区域 \(|z|\gt r_{\max}\)。</li>
+    <li><b>左边序列</b>（反因果）：ROC 是最内层极点以内的区域 \(|z|\lt r_{\min}\)。</li>
+    <li><b>双边序列</b>：ROC 是环 \(r_1\lt|z|\lt r_2\)；若无极点夹在中间，可能整个平面。</li>
+    <li><b>有限长序列</b>：ROC 是整个平面（可能除去 0 或 \(\infty\)）。</li>
+  </ol>
+  <p><b>为什么必须记 ROC：</b>\(1/(1-az^{-1})\) 对应两个完全不同的时域序列（因果 vs 反因果），只看代数式无法区分。这与连续域 (D-18) 是同一个道理，只是离散域的边界从「竖直直线」变成了「圆」。<b>实用推论：</b>判断一个 IIR 滤波器能否实时运行，看它的 ROC 是否包含单位圆且是右边序列——两者同时满足才叫「因果稳定」。</p></div>
+
+  <h3>E.3　z 与 s 的映射、DTFT 与频率响应</h3>
+  <h4>1. \(z=e^{sT}\)：一条指数映射</h4>
+  <div class="mathbox">
+    <div class="math">\[ z=e^{sT}=e^{\sigma T}e^{j\omega T},\qquad |z|=e^{\sigma T},\ \ \angle z=\omega T \tag{E-5} \]</div>
+  </div>
+  <table class="sym">
+    <tr><th>s 平面</th><th>z 平面</th><th>物理含义</th></tr>
+    <tr><td>左半平面 \(\sigma\lt0\)</td><td>单位圆内 \(|z|\lt1\)</td><td>衰减模态（稳定）</td></tr>
+    <tr><td>虚轴 \(\sigma=0\)</td><td>单位圆 \(|z|=1\)</td><td>等幅振荡（临界）</td></tr>
+    <tr><td>右半平面 \(\sigma\gt0\)</td><td>单位圆外 \(|z|\gt1\)</td><td>增长模态（不稳定）</td></tr>
+    <tr><td>\(\sigma\) 为常数的竖线</td><td>半径为 \(e^{\sigma T}\) 的圆</td><td>同一衰减率</td></tr>
+    <tr><td>\(\omega\) 为常数的横线</td><td>角度为 \(\omega T\) 的射线</td><td>同一频率</td></tr>
+  </table>
+  <div class="mathnote"><p><b>关键后果：</b>s 平面的虚轴（无穷长）被压到单位圆（有限长）上，且 \(\omega\) 以 \(2\pi/T\) 为周期重复映射到同一个角度——<strong>这就是离散频谱必然以 \(2\pi\) 为周期、必然发生混叠的几何原因</strong>。教材图 8-13 画的就是这条映射。</p></div>
+  <h4>2. DTFT：单位圆上的 z 变换（教材式 8-82）</h4>
+  <div class="mathbox">
+    <div class="math">\[ X(e^{j\omega})=X(z)\big|_{z=e^{j\omega}}=\sum_{n=-\infty}^{\infty}x[n]e^{-j\omega n},\qquad X(e^{j(\omega+2\pi)})=X(e^{j\omega}) \tag{E-6} \]</div>
+    <div class="mathnote"><p>这就是第 4 讲 <code>fft()</code> 计算的连续谱（DFT 只是它的 \(N\) 点采样，见 E.5）。<b>三个必须记住的性质：</b>① 以 \(2\pi\) 为周期；② 实序列满足共轭对称 \(X(e^{-j\omega})=X^*(e^{j\omega})\)，所以只看 \([0,\pi]\) 就够（第 4 讲单边谱）；③ 若 ROC 不含单位圆，DTFT 不存在，此时频率响应无从谈起——系统已经不稳定。</p></div>
+  </div>
+  <h4>3. 频率响应：把 \(z=e^{j\omega}\) 代进 \(H(z)\)</h4>
+  <div class="mathbox">
+    <div class="math">\[ H(e^{j\omega})=\frac{\sum_m b_m e^{-j\omega m}}{\sum_k a_k e^{-j\omega k}}=|H(e^{j\omega})|\,e^{j\varphi(\omega)} \tag{E-7} \]</div>
+    <div class="mathnote"><p>它与 (D-20) 的零极点几何法完全一致，只是把 \(j\omega\) 换成单位圆上的点 \(e^{j\omega}\)：<b>极点越靠近单位圆，峰越尖</b>；极点落在单位圆上，增益无穷大（自激）；零点落在单位圆上，该频率被完全抑制（陷波）。这就是 E.7 要用的设计语言。</p></div>
+  </div>
+
+  <h3>E.4　系统函数、稳定性与 FIR / IIR 的分水岭</h3>
+  <div class="mathbox">
+    <div class="math">\[ H(z)=\frac{Y(z)}{X(z)}=\frac{\sum_{m=0}^{M}b_m z^{-m}}{\sum_{k=0}^{N}a_k z^{-k}}=K\,z^{N-M}\,\frac{\prod(z-z_i)}{\prod(z-p_k)} \tag{E-8} \]</div>
+  <div class="mathnote"><p>由 (E-1) 两边取 z 变换、用移位性质 \(\mathcal{Z}\{y[n-k]\}=z^{-k}Y(z)\) 直接得到。<b>注意 \(z^{N-M}\) 这个因子</b>：它意味着原点处还有 \(|N-M|\) 个极点或零点，常被漏掉。</p></div>
+  </div>
+  <table class="sym">
+    <tr><th>判据</th><th>条件</th><th>怎么查</th></tr>
+    <tr><td>因果</td><td>\(h[n]=0,\ n\lt0\)</td><td>ROC 是某圆外，且 \(H(z)\) 在 \(\infty\) 处有限</td></tr>
+    <tr><td>稳定</td><td>\(\sum_n|h[n]|\lt\infty\)</td><td>ROC 包含单位圆</td></tr>
+    <tr><td>因果且稳定</td><td>两者同时成立</td><td><b>全部极点在单位圆内</b> \(|p_k|\lt1\)</td></tr>
+  </table>
+  <h4>FIR 与 IIR：差别只在一个极点</h4>
+  <table class="sym">
+    <tr><th></th><th>FIR</th><th>IIR</th></tr>
+    <tr><td>差分方程</td><td>\(y[n]=\sum_{m=0}^{M}b_m x[n-m]\)</td><td>含 \(a_k\ (k\geq1)\) 反馈项</td></tr>
+    <tr><td>\(H(z)\)</td><td>只有分子，极点全在 \(z=0\)</td><td>有非零极点</td></tr>
+    <tr><td>稳定性</td><td><b>恒稳定</b>（极点都在原点）</td><td>需检查 \(|p_k|\lt1\)</td></tr>
+    <tr><td>相位</td><td>可取严格线性相位（\(h[n]=\pm h[M-n]\)）</td><td>一般非线性相位</td></tr>
+    <tr><td>同样指标所需阶数</td><td>高（要很多抽头）</td><td>低（几个极点就够陡）</td></tr>
+    <tr><td>声纹里的例子</td><td>预加重、滑动平均、FIR 抗混叠</td><td>共振峰合成、工频陷波、LPC 合成滤波器</td></tr>
+  </table>
+  <div class="defbox"><div class="dh">最小相位与全通（离散版）</div>
+  <p><b>最小相位</b>：全部零点与极点都在单位圆内。性质：逆系统 \(1/H(z)\) 也因果稳定；在相同幅频响应下，相位滞后最小、能量最集中在时间前端。<b>全通</b>：\(H_{ap}(z)=\prod_k\frac{z^{-1}-a_k^*}{1-a_kz^{-1}}\)，零点与极点关于单位圆镜像（\(z_i=1/p_k^*\)），幅频恒为 1，只改相位。声纹里的用途：全通做相位/时长扰动做数据增强；最小相位是倒谱分析（第 6 讲）与 LPC（专题 B）能用「取 \(\log\) 再低通」分离声道与激励的前提。</p></div>
+
+  <h3>E.5　从 DFS 到 DFT：为什么 DFT 是「有损」的</h3>
+  <h4>1. 周期序列不能做双边 z 变换（§9.3 的出发点）</h4>
+  <p>教材下册书页 124 说得很直接：周期序列 \(x_p(n)=x_p(n+rN)\) 在 \(n\to\pm\infty\) 时永不衰减，<strong>找不到任何 \(z\) 使 \(x_p(n)z^{-n}\) 绝对可和</strong>，因此 z 变换不存在。这与连续域「周期信号不存在双边拉普拉斯变换、只能用傅里叶级数」完全对应。所以周期序列用 DFS 表示。教材式 (9-18)(9-19)：</p>
+  <div class="mathbox">
+    <div class="math">\[ \begin{cases} X_p(k)=\sum_{n=0}^{N-1}x_p(n)\,e^{-j\frac{2\pi}{N}nk}\\[4pt] x_p(n)=\dfrac{1}{N}\sum_{k=0}^{N-1}X_p(k)\,e^{j\frac{2\pi}{N}nk}\end{cases} \tag{E-9} \]</div>
+    <div class="mathnote"><p>两式都是 \(N\) 项求和，且 \(X_p(k)\) 以 \(N\) 为周期。<b>结构上和 (D-10) 的 FS 一模一样</b>，只是积分换成求和、\(T\) 换成 \(N\)。教材指出：这里取时域间隔 \(T_s\) 与频域间隔 \(f_1\) 都等于 1，表达式才这么简洁；一般情形会出现 \(T_s f_1=1/N\) 的因子。</p></div>
+  </div>
+  <h4>2. DFT 就是 DFS 取一个主值区间</h4>
+  <div class="mathbox">
+    <div class="math">\[ X[k]=\sum_{n=0}^{N-1}x[n]\,e^{-j\frac{2\pi}{N}kn},\qquad x[n]=\frac{1}{N}\sum_{k=0}^{N-1}X[k]\,e^{j\frac{2\pi}{N}kn},\qquad 0\leq k,n\leq N-1 \tag{E-10} \]</div>
+    <div class="mathnote"><p><b>关键理解：</b>DFT 把有限长序列 \(x[0..N-1]\) <em>当成</em>一个周期为 \(N\) 的周期序列的一个周期。这个「当成」是全部混淆的来源：</p>
+    <ul>
+      <li>频域被采样成 \(N\) 个点，\(X[k]=X(e^{j2\pi k/N})=X(z)|_{z=e^{j2\pi k/N}}\)，<b>丢掉了点与点之间的连续谱</b>；</li>
+      <li>时域被当成周期延拓，<b>相邻周期的「尾巴」会卷回来叠加</b>，即圆周卷积；</li>
+      <li>所以补零只能让 \(X[k]\) 采样更密（看到更多点），<b>不能真正提高分辨率</b>——分辨率由观测时长 \(T=NT_s\) 决定，\(\Delta f=1/T=F_s/N\)。第 4 讲「补零只改显示密度」的严格出处就在这里。</li>
+    </ul></div>
+  </div>
+  <h4>3. 圆周卷积与线性卷积的等价条件</h4>
+  <div class="mathbox">
+    <div class="math">\[ \mathrm{DFT}\{x\circledast h\}=X[k]H[k],\qquad x\circledast h\text{ 等于 }x\ast h\ \Longleftrightarrow\ N\geq L_x+L_h-1 \tag{E-11} \]</div>
+    <div class="mathnote"><p><b>算到账：</b>\(L_x=3\)、\(L_h=2\) 的 D.3 例子，线性卷积长度是 4；若取 \(N=4\) 做圆周卷积恰好相等；若取 \(N=3\)，第 4 个点会卷回第 0 个点，结果变成 \([1+(-3),1,1]=[-2,1,1]\)。<b>所以 FFT 加速卷积时必须补零到 \(N\geq L_x+L_h-1\)</b>；长信号分段处理则用重叠相加法（overlap-add）或重叠保留法（overlap-save），这是实时滤波与离线批处理的标准做法。</p></div>
+  </div>
+  <h4>4. DFT 的性质与「四性」</h4>
+  <table class="sym">
+    <tr><th>性质</th><th>表达式</th><th>讲义里的用处</th></tr>
+    <tr><td>线性</td><td>\(\mathrm{DFT}\{ax+bg\}=aX+bG\)</td><td>多通道信号叠加</td></tr>
+    <tr><td>圆周移位</td><td>\(x[(n-m)\bmod N]\leftrightarrow W_N^{km}X[k]\)</td><td>时延估计、相位差</td></tr>
+    <tr><td>共轭对称</td><td>实序列 \(X[N-k]=X^*[k]\)</td><td>单边谱只取 \(N/2+1\) 点</td></tr>
+    <tr><td>帕塞瓦尔</td><td>\(\sum_{n}|x[n]|^2=\frac{1}{N}\sum_k|X[k]|^2\)</td><td>D.9 已手算验证</td></tr>
+    <tr><td>圆周卷积</td><td>(E-11)</td><td>频域滤波、卷积定理的离散版</td></tr>
+  </table>
+
+  <h3>E.6　FFT、DCT 与沃尔什变换</h3>
+  <h4>1. FFT 只是算法，不是新变换</h4>
+  <div class="mathbox">
+    <div class="math">\[ \text{直接 DFT：}O(N^2)\ \longrightarrow\ \text{基-2 FFT：}O(N\log_2 N),\qquad N=512:\ 262144\to4608 \tag{E-12} \]</div>
+    <div class="mathnote"><p><b>算到账：</b>\(512^2=262144\)，而 \((512/2)\log_2 512=256\times9=2304\) 次蝶形，每蝶形约 2 次复数乘法 ⇒ 约 4608，加速约 57 倍。第 4 讲已推过 Cooley–Tukey 的奇偶分解，这里只强调：<b>FFT 不改变 DFT 的数值结果，只改变算它的代价</b>；所有「精度问题、泄漏问题、分辨率问题」都来自 DFT 的定义 (E-10)，与 FFT 无关。</p></div>
+  </div>
+  <h4>2. DCT：把信号偶延拓后再 DFT（第 6 讲第 6 步的理论出处）</h4>
+  <div class="mathbox">
+    <div class="math">\[ X_c[k]=\alpha_k\sum_{n=0}^{N-1}x[n]\cos\!\Big[\frac{\pi}{N}\Big(n+\frac12\Big)k\Big],\qquad \alpha_0=\sqrt{\frac1N},\ \alpha_k=\sqrt{\frac2N} \tag{E-13} \]</div>
+    <div class="mathnote"><p>教材 §9.10 用「偶对称延拓」解释 DCT：把 \(x[n]\) 沿 \(n=-1/2\) 偶延拓成 \(2N\) 长序列再 DFT，虚部自动抵消，只剩余弦项。<b>两个工程优势</b>：① 实数运算、无冗余；② 能量更集中（去相关能力强），所以 MFCC 用它压缩 26 维 Mel 能量到 13 维。<b>正交性</b>：\(\sum_n \alpha_k\cos[\cdot]\cdot\alpha_l\cos[\cdot]=\delta_{kl}\)，第 6 讲已验证 \(DD^{\mathsf T}=I\)。</p></div>
+  </div>
+  <h4>3. 沃尔什变换：只有加减的正交基</h4>
+  <div class="mathnote"><p>教材 §6.5 与 §9.9 讲沃尔什（Walsh）函数：取值只有 \(\pm1\) 的完备正交函数集，变换只需加减法，适合硬件实现。今天它更多出现在图像/通信的快速变换里；对声纹而言，它的意义是<strong>再次印证「换一组正交基」的思路</strong>——DFT、DCT、Walsh、小波、Gammatone 都是不同基，选哪个取决于你要稀疏表示什么结构。</p></div>
+
+  <h3>E.7　数字滤波器：从模拟原型到声纹的四个滤波器</h3>
+  <h4>1. 模拟原型（§10.2）</h4>
+  <div class="mathbox">
+    <div class="math">\[ |H_{B}(j\Omega)|^2=\frac{1}{1+(\Omega/\Omega_c)^{2N}},\qquad |H_{C}(j\Omega)|^2=\frac{1}{1+\varepsilon^2T_N^2(\Omega/\Omega_c)} \tag{E-14} \]</div>
+    <div class="mathnote"><p>巴特沃斯（Butterworth）在通带内最平坦、单调下降，\(N\) 阶在 \(\Omega_c\) 处衰减 3 dB，阻带以 \(-20N\) dB/dec 滚降；切比雪夫（Chebyshev）用纹波换更陡的过渡带。教材 §10.2 的「逼近」就是选 \(N\) 与 \(\Omega_c\) 去满足给定的通带/阻带指标——<b>这正是 D.8 佩利–维纳准则说的「必须有过渡带」的具体实现</b>。</p></div>
+  </div>
+  <h4>2. 双线性变换：把 s 左半平面压进单位圆</h4>
+  <div class="mathbox">
+    <div class="math">\[ s=\frac{2}{T}\cdot\frac{1-z^{-1}}{1+z^{-1}},\qquad \Omega=\frac{2}{T}\tan\frac{\omega}{2} \tag{E-15} \]</div>
+    <div class="mathnote"><p>它把整个 \(j\Omega\) 轴一一映射到单位圆上，<strong>无混叠</strong>（这是它相对「脉冲响应不变法」的最大优势），代价是频率<strong>畸变</strong>：高频被压缩。所以设计时要先「预畸变」：把想要的数字频率 \(\omega_c\) 用 (E-15) 换成模拟 \(\Omega_c\) 再设计原型。教材 §10.6 讲 IIR 设计，核心就是这条链。</p></div>
+  </div>
+  <h4>3. FIR 窗函数法（§10.7）</h4>
+  <div class="mathbox">
+    <div class="math">\[ h[n]=h_d[n]\cdot w[n],\qquad h_d[n]=\frac{\sin[\omega_c(n-\tau)]}{\pi(n-\tau)},\ \ \tau=\frac{M}{2} \tag{E-16} \]</div>
+    <div class="mathnote"><p>理想低通的 \(h_d\) 是 sinc、无限长且非因果（(D-23) 的离散版）。工程做法：<b>截断 + 加窗 + 右移 \(\tau\)</b>。加窗就是 D.4 的时域相乘，所以频域是「理想矩形响应与窗谱的卷积」——主瓣决定过渡带宽度（\(\approx\) 窗主瓣宽），旁瓣决定阻带衰减。矩形窗阻带仅 −21 dB，汉明 −53 dB，凯塞（Kaiser）窗可用参数 \(\beta\) 连续调节。<b>线性相位条件</b>：\(h[n]=\pm h[M-n]\) 时有严格线性相位，群延时恒为 \(M/2\) 个样点——这是 FIR 相对 IIR 的最大卖点。</p></div>
+  </div>
+  <h4>4. 声纹流程里的四个滤波器，分别是什么类型</h4>
+  <table class="sym">
+    <tr><th>滤波器</th><th>作用位置</th><th>类型 / 设计</th><th>关键指标</th></tr>
+    <tr><td>抗混叠低通</td><td>ADC 之前（模拟）</td><td>模拟低通，巴特沃斯/椭圆</td><td>\(F_s/2=4\) kHz 处足够衰减，过渡带 3.4–4 kHz</td></tr>
+    <tr><td>预加重</td><td>第 6 讲第 1 步</td><td>一阶 FIR 高通，\(h=[1,-0.97]\)</td><td>零点 \(z=0.97\)，低频 −30 dB、高频 +6 dB（D.2 表）</td></tr>
+    <tr><td>Mel / Gammatone 组</td><td>第 6 讲第 4 步、第 7 讲</td><td>并联带通组（三角/伽马通）</td><td>中心频率按 Mel/Bark 分布，带宽随频率变宽</td></tr>
+    <tr><td>工频陷波</td><td>专题 A 现场采集</td><td>IIR 陷波（二阶），零点在 \(e^{\pm j\omega_0}\)</td><td>50 Hz 与 100 Hz，\(Q\) 决定陷波宽度</td></tr>
+  </table>
+  <div class="mathbox">
+    <div class="math">\[ H_{\text{notch}}(z)=\frac{1-2\cos\omega_0\,z^{-1}+z^{-2}}{1-2r\cos\omega_0\,z^{-1}+r^2z^{-2}},\qquad 0\lt r\lt1 \tag{E-17} \]</div>
+    <div class="mathnote"><p>零点在单位圆上的 \(e^{\pm j\omega_0}\)（该频率增益严格为 0），极点在同角度的 \(r e^{\pm j\omega_0}\)（\(r\) 略小于 1，把陷波做窄、减少对邻近频段的伤害）。<b>\(r\to1\) 陷波越窄越尖锐，但极点贴近单位圆、瞬态拖长</b>——稳定性与选择性的一对矛盾，正是 E.4 判据的现场应用。变压器声纹的 100 Hz 基频与谐波若被 50 Hz 工频干扰污染，就靠它分离。</p></div>
+  </div>
+
+  <h3>E.8　反馈、稳定性与「训练为什么会炸」</h3>
+  <p>§11 讲反馈系统：负反馈换带宽/降失真，正反馈产生自激。判定闭环稳定性的工具是奈奎斯特判据与根轨迹：</p>
+  <div class="mathbox">
+    <div class="math">\[ 1+G(s)H(s)=0,\qquad Z=P-N \tag{E-18} \]</div>
+    <div class="mathnote"><p>\(Z\) 为右半平面闭环极点数，\(P\) 为开环右半平面极点数，\(N\) 为 \(1+GH\) 曲线顺时针包围原点的圈数。稳定要求 \(Z=0\)。§11.4 的根轨迹则描述「某个参数（通常是增益 \(K\)）从 0 变到 \(\infty\) 时闭环极点怎么走」——<b>参数过大导致极点越过虚轴 ⇒ 自激/发散</b>。</p></div>
+  </div>
+  <div class="defbox"><div class="dh">这个判据和第 10 讲的「训练发散」是同一件事</div>
+  <p>把梯度下降看成闭环系统：参数更新 \(w_{t+1}=w_t-\eta\nabla L(w_t)\)。在极小点附近线性化，\(\nabla L\approx H(w-w^*)\)（\(H\) 为 Hessian），于是</p>
+  <p style="text-align:center">\(w_{t+1}-w^*=(I-\eta H)(w_t-w^*)\)。</p>
+  <p>收敛要求「闭环极点」\((1-\eta\lambda_i)\) 全部落在单位圆内，即 \(0\lt\eta\lambda_i\lt2\)，\(\lambda_i\) 是 \(H\) 的特征值。所以<b>学习率上限是 \(2/\lambda_{\max}\)</b>：曲率最大的方向决定你能用多大步长，超过就振荡发散——这就是「学习率太大 loss 变 NaN」的严格解释，与 (E-18) 中「增益过大极点出界」完全同构。第 10 讲的梯度裁剪、学习率衰减、Adam 的自适应步长，本质上都在给这个闭环加阻尼。</p></div>
+
+  <h3>E.9　状态变量：从电路方程到 RNN</h3>
+  <div class="mathbox">
+    <div class="math">\[ \dot{\mathbf{x}}=A\mathbf{x}+B\mathbf{u},\quad \mathbf{y}=C\mathbf{x}+D\mathbf{u}\qquad\Longleftrightarrow\qquad \mathbf{x}[n+1]=A\mathbf{x}[n]+B\mathbf{u}[n],\quad \mathbf{y}[n]=C\mathbf{x}[n]+D\mathbf{u}[n] \tag{E-19} \]</div>
+    <div class="mathnote"><p>§12 把高阶微分/差分方程降为一阶向量方程，状态 \(\mathbf{x}\) 是「记住过去所需的最小信息集」。连续解含矩阵指数 \(e^{At}\)，离散解含 \(A^n\)——<b>稳定性判据变成 \(A\) 的特征值模长小于 1</b>，与 E.4 的极点判据一致（极点就是 \(A\) 的特征值）。</p></div>
+  </div>
+  <table class="sym">
+    <tr><th>概念</th><th>判据</th><th>在深度学习里的对应</th></tr>
+    <tr><td>可控性</td><td>\([B\ \ AB\ \ \cdots\ \ A^{n-1}B]\) 满秩</td><td>输入能否影响全部隐状态</td></tr>
+    <tr><td>可观性</td><td>\([C;\ CA;\ \cdots;\ CA^{n-1}]\) 满秩</td><td>隐状态能否由输出反推</td></tr>
+    <tr><td>状态转移</td><td>\(\mathbf{x}[n]=A^n\mathbf{x}[0]+\sum AkB u\)</td><td>RNN 的隐状态递推、长程依赖衰减</td></tr>
+  </table>
+  <div class="mathnote"><p><b>这条线一直通到今天的模型：</b>RNN 就是 (E-19) 加上非线性激活；LSTM 的门控是在给 \(A\) 加「可学习的遗忘因子」；卡尔曼滤波是线性高斯下的最优状态估计；近年的状态空间模型（S4、Mamba）直接把 \(A\) 参数化成结构化矩阵，用 (E-19) 的卷积形式做长序列建模。<b>声纹里的 x-vector 统计池化，本质上也是在从变长序列里估计一个「状态摘要」。</b>第 14 讲说的「帧级特征 → 句级嵌入」，用状态变量的语言就是「用 \(C\) 观测、用池化汇总」。</p></div>
+
+  <h3>E.10　全映射：郑君里 12 章 → 讲义 17 讲</h3>
+  <table class="sym">
+    <tr><th>教材章节</th><th>核心内容</th><th>对应讲义</th><th>读了能解决什么</th></tr>
+    <tr><td>上册 §1</td><td>信号分类、δ、LTI 定义</td><td>第 1 讲</td><td>为什么正弦/复指数是「基本单元」</td></tr>
+    <tr><td>上册 §2</td><td>微分方程、卷积、冲激响应</td><td>第 1、6 讲；专题 D.2–D.3</td><td>预加重、滤波器到底是什麼</td></tr>
+    <tr><td>上册 §3</td><td>FS、FT、卷积定理、抽样</td><td>第 2、4 讲；专题 D.4–D.6</td><td>泄漏、分辨率、混叠的严格解释</td></tr>
+    <tr><td>上册 §4</td><td>拉普拉斯、H(s)、零极点、稳定性</td><td>第 6 讲；专题 D.7</td><td>共振峰、最小相位、逆滤波</td></tr>
+    <tr><td>上册 §5</td><td>无失真传输、理想滤波器、调制、PCM</td><td>第 2 讲；专题 D.8</td><td>为什么抗混叠必须有过渡带</td></tr>
+    <tr><td>上册 §6</td><td>矢量空间、帕塞瓦尔、相关、匹配滤波、测不准</td><td>第 3、5、12 讲；专题 D.9</td><td>自相关、STFT 下界、模板匹配</td></tr>
+    <tr><td>下册 §7</td><td>差分方程、卷积和、解卷积</td><td>第 3、6 讲；专题 E.1</td><td>IIR/FIR 的实现与反卷积</td></tr>
+    <tr><td>下册 §8</td><td>z 变换、ROC、DTFT、频率响应</td><td>第 4、6 讲；专题 E.2–E.3</td><td>单位圆、共轭对称、滤波器频响</td></tr>
+    <tr><td>下册 §9</td><td>DFS、DFT、FFT、DCT、沃尔什</td><td>第 4、6 讲；专题 E.5–E.6</td><td>DFT 为什么有损、补零为何不提分辨率</td></tr>
+    <tr><td>下册 §10</td><td>模拟逼近、IIR、FIR、开关电容</td><td>第 6 讲；专题 E.7</td><td>Mel 组、陷波、线性相位</td></tr>
+    <tr><td>下册 §11</td><td>反馈、自激、根轨迹、奈奎斯特</td><td>第 10 讲；专题 E.8</td><td>学习率上限、训练发散</td></tr>
+    <tr><td>下册 §12</td><td>状态方程、可控可观</td><td>第 14 讲；专题 E.9</td><td>RNN、Kalman、状态空间模型</td></tr>
+  </table>
+
+  <h3>E.11　公式 ↔ 代码、边界与自检</h3>
+  <table class="sym">
+    <tr><th>结论</th><th>公式</th><th>代码</th><th>验证方式</th></tr>
+    <tr><td>差分方程 / FIR</td><td>(E-1), (E-16)</td><td><code>mfcc()</code> 预加重</td><td>与 <code>np.convolve</code> 对拍</td></tr>
+    <tr><td>DTFT / 频响</td><td>(E-6), (E-7)</td><td><code>fft()</code>、<code>stft()</code></td><td>纯音峰值落在预期 bin</td></tr>
+    <tr><td>DFT 采样性</td><td>(E-10)</td><td><code>dft()</code> 与 <code>fft()</code></td><td>两者结果差 &lt; 1e-12</td></tr>
+    <tr><td>圆周卷积条件</td><td>(E-11)</td><td>—</td><td>N=3 与 N=4 手算对比</td></tr>
+    <tr><td>DCT 正交</td><td>(E-13)</td><td><code>dct_matrix()</code></td><td>\(DD^{\mathsf T}=I\)</td></tr>
+    <tr><td>稳定性</td><td>(E-8)</td><td>递归滤波实验</td><td>极点 \(|p|\gt1\) 时输出发散</td></tr>
+  </table>
+  <div class="defbox"><div class="dh">五个常见错误</div>
+  <ol>
+    <li><b>看到 \(H(z)\) 就算频响</b>：先确认 ROC 含单位圆，否则系统不稳定、频响无意义。</li>
+    <li><b>补零当升分辨率</b>：分辨率由观测时长决定，补零只是插值显示（E.5）。</li>
+    <li><b>FFT 加速卷积忘了补零</b>：\(N\lt L_x+L_h-1\) 时结果是圆周卷积，尾部卷回头部（E.11 手算）。</li>
+    <li><b>以为 FIR 一定线性相位</b>：只有满足 \(h[n]=\pm h[M-n]\) 的四种类型才是；任意抽头不保证。</li>
+    <li><b>把陷波 \(Q\) 调得过高</b>：极点贴近单位圆，瞬态振铃长达几十毫秒，反而污染短帧特征。</li>
+  </ol></div>
+
+  <h3>自检</h3>
+  <div class="checklist">
+    <label><input type="checkbox" data-k="qE-1"> 我能说出同一个 \(1/(1-az^{-1})\) 在两种 ROC 下分别对应什么序列，并解释为什么 ROC 是变换的一部分。</label>
+    <label><input type="checkbox" data-k="qE-2"> 我能画出 \(z=e^{sT}\) 的映射表，并说明「频谱以 \(2\pi\) 为周期」的几何原因。</label>
+    <label><input type="checkbox" data-k="qE-3"> 我能从 DFS 写出 DFT，说清 DFT 丢了什么、补零为什么不能提高分辨率。</label>
+    <label><input type="checkbox" data-k="qE-4"> 我能判断一个差分方程是否稳定，并解释 FIR 为什么恒稳定、IIR 为什么不一定。</label>
+    <label><input type="checkbox" data-k="qE-5"> 我能写出二阶陷波器的 \(H(z)\)，说明零点、极点各在哪、\(r\) 调节什么。</label>
+    <label><input type="checkbox" data-k="qE-6"> 我能把「学习率过大导致发散」解释成闭环极点出单位圆，并说出学习率上限与 Hessian 特征值的关系。</label>
   </div>
 </section>
 
@@ -3458,7 +4230,7 @@ def amdf(x, fmin=80, fmax=400, fs=8000):
   <div class="goal">
     <div class="g">目标</div>
     <ul>
-      <li>把前面 17 讲 + 专题 A/B 的每一条结论，都变成一条<strong>能自己跑、能判对错</strong>的实验。</li>
+      <li>把前面 17 讲 + 专题 A/B/D/E 的每一条结论，都变成一条<strong>能自己跑、能判对错</strong>的实验。</li>
       <li>知道每本参考书各自贡献了什么，遇到卡点时能直接定位到该翻哪一本、哪一章。</li>
       <li>养成「先预测结果 → 再跑 → 对不上就找根因」的习惯，而不是把代码跑通就算学完。</li>
     </ul>
@@ -3532,7 +4304,8 @@ def amdf(x, fmin=80, fmax=400, fs=8000):
   <p>本讲义的知识点来自下列资料。按仓库约定，<strong>原书全文与从电子书提取的文本均不入库</strong>（版权内容），仓库只包含自己撰写的讲义、自己手写的算法实现、以及由脚本实测生成的图表与数值。</p>
   <table class="sym">
     <tr><th>资料</th><th>形态</th><th>本次用于</th><th>对应章节</th></tr>
-    <tr><td>韩纪庆、张磊、郑铁然《语音信号处理（第 3 版）》</td><td>EPUB，可提取全文</td><td>理论根基：产生模型、短时分析、同态解卷积、Mel 倒谱、线性预测、LPC 倒谱</td><td>第 1–7 讲、专题 B.1 / B.5</td></tr>
+    <tr><td><strong>郑君里、应启珩、杨为理《信号与系统（第三版）》上、下册</strong></td><td>PDF 扫描版，160 条书签可作框架</td><td><strong>理论根基</strong>：LTI 与卷积、卷积定理、抽样与内插、拉普拉斯与零极点、无失真传输与希尔伯特、帕塞瓦尔/相关/匹配滤波/测不准、z 变换与 ROC、DFS→DFT、IIR/FIR 设计、反馈稳定性、状态变量</td><td>专题 D / E 全篇；第 1–14 讲的「理论桥接」；附录 12 章映射表</td></tr>
+    <tr><td>韩纪庆、张磊、郑铁然《语音信号处理（第 3 版）》</td><td>EPUB，可提取全文</td><td>语音侧根基：产生模型、短时分析、同态解卷积、Mel 倒谱、线性预测、LPC 倒谱</td><td>第 1–7 讲、专题 B.1 / B.5</td></tr>
     <tr><td>王泉《声纹技术：从核心算法到工程实践》</td><td>MOBI，可提取全文</td><td>工程视角：预处理、评价指标、GMM-UBM、i-vector、深度学习声纹</td><td>第 11–14 讲</td></tr>
     <tr><td>赵力《语音信号处理（第三版）》</td><td>PDF 扫描版，仅目录可用</td><td><strong>知识地图</strong>：矢量量化、HMM、LPC/LSP、端点检测、基音/共振峰、语音增强、DTW、说话人识别各分支</td><td>专题 B 全篇、第 3/5 讲延伸</td></tr>
     <tr><td>梁瑞宇、赵力、魏昕《语音信号处理实验教程》</td><td>PDF，可提取</td><td>13 章实验体系与编排</td><td>专题 C.1、各讲「动手」部分</td></tr>
@@ -3542,7 +4315,7 @@ def amdf(x, fmin=80, fmax=400, fs=8000):
     <tr><td>朱柯佳《高噪声环境下变压器声纹特征提取方法研究》（2021，硕士论文）</td><td>PDF，字符定位需重排</td><td><strong>专题 A 主体</strong>：三种去噪法对比、改进/分层阈值、小波包能量谱、TFCC、Laplacian/Fisher 选维、现场实测数字</td><td>专题 A.2–A.4、A.6</td></tr>
     <tr><td>陆云才等《基于声纹特征和集成学习的变压器缺陷诊断方法》（2023）</td><td>PDF，可提取</td><td><strong>专题 A 主体</strong>：19 类样本库、多通道时频输入、CNN+CBAM、stacking 二次诊断、单一/混合缺陷实测结果</td><td>专题 A.1 / A.5</td></tr>
   </table>
-  <div class="warn inline"><span class="t">一句提醒</span>三本扫描版 PDF 没有文本层，本次只用它们的目录做知识地图，正文公式全部按标准教材形式自行推导，没有从扫描件 OCR 后照抄。专题 A 里朱柯佳论文的「改进阈值函数」也一样：讲义给出的是同家族的<strong>半软阈值标准形式</strong>并说明思路，不是原论文图中分段公式的逐字转录。</div>
+  <div class="warn inline"><span class="t">一句提醒</span>四本扫描版 PDF（郑君里上/下册、宋知用、姜囡）没有文本层，本次只用它们的目录做知识地图，正文公式全部按标准教材形式自行推导，没有从扫描件 OCR 后照抄。郑君里两册的价值在<strong>理论框架</strong>：专题 D/E 的章节顺序、定理编号与符号记法（\(\operatorname{Sa}(x)\)、\(\omega_s=2\pi/T_s\)、DFS 式 9-18/9-19、DTFT 式 8-82）都对照其书签目录与抽样页核对过，但推导文字是重写的。专题 A 里朱柯佳论文的「改进阈值函数」也一样：讲义给出的是同家族的<strong>半软阈值标准形式</strong>并说明思路，不是原论文图中分段公式的逐字转录。</div>
 
   <h3>C.4　从讲义到现场：十条检查清单</h3>
   <div class="defbox"><div class="dh">上线前逐条过</div>
@@ -3795,6 +4568,36 @@ def amdf(x, fmin=80, fmax=400, fs=8000):
 编号如 <b>(4-9)</b> 中的 4 表示第 4 讲、9 表示该讲的公式序号；带「推导详解」字样的编号（如 4-9、6-10）
 出现在各讲末尾的推导补充中，与正文公式属于同一编号体系。
 所有下式里的中文说明、变量表、数值算例都放在公式<b>之外</b>，以免中文字形干扰数学排版。</p>
+</div>
+
+  <div class="bridge">
+<div class="btitle">资料补录 · 郑君里《信号与系统》第三版（上、下册）章节映射</div>
+<p>本版新增的两册教材是<strong>理论根基</strong>，不按「讲」组织，因此单列一张映射表。上册 448 页、88 条书签；下册 416 页、72 条书签；均为扫描版（无文本层），讲义只依据其目录框架与标准结论重写，未转录原文。</p>
+<table class="sym">
+  <tr><th>教材位置</th><th>章节主题</th><th>本讲义对应</th><th>先读哪一段</th></tr>
+  <tr><td>上册 §1.2–§1.8</td><td>信号分类、δ 与阶跃、LTI 定义</td><td>第 1 讲；专题 D.2</td><td>D.2「卷积表示是推出来的」</td></tr>
+  <tr><td>上册 §2.2–§2.9</td><td>微分方程、零输入/零状态、卷积及性质</td><td>第 1、6 讲；专题 D.2–D.3</td><td>D.3 手算卷积 + 对拍</td></tr>
+  <tr><td>上册 §3.2–§3.9</td><td>FS、FT、性质、卷积定理</td><td>第 1、4 讲；专题 D.4–D.5</td><td>D.4 泄漏的定量解释</td></tr>
+  <tr><td>上册 §3.10–§3.11</td><td>抽样信号的 FT、抽样定理</td><td>第 2 讲；专题 D.6</td><td>D.6 sinc 内插推导</td></tr>
+  <tr><td>上册 §4.2–§4.11</td><td>拉普拉斯、H(s)、零极点、稳定性</td><td>第 6 讲；专题 D.7</td><td>D.7 共振峰 = 一对极点</td></tr>
+  <tr><td>上册 §4.12–§4.13</td><td>双边拉氏、拉氏与傅氏关系</td><td>专题 E.2（ROC 思想）</td><td>E.2 四种 ROC 形态</td></tr>
+  <tr><td>上册 §5.2–§5.6</td><td>H(jω)、无失真、理想低通、可实现性、希尔伯特</td><td>第 2、7 讲；专题 D.8</td><td>D.8 佩利–维纳准则</td></tr>
+  <tr><td>上册 §5.7–§5.11</td><td>调制解调、带通、抽样恢复、PCM、复用</td><td>第 2 讲；专题 D.6</td><td>D.6 三条失效边界</td></tr>
+  <tr><td>上册 §6.2–§6.5</td><td>矢量空间、正交分解、帕塞瓦尔、沃尔什</td><td>第 4、6、7 讲；专题 D.9</td><td>D.9 帕塞瓦尔手算</td></tr>
+  <tr><td>上册 §6.6–§6.8</td><td>相关、能量谱与功率谱</td><td>第 3 讲；专题 D.9</td><td>D.9 维纳–辛钦 + ZCR</td></tr>
+  <tr><td>上册 §6.9</td><td>匹配滤波器</td><td>第 11、12 讲；专题 D.9</td><td>D.9 柯西–施瓦茨推导</td></tr>
+  <tr><td>上册 §6.10</td><td>测不准原理及其证明</td><td>第 5 讲；专题 D.9</td><td>D.9 式 (D-31)~(D-33)</td></tr>
+  <tr><td>下册 §7.2–§7.7</td><td>序列、差分方程、单位样值响应、卷积和、解卷积</td><td>第 3、6、9 讲；专题 E.1</td><td>E.1 解卷积为什么会炸</td></tr>
+  <tr><td>下册 §8.2–§8.8</td><td>z 变换、ROC、逆 z、性质、系统函数</td><td>第 4、6 讲；专题 E.2–E.4</td><td>E.4 因果稳定判据</td></tr>
+  <tr><td>下册 §8.9–§8.10</td><td>DTFT、离散系统频率响应</td><td>第 4 讲；专题 E.3</td><td>E.3 单位圆读图法</td></tr>
+  <tr><td>下册 §9.2–§9.5</td><td>离散性与周期性、DFS→DFT、DFT 性质与 z 的关系</td><td>第 4 讲；专题 E.5</td><td>E.5 圆周卷积条件</td></tr>
+  <tr><td>下册 §9.6–§9.10</td><td>FFT、DFT 应用（OFDM）、沃尔什变换、DCT</td><td>第 4、6 讲；专题 E.6</td><td>E.6 DCT = 偶延拓</td></tr>
+  <tr><td>下册 §10.2–§10.5</td><td>模拟滤波器逼近、无源网络、频率变换</td><td>专题 E.7</td><td>E.7 巴特沃斯/切比雪夫</td></tr>
+  <tr><td>下册 §10.6–§10.7</td><td>IIR、FIR 数字滤波器</td><td>第 6 讲；专题 E.7</td><td>E.7 双线性变换与窗函数法</td></tr>
+  <tr><td>下册 §11.2–§11.6</td><td>反馈、自激、根轨迹、奈奎斯特、信号流图</td><td>第 10 讲；专题 E.8</td><td>E.8 学习率上限</td></tr>
+  <tr><td>下册 §12.2–§12.7</td><td>状态方程、求解、线性变换、可控可观</td><td>第 14 讲；专题 E.9</td><td>E.9 RNN 与状态空间</td></tr>
+</table>
+<div class="note"><span class="t">怎么用这两册书</span>不建议从头读到尾。想搞清「为什么加窗会泄漏」读上册 §3.8 + 专题 D.4；想搞清「8 kHz 从哪来」读上册 §3.10–§3.11 + 专题 D.6；想搞清「共振峰是什么」读上册 §4.9 + 专题 D.7；想搞清「DFT 为什么有损」读下册 §9.2–§9.5 + 专题 E.5；想搞清「训练为什么炸」读下册 §11.4–§11.5 + 专题 E.8。<b>每一条都配了手算例与代码对拍，不必啃扫描版的原书也能走通。</b></div>
 </div>
 
   </section>

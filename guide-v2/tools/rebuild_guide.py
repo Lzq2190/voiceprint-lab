@@ -28,14 +28,18 @@ from exp_c import EXP_C                           # noqa: E402
 from topic_a import TOPIC_A                       # noqa: E402
 from topic_b import TOPIC_B                       # noqa: E402
 from topic_c import TOPIC_C                       # noqa: E402
+from theory_d import TOPIC_D                      # noqa: E402
+from theory_e import TOPIC_E                      # noqa: E402
+from theory_bridge import BRIDGES                 # noqa: E402
 
 EXPANSIONS = {}
 EXPANSIONS.update(EXP_A)
 EXPANSIONS.update(EXP_B)
 EXPANSIONS.update(EXP_C)
 
-# 三个完整的新增专题 section，插在「第 14 讲」之后、「第 15 讲 收尾」之前
-TOPICS = [TOPIC_A, TOPIC_B, TOPIC_C]
+# 五个完整的新增专题 section，插在「第 14 讲」之后、「第 15 讲 收尾」之前。
+# D/E 是理论根基（郑君里上册/下册），放在工程专题 A/B/C 之前。
+TOPICS = [TOPIC_D, TOPIC_E, TOPIC_A, TOPIC_B, TOPIC_C]
 
 # ---------------------------------------------------------------- 新增样式
 EXTRA_CSS = r"""
@@ -84,6 +88,16 @@ table.sym.compact td{text-align:center}
 .derive .warn{font-size:14px}
 .derive strong,.derive b{color:#fff}
 .mathnote code,.derive code,.defbox code{background:#222d3f;color:#ffd580}
+/* ============ 理论桥接块（郑君里《信号与系统》） ============ */
+.bridge{margin:16px 0 30px;border:1px solid #3a4a63;border-left:3px solid #7ee0b8;
+  border-radius:10px;background:linear-gradient(180deg,#131d2b,#111925);padding:14px 20px 16px}
+.bridge .btitle{font-size:14.5px;font-weight:700;color:#7ee0b8;letter-spacing:.02em;
+  margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #33506a}
+.bridge p{font-size:14.4px;line-height:1.85;color:#d3dded}
+.bridge strong,.bridge b{color:#fff}
+.bridge .mathbox{margin:12px 0 6px}
+.bridge .note{margin:10px 0 0}
+@media (max-width:900px){.bridge{padding:12px 14px 14px}}
 @media (max-width:900px){.symgrid{grid-template-columns:1fr}.derive{padding:4px 14px 16px}}
 """
 
@@ -209,10 +223,17 @@ def insert_derivations(src):
             continue
         sid = m.group(1)
         raw_block = EXPANSIONS.get(sid)
-        if not raw_block:
+        bridge = BRIDGES.get(sid)
+        if not raw_block and not bridge:
             out.append(seg)
             continue
-        block = sanitize_block(raw_block)
+        parts = []
+        if raw_block:
+            parts.append(sanitize_block(raw_block).strip())
+        if bridge:
+            # 理论桥接块独立成块，追加在「推导详解」之后、「误区与注意事项」之前
+            parts.append(sanitize_block(bridge).strip())
+        block = "\n\n  ".join(parts)
         anchor = "<h3>误区与注意事项</h3>"
         if anchor in seg:
             seg = seg.replace(anchor, block.strip() + "\n\n  " + anchor, 1)
@@ -239,7 +260,10 @@ def insert_topics(src):
     return src.replace(marker, blocks + marker, 1)
 
 
-NAV_TOPICS = '''  <div class="grp">工程专题与补遗</div>
+NAV_TOPICS = '''  <div class="grp">理论根基 · 郑君里《信号与系统》</div>
+  <a href="#sD">专题 D · 连续 LTI 与变换域</a>
+  <a href="#sE">专题 E · z 域、DFT 与滤波器</a>
+  <div class="grp">工程专题与补遗</div>
   <a href="#sA">专题 A · 变压器声纹实战</a>
   <a href="#sB">专题 B · 经典算法补遗</a>
   <a href="#sC">专题 C · 实验与资料索引</a>
@@ -280,15 +304,16 @@ def main():
     # 封面说明补充
     out = out.replace(
         "配套 <code>acoustic-lab</code> 复现项目",
-        "全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）。"
-        "另增<b>三个工程专题</b>：变压器声纹实战（去噪 / 特征 / 诊断）、经典算法补遗（LPC / VQ / HMM / DTW）、"
-        "动手实验清单与资料索引。配套 <code>acoustic-lab</code> 复现项目")
+        "全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）"
+        "与<b>理论桥接</b>（把该讲结论钉回郑君里《信号与系统》的具体章节与定理）。"
+        "另增<b>五个专题</b>：理论根基（连续 LTI / z 域与数字滤波器）、变压器声纹实战（去噪 / 特征 / 诊断）、"
+        "经典算法补遗（LPC / VQ / HMM / DTW）、动手实验清单与资料索引。配套 <code>acoustic-lab</code> 复现项目")
 
     io.open(SRC, "w", encoding="utf-8").write(out)
-    print("完成：%d 字符，mathbox %d 个，defbox %d 个，推导详解 %d 块，专题 %d 个" % (
+    print("完成：%d 字符，mathbox %d 个，defbox %d 个，推导详解 %d 块，理论桥接 %d 块，专题 %d 个" % (
         len(out), out.count('class="mathbox"'), out.count('class="defbox"'),
-        out.count('class="derive"'),
-        len(re.findall(r'<section id="s[ABC]">', out))))
+        out.count('class="derive"'), out.count('class="bridge"'),
+        len(re.findall(r'<section id="s[ABCDE]">', out))))
 
 
 if __name__ == "__main__":
