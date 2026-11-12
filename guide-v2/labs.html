@@ -39,7 +39,8 @@ p{margin:9px 0}
 .mono{font-family:Consolas,"Courier New",monospace}
 
 .grid2{display:grid;grid-template-columns:430px 1fr;gap:22px;align-items:start}
-@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.grid2.eq{grid-template-columns:1fr 1fr}
+@media(max-width:860px){.grid2,.grid2.eq{grid-template-columns:1fr}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .cv{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
   padding:6px;display:block;width:100%}
@@ -209,7 +210,7 @@ mag = <span class="k">abs</span>(X) / N      <span class="c"># 除以 N，就是
 
   <canvas id="cvNet" class="cv" width="1900" height="620" style="height:auto;margin-top:14px"></canvas>
 
-  <div class="grid2" style="margin-top:18px;grid-template-columns:1fr 1fr">
+  <div class="grid2 eq" style="margin-top:18px">
     <div class="card">
       <h3 style="margin-top:0">参数（拖动即重算）</h3>
       <div id="params"></div>

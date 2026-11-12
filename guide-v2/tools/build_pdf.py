@@ -51,7 +51,7 @@ CHROME = next((p for p in [
 ACCENT = "#1f5fbf"
 
 CSS = r"""
-@page { size: A4; margin: 21mm 21mm 19mm 21mm; }
+@page { size: A4; margin: 20mm 21mm 20mm 21mm; }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; padding: 0; background: #fff; }
 body {
@@ -64,20 +64,21 @@ sub { vertical-align: -0.28em; } sup { vertical-align: 0.42em; }
 
 /* ---------- 封面 ---------- */
 .cover { height: 242mm; display: flex; flex-direction: column; page-break-after: always; }
-.cover .meta { width: 100%; border-collapse: collapse; font-size: 9pt; }
-.cover .meta td { border: 0.6pt solid #9aa4b2; padding: 4pt 7pt; }
+.cover .meta { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+.cover .meta td { border: 0.6pt solid #9aa4b2; padding: 3.4pt 6.5pt; line-height: 1.55; }
 .cover .meta td.k { width: 26mm; color: #55606e; background: #f7f8fa; }
 .cover .grow { flex: 1 1 auto; }
 .cover .mid { text-align: center; }
 .cover .kicker { font-family: "Microsoft YaHei"; font-size: 9.5pt; letter-spacing: .42em;
   color: #7a8492; margin-bottom: 7mm; }
-.cover h1 { font-family: "Microsoft YaHei"; font-size: 31pt; font-weight: 700;
+.cover h1 { font-family: "Microsoft YaHei"; font-size: 33pt; font-weight: 700;
   letter-spacing: .10em; margin: 0 0 3.5mm; color: #10161f; line-height: 1.25; }
-.cover .sub { font-family: "Microsoft YaHei"; font-size: 14.5pt; font-weight: 400;
+.cover .sub { font-family: "Microsoft YaHei"; font-size: 15.5pt; font-weight: 400;
   color: #37424f; letter-spacing: .10em; margin: 0; }
 .cover .rule { width: 44mm; height: 2pt; background: %(accent)s; margin: 8mm auto; }
 .cover .tag { font-size: 10.5pt; color: #4c5664; letter-spacing: .06em; }
-.cover .foot { text-align: center; font-size: 9pt; color: #64707e; line-height: 1.95; }
+.cover .foot { text-align: center; font-size: 9pt; color: #64707e; line-height: 1.95;
+  margin-top: 7mm; padding-top: 5mm; border-top: 0.6pt solid #dfe4ea; }
 .cover .foot .org { font-family: "Microsoft YaHei"; font-size: 10pt; color: #2c3542;
   letter-spacing: .06em; margin-bottom: 1.5mm; }
 
@@ -172,7 +173,6 @@ table.num td:first-child { font-variant-numeric: tabular-nums; color: #6b7583; }
 .checklist { border: 0.7pt solid #e1e7ee; background: #fff; padding: 8pt 10pt 6pt;
   margin: 7pt 0 9pt; break-inside: avoid; }
 .checklist label { break-inside: avoid; }
-.checklist label:last-child { break-before: avoid; }   /* 不让最后一项单独掉到下一页 */
 .checklist label { display: block; font-size: 9.9pt; line-height: 1.72; margin-bottom: 4pt;
   text-indent: 0; }
 .checklist input { -webkit-appearance: none; appearance: none; width: 8.4pt; height: 8.4pt;
@@ -430,6 +430,15 @@ def page_html(title, inner, math=False):
 def cover_html():
     inner = (
         '<div class="cover">'
+        '<div class="grow" style="flex:1.25 1 0"></div>'
+        '<div class="mid">'
+        '<div class="kicker">信 号 处 理 与 识 别 系 列</div>'
+        '<h1>声纹信号处理</h1>'
+        '<p class="sub">从零开始的学习讲义</p>'
+        '<div class="rule"></div>'
+        '<div class="tag">信号 → 特征 → 神经网络 → 声纹识别</div>'
+        '</div>'
+        '<div class="grow" style="flex:1 1 0"></div>'
         '<table class="meta">'
         '<tr><td class="k">文档类型</td><td>学习讲义（自学用）</td>'
         '<td class="k">版　　本</td><td>3.0（公式版）</td></tr>'
@@ -445,15 +454,6 @@ def cover_html():
         '<tr><td class="k">说　　明</td><td colspan="3">书中公式按标准形式用 KaTeX 排版并标注出处、逐条编号；'
         '每讲附推导详解（符号表、逐步推导、数值算例、代码对应、失效条件）；全部图表由配套脚本实测生成</td></tr>'
         '</table>'
-        '<div class="grow"></div>'
-        '<div class="mid">'
-        '<div class="kicker">信 号 处 理 与 识 别 系 列</div>'
-        '<h1>声纹信号处理</h1>'
-        '<p class="sub">从零开始的学习讲义</p>'
-        '<div class="rule"></div>'
-        '<div class="tag">信号 → 特征 → 神经网络 → 声纹识别</div>'
-        '</div>'
-        '<div class="grow"></div>'
         '<div class="foot">'
         '<div class="org">共 17 讲 + 5 个专题 · 每部分含目标、做法、推导、理论桥接与自检</div>'
         '<div>配套复现项目 acoustic-lab　·　全部图表为脚本实测生成</div>'

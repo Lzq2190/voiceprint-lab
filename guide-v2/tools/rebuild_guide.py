@@ -99,6 +99,65 @@ table.sym.compact td{text-align:center}
 .bridge .note{margin:10px 0 0}
 @media (max-width:900px){.bridge{padding:12px 14px 14px}}
 @media (max-width:900px){.symgrid{grid-template-columns:1fr}.derive{padding:4px 14px 16px}}
+
+/* ============ v3.3 版式重排：宽屏铺开 / 中屏收敛 / 窄屏可用 ============ */
+/* 大屏：整块版心居中（导航+正文连成一体），不再让中间出现空洞 */
+@media (min-width:1600px){
+  .layout{max-width:1460px;grid-template-columns:300px minmax(0,1fr)}
+  main{max-width:none;margin:0;padding:42px 56px 110px}
+  nav{padding:32px 20px}
+  section{padding:34px 0}
+  header.hero{padding:34px 38px}
+}
+/* 常规桌面：铺满视口，去掉固定 1280 造成的大片空白 */
+@media (min-width:1200px) and (max-width:1599px){
+  .layout{max-width:100%;grid-template-columns:272px minmax(0,1fr)}
+  main{max-width:none;margin:0;padding:38px 50px 96px}
+  nav{padding:28px 18px}
+  section{padding:30px 0}
+}
+/* 平板：收窄导航与内边距 */
+@media (max-width:1199px) and (min-width:901px){
+  .layout{max-width:100%;grid-template-columns:238px minmax(0,1fr)}
+  nav{padding:24px 14px}
+  main{padding:30px 34px 80px}
+  section{padding:26px 0}
+}
+/* 窄屏：导航收成顶部横向胶囊条（sticky），不再吃掉大半屏 */
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);max-width:100%}
+  nav{position:sticky;top:0;z-index:60;height:auto;max-height:none;min-width:0;
+      display:flex;flex-wrap:nowrap;align-items:center;gap:6px;
+      overflow-x:auto;overflow-y:hidden;padding:9px 12px;
+      background:var(--panel);border-right:none;border-bottom:1px solid var(--border);
+      -webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  nav .brand{flex:0 0 auto;position:sticky;left:0;z-index:2;margin:0 6px 0 0;
+      padding:2px 10px 2px 0;background:var(--panel);font-size:14px;white-space:nowrap}
+  nav .sub,nav .grp{display:none}
+  nav a{flex:0 0 auto;white-space:nowrap;padding:5px 12px;font-size:13px;
+      background:var(--panel2);border-radius:999px;line-height:1.5}
+  nav a.active{border-left:none;box-shadow:inset 0 0 0 1px var(--accent)}
+  main{padding:22px 18px 64px;overflow-x:clip}
+  section{padding:22px 0;overflow-x:auto;scrollbar-width:thin}
+  section h2{font-size:21px}
+  header.hero{padding:22px 20px}
+  header.hero h1{font-size:23px}
+  table{font-size:12.2px}
+}
+/* 手机：进一步压缩内边距 */
+@media (max-width:540px){
+  main{padding:18px 13px 52px}
+  header.hero{padding:18px 16px}
+  header.hero h1{font-size:20px}
+  section h2{font-size:19px}
+}
+/* 网页打印：隐藏侧栏，正文占满 */
+@media print{
+  nav{display:none}
+  .layout{display:block;max-width:100%}
+  main{padding:0;max-width:100%}
+  section{break-inside:auto}
+}
 """
 
 # ---------------------------------------------------------------- head / body 注入

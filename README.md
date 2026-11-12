@@ -19,7 +19,14 @@
 > **v3.2 理论熔炼版**：把新加入的**郑君里《信号与系统》第三版上、下册**（12 章 / 160 条目录）熔进讲义，
 > 分两层落地——① 新增 **2 个理论专题**（D 连续 LTI 与变换域 / E z 域、DFT 与数字滤波器）；
 > ② 给 14 讲各加一块**理论桥接**，把该讲结论钉回教材的具体章节与定理。全篇 **241 个编号公式、
-> 2013 处数学排版、约 6.6 万中文字、94 张表、98 个自检项**，PDF 137 页。
+> 2015 处数学排版、约 6.6 万中文字、94 张表、98 个自检项**，PDF 137 页。
+>
+> **v3.3 版式重排版**：修掉一轮排版缺陷——PDF 封面原本把信息表压在标题上方（头重脚轻），
+> 改为「系列名 → 大标题 → 副标题 → 分隔线 → 信息表 → 出处」的经典学术封面，上下留白对称；
+> 正文上下页边距改为对称 20 mm。网页端取消固定 1280 px 版心（大屏右侧留大片空白），
+> 按 ≥1600 / 1200–1599 / 901–1199 / ≤900 四档自适应：大屏整块版心居中，窄屏把左侧栏收成
+> 顶部可横滑的胶囊导航（原先被 `max-height:300px` 截成只露 3 个条目的残块），
+> 手机端超宽表格改为区域内横滑，不再撑破整页。实测 430 / 520 / 860 / 1366 / 1920 五档均无横向溢出。
 
 ---
 
@@ -53,7 +60,7 @@
 | `acoustic-lab/run.py` | 一键入口：全流程 / `--check` 只验证 / `--wav` 跑真实录音 | 见下 |
 | `acoustic-lab/data/` | 6 段 8 kHz / 0.5 s 合成声纹：正常、铁芯松动、直流偏磁、局部放电、短路冲击、风机老化 | 可换成自己的录音 |
 | `acoustic-lab/outputs/` | 57 张 PNG、7 个 CSV、`metrics.json` | 讲义里的图全部来自这里 |
-| `guide-v2/index.html` | 讲义网页版：17 讲 + 5 个专题 + 附录，约 6.6 万中文字、94 张表、**241 个 KaTeX 编号公式（2013 处数学排版）**、18 个推导详解、**15 个理论桥接**、14 张实测图、98 个自检项 | 双击打开，无需联网 |
+| `guide-v2/index.html` | 讲义网页版：17 讲 + 5 个专题 + 附录，约 6.6 万中文字、94 张表、**241 个 KaTeX 编号公式（2015 处数学排版）**、18 个推导详解、**15 个理论桥接**、14 张实测图、98 个自检项 | 双击打开，无需联网 |
 | `guide-v2/assets/katex/` | 本地化的 KaTeX 0.16.11（CSS / JS / 60 个字体文件，约 600 KB） | 网页与 PDF 共用，保证离线渲染 |
 | `guide-v2/tools/math_data.py`、`exp_a~c.py` | 公式数据层：70 个原 ASCII 公式块的 LaTeX 映射 + 16 讲的推导详解 HTML | 改公式/加推导改这里，然后跑 `rebuild_guide.py` |
 | `guide-v2/tools/theory_d.py`、`theory_e.py` | 理论专题 D/E 的完整 section：连续 LTI 与变换域、z 域与数字滤波器（对应郑君里上/下册 12 章） | 改理论内容改这里 |
@@ -61,7 +68,7 @@
 | `guide-v2/tools/topic_a~c.py` | 3 个工程专题的完整 section：变压器声纹实战、经典算法补遗、动手实验与资料索引 | 改专题内容改这里，同样由 `rebuild_guide.py` 装配 |
 | `tools/survey_shuji.py` | 盘点 `Desktop/SHUJI` 资料，把 PDF/EPUB 目录与正文提取到 `.workbuddy/sources/`（<b>不入库</b>，版权内容） | 换新资料时重跑 |
 | `guide-v2/tools/rebuild_guide.py` | 幂等地重建 `index.html`（从 `tools/backup/index_v2.html` 原始版重新装配公式、推导、桥接、5 个专题与 KaTeX 运行时） | 改了数据层后重跑 |
-| `guide-v2/tools/check_math.py` + `check_math.js` | 用本地 Node + KaTeX 逐条渲染全部 2013 处公式，定位任何语法错误 | `python tools/check_math.py`，需 Node 18+ |
+| `guide-v2/tools/check_math.py` + `check_math.js` | 用本地 Node + KaTeX 逐条渲染全部 2015 处公式，定位任何语法错误 | `python tools/check_math.py`，需 Node 18+ |
 | `guide-v2/assets/`、`assets-print/` | 深色版（网页用）与浅色版（印刷用）两套插图 | 由脚本生成，勿手改 |
 | `guide-v2/labs.html` | 两个可拖的实验台：DFT 的缠绕/质心可视化、反向传播的链式分解（9 个权重可拖，实时数值梯度校验） | 双击打开，先预测再拖 |
 | `guide-v2/tools/render_light_figs.py` | 用浅色主题重绘全部插图（字号放大 1.3 倍，缩到 A4 后仍清晰） | 改了图之后重跑 |
@@ -113,7 +120,7 @@ python run.py --wav "data/3_局部放电.wav"   # 换成单条真实录音
 3. **近零梯度会放大相对误差**。BPNN 梯度检查一开始报 `5.3e-6`，看着像反向传播写错了；查到那个探针的解析梯度只有 `-2.03e-6`，绝对误差 `1e-11`，属于数值微分的固有噪声。所以本项目同时报相对误差与绝对误差，不靠放宽阈值掩盖。
 4. **HTML 会吞掉 LaTeX 里的裸 `<`**。把 `f_{m-1}\le k<f_m` 直接写进网页，浏览器把 `<f_m` 当成标签开始，
    公式内容凭空少一截、PDF 里甚至残留 `\[ ... \]` 源码。现在生成时自动把公式内部的 `<` / `>` 换成
-   `\lt` / `\gt`，并用 Node + KaTeX 逐条渲染校验，才把 2013 处公式全部跑通。
+   `\lt` / `\gt`，并用 Node + KaTeX 逐条渲染校验，才把 2015 处公式全部跑通。
 
 ---
 
@@ -126,7 +133,7 @@ python run.py --wav "data/3_局部放电.wav"   # 换成单条真实录音
 ```bash
 cd guide-v2
 python tools/rebuild_guide.py        # 从原始版幂等重建（公式 + 推导 + 桥接 + 5 专题 + KaTeX + 导航）
-python tools/check_math.py           # 用本地 Node + KaTeX 逐条校验，必须 2013/2013 通过
+python tools/check_math.py           # 用本地 Node + KaTeX 逐条校验，必须 2015/2015 通过
 python tools/render_light_figs.py    # 仅在改了插图配色/字号时：重绘 assets-print/
 python tools/build_pdf.py            # 重新排版 PDF（封面/目录/书签/页码自动重建）
 ```
