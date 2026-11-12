@@ -69,7 +69,58 @@ details[open] summary{border-bottom:1px solid var(--border);margin-bottom:8px}
 .checklist input{accent-color:var(--accent);margin-top:3px}
 .tag{display:inline-block;font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--border);padding:2px 8px;border-radius:5px;margin-right:6px}
 @media (max-width:900px){.layout{grid-template-columns:1fr}nav{position:static;height:auto;max-height:300px}}
+
+/* ============ 第 3 版：KaTeX 公式与推导详解 ============ */
+.katex { color: var(--text); font-size: 1.06em; }
+.mathbox{margin:18px 0 20px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#141b28}
+.mathbox .math{padding:16px 20px;text-align:center;overflow-x:auto;overflow-y:hidden;background:#111827;
+  border-bottom:1px solid var(--border)}
+.mathbox .math .katex-display{margin:.2em 0}
+.mathbox .mathnote{padding:12px 20px;font-size:14px;color:var(--muted);line-height:1.75}
+.mathbox .mathnote p{margin:6px 0}
+.mathbox .mathnote strong,.mathbox .mathnote b{color:var(--text)}
+.mathbox .mathnote .symgrid{margin:6px 0}
+.defbox{background:#161f2e;border-left:3px solid var(--accent2);border-radius:8px;
+  padding:12px 18px;margin:16px 0;font-size:14.5px}
+.defbox .dh{font-weight:700;color:var(--accent2);margin-bottom:8px;font-size:15px}
+.defbox p{margin:8px 0}
+.defbox ol{margin:8px 0;padding-left:22px}
+.defbox li{margin:5px 0}
+.symgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:8px 0;font-size:14px}
+.symgrid>div{background:var(--panel2);border-radius:6px;padding:7px 11px}
+.symgrid b{color:var(--accent2)}
+table.sym{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.8px}
+table.sym th,table.sym td{border:1px solid var(--border);padding:6px 10px;vertical-align:top}
+table.sym th{background:#202a3a;color:#fff;font-size:13.2px}
+table.sym td:first-child{white-space:nowrap;color:#ffd580;font-family:Consolas,monospace}
+table.sym.compact td{text-align:center}
+.warn.inline{background:#2a1d1d;border-left:3px solid var(--red);padding:9px 13px;
+  border-radius:6px;margin:9px 0;font-size:13.8px}
+.warn.inline .t{font-weight:700;color:var(--red);margin-right:5px}
+/* 推导详解区 */
+.derive{margin:28px 0 8px;border:1px solid #31507d;border-radius:12px;
+  background:linear-gradient(180deg,#16223a 0,#141c2b 100%);padding:6px 24px 20px}
+.derive .dtitle{font-size:16px;font-weight:700;color:#8fc0ff;letter-spacing:.02em;
+  margin:18px 0 6px;padding-bottom:9px;border-bottom:1px solid #2c466c}
+.derive h4{font-size:15px;color:var(--accent2);margin:22px 0 8px;
+  padding-left:10px;border-left:3px solid var(--accent2)}
+.derive p{font-size:14.6px;line-height:1.85;color:#d7e0ee}
+.derive ul,.derive ol{font-size:14.6px;line-height:1.85;color:#d7e0ee;padding-left:22px}
+.derive li{margin:7px 0}
+.derive .math.sub{margin:13px 0;background:#0e1624;border:1px solid #2a3b57;
+  border-radius:8px;padding:13px 16px;text-align:center;overflow-x:auto}
+.derive .math.sub .katex-display{margin:.2em 0}
+.derive pre{background:#0b0f16;font-size:12.8px}
+.derive table.sym{margin:12px 0}
+.derive .warn{font-size:14px}
+.derive strong,.derive b{color:#fff}
+.mathnote code,.derive code,.defbox code{background:#222d3f;color:#ffd580}
+@media (max-width:900px){.symgrid{grid-template-columns:1fr}.derive{padding:4px 14px 16px}}
+
 </style>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script src="assets/katex/katex.min.js"></script>
+<script src="assets/katex/contrib/auto-render.min.js"></script>
 </head>
 <body>
 <div class="layout">
@@ -103,7 +154,7 @@ details[open] summary{border-bottom:1px solid var(--border);margin-bottom:8px}
 <header class="hero">
   <span class="badge">初学者向</span><span class="badge alt">动手为主</span>
   <h1>声纹信号处理 · 从零开始的学习讲义</h1>
-  <p>基于韩纪庆《语音信号处理（第3版）》与王泉《声纹技术》两书的核心知识重新组织编写。不逐章复述，而是按「一条依赖链」把两本书讲透：每步都说明<b>怎么做、为什么、要准备什么、常见误区、怎么自检</b>。配套 <code>acoustic-lab</code> 复现项目（零第三方算法依赖，仅需 numpy + Pillow），边读边跑。</p>
+  <p>基于韩纪庆《语音信号处理（第3版）》与王泉《声纹技术》两书的核心知识重新组织编写。不逐章复述，而是按「一条依赖链」把两本书讲透：每步都说明<b>怎么做、为什么、要准备什么、常见误区、怎么自检</b>。全部公式由 KaTeX 排版并按「讲-序」编号，每讲末尾附<b>推导详解</b>（符号表、逐步推导、数值算例、代码对应、失效条件）。配套 <code>acoustic-lab</code> 复现项目（零第三方算法依赖，仅需 numpy + Pillow），边读边跑。</p>
 </header>
 
 <section id="s0">
@@ -122,7 +173,7 @@ details[open] summary{border-bottom:1px solid var(--border);margin-bottom:8px}
 
   <h3>为什么很多教程看不懂</h3>
   <p>初学者读信号处理教材最常卡在三处，这份讲义专门针对它们：</p>
-  <p><strong>第一，公式没有落到数字。</strong>书上写 <code>Δf = Fs/N</code>，读者记住了符号，却不知道"8 kHz 采样、256 点 FFT，频率分辨率就是 31.25 Hz"这个具体结论。本讲义每个公式后面都跟一个带数字的算例，你要能自己把这个数字算出来。</p>
+  <p><strong>第一，公式没有落到数字。</strong>书上写 \(\Delta f=F_s/N\)，读者记住了符号，却不知道"8 kHz 采样、256 点 FFT，频率分辨率就是 31.25 Hz"这个具体结论。本讲义每个公式后面都跟一个带数字的算例，你要能自己把这个数字算出来。</p>
   <p><strong>第二，默认你会。</strong>教材写"对信号做 Mel 滤波"，默认你知道滤波器组是一堆三角形、默认你知道为什么要取对数。本讲义把这些"默认"全部展开，包括看起来傻的问题：为什么是三角形不是矩形？为什么取 log 不取平方根？</p>
   <p><strong>第三，只讲"是什么"，不讲"错了会怎样"。</strong>没有反例的知识不牢固。每一讲后面都有"误区"和"破坏性实验"：改一个参数，先预测结果，再运行验证。这个"预测—打脸"的过程才是真正记住的地方。</p>
 
@@ -198,7 +249,7 @@ cd voiceprint-lab</code></pre>
   <h2><span class="no">第 1 讲</span>声音是什么：从声波到正弦波</h2>
   <div class="goal">
     <div class="g">目标</div>
-    <ul><li>能写出正弦波 <code>x(t)=A·sin(2πft+φ)</code>，并说清 A、f、φ 三个量各决定听感的什么。</li>
+    <ul><li>能写出正弦波 \(x(t)=A\sin(2\pi ft+\varphi)\)，并说清 A、f、φ 三个量各决定听感的什么。</li>
     <li>理解"复合音 = 基频 + 倍音叠加"，能解释为什么不同设备/不同人声听起来不同。</li>
     <li>知道声纹诊断在物理上到底在比什么。</li></ul>
   </div>
@@ -213,23 +264,39 @@ cd voiceprint-lab</code></pre>
 
   <h3>① 声音是空气的压强波</h3>
   <p>声带、铁芯、风机叶片振动，推动空气一疏一密地传播，耳朵接收到的是<strong>压强随时间的变化</strong>。所以声音最本质的数学表示，就是一个随时间变化的量：</p>
-  <div class="eq">x(t) = 某一时刻 t 的声压（单位 Pa，实际常用相对于 20 μPa 的分贝表示）</div>
+  <div class="defbox"><div class="dh">符号约定</div>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>单位 / 取值</th></tr>
+<tr><td>\(x(t)\)</td><td>时刻 \(t\) 的瞬时声压（相对大气压的微小起伏）</td><td>Pa（帕）</td></tr>
+<tr><td>\(p_0\)</td><td>听阈参考声压，人耳 1 kHz 处刚能听见</td><td>\(2\times10^{-5}\,\mathrm{Pa}=20\,\mu\mathrm{Pa}\)</td></tr>
+<tr><td>\(L_p\)</td><td>声压级（分贝表示法）</td><td>dB SPL</td></tr>
+</table>
+<p>工程上几乎不直接用 Pa，而是用 <b>声压级</b>：\(L_p=20\log_{10}\big(x_{\mathrm{rms}}/p_0\big)\)。之所以是 20 而不是 10，见本讲「推导详解」。</p></div>
   <p>三个量级要记住，用来判断"这个采样率够不够"：人耳可听范围约 <strong>20 Hz – 20 kHz</strong>；人说话的主要能量在 <strong>60–4000 Hz</strong>（所以电话用 8 kHz 采样就够）；变压器本体噪声主要能量在 <strong>50–2000 Hz</strong>，其中 100 Hz（两倍工频）是磁致伸缩的基频。</p>
   <div class="note"><span class="t">为什么变压器是 100 Hz 而不是 50 Hz</span>铁芯的磁致伸缩（硅钢片随磁场伸缩）与磁感应强度平方成正比，而 B 又以 50 Hz 交变，平方之后频率翻倍——所以本体噪声的基频是 100 Hz。这一点在第 4 讲的频谱图和文献里会反复出现（例如"50 Hz 倍频倒谱系数"就是用这个物理事实设计的特征）。</div>
 
   <h3>② 三个物理量，对应三种听感</h3>
   <p>最简单的声波是正弦波（纯音，音叉近似）：</p>
-  <div class="eq">x(t) = A · sin(2π·f·t + φ)
-A：振幅（Pa）→ 决定响度（多大声）
-f：频率（Hz）→ 决定音高（多高）
-φ：初相位（弧度）→ 单听一个纯音听不出来，但多频率叠加时决定波形形状</div>
-  <p>为什么写成 <code>2πf</code> 而不是 <code>f</code>？因为正弦的自变量是<strong>角度</strong>，不是时间。一秒转 f 圈，一圈 2π 弧度，所以角速度 ω = 2πf（rad/s）。周期与频率互为倒数：<code>T = 1/f</code>。</p>
+  <div class="mathbox">
+<div class="math">\[ x(t)=A\sin\!\big(2\pi f t+\varphi\big)=A\sin\!\big(\tfrac{2\pi}{T}t+\varphi\big),\qquad T=\frac{1}{f} \tag{1-2} \]</div>
+<div class="mathnote"><div class="symgrid">
+<div><b>\(A\)</b> 振幅（Pa）→ 决定<b>响度</b>；有效值 \(x_{\mathrm{rms}}=A/\sqrt{2}\)</div>
+<div><b>\(f\)</b> 频率（Hz）→ 决定<b>音高</b>；角频率 \(\omega=2\pi f\)</div>
+<div><b>\(\varphi\)</b> 初相位（rad）→ 单听纯音听不出，但多频率叠加时决定波形形状</div>
+<div><b>\(T\)</b> 周期（s），一个完整振荡所需时间</div>
+</div></div>
+</div>
+  <p>为什么写成 \(2\pi f\) 而不是 <code>f</code>？因为正弦的自变量是<strong>角度</strong>，不是时间。一秒转 f 圈，一圈 2π 弧度，所以角速度 ω = 2πf（rad/s）。周期与频率互为倒数：\(T=1/f\)。</p>
   <div class="tip"><span class="t">手算一次，比看十遍公式有用</span>f = 100 Hz → 周期 T = 1/100 = <strong>0.01 s = 10 ms</strong>。若采样率 Fs = 8000 Hz，则一个周期内有 8000 × 0.01 = <strong>80 个采样点</strong>。记住这个"80 点/周期"，第 2 讲算帧长、第 4 讲算频率分辨率都要用它。</div>
 
   <h3>③ 真实声音都是复合音</h3>
   <p>纯音只有一个频率，但真实语音、乐器、变压器噪声都是<strong>很多正弦叠加</strong>：一个基频 f₀，加上频率是它整数倍的"倍音"（谐波）。</p>
-  <div class="eq">x(t) = A₁·sin(2π·f₀·t + φ₁) + A₂·sin(2π·2f₀·t + φ₂) + A₃·sin(2π·3f₀·t + φ₃) + …
-其中 f₀ 是基频，2f₀、3f₀… 是倍音（谐波），A_k 是第 k 次谐波的振幅</div>
+  <div class="mathbox">
+<div class="math">\[ x(t)=\sum_{k=1}^{K}A_k\sin\!\big(2\pi k f_0 t+\varphi_k\big)=A_1\sin(2\pi f_0t+\varphi_1)+A_2\sin(4\pi f_0t+\varphi_2)+\cdots \tag{1-3} \]</div>
+<div class="mathnote"><p>其中 \(f_0\) 是<b>基频</b>，\(kf_0\) 是第 \(k\) 次<b>谐波</b>，\(A_k,\varphi_k\) 是它的振幅与相位。
+这就是<b>傅里叶级数</b>的思想：任何周期信号都能拆成一组整数倍频率的正弦。变压器本体振动以
+\(f_0=100\,\mathrm{Hz}\)（工频 50 Hz 的两倍，因为磁致伸缩与电动势平方成正比）为基频，
+故障会改变 \(A_2,A_3,\dots\) 的分布——这正是频域能诊断故障的物理依据。</p></div>
+</div>
   <p><strong>关键结论：音色由谐波比例决定，不由基频决定。</strong>钢琴和小提琴弹同一个音（基频相同），听起来完全不同，因为它们的 2 次、3 次…谐波振幅比例不同。这条结论是"用频谱做识别"的全部依据：如果音色只由基频决定，那只需测一个频率就够了，用不着 FFT。</p>
   <h4>三种常见波形的谐波构成</h4>
   <table data-cap="三种常见波形的谐波构成">
@@ -252,9 +319,12 @@ f：频率（Hz）→ 决定音高（多高）
   <p>这张表是本讲义后半部分所有特征设计的"物理依据"：第 3 讲的过零率抓高频，第 6 讲的 MFCC 抓谐波包络，第 7 讲的小波抓瞬态，都是因为它们各自对应上表的一行。</p>
 
   <h3>⑤ 从 x(t) 到 x[n]：离散化的预告</h3>
-  <p>计算机存不下连续函数，只能存一串数。做法是每隔 <code>Ts = 1/Fs</code> 秒取一个值：</p>
-  <div class="eq">x[n] = x(n · Ts) = x(n / Fs)，n = 0, 1, 2, …
-例：Fs = 8000 Hz、时长 0.5 s → 共 8000 × 0.5 = 4000 个采样点</div>
+  <p>计算机存不下连续函数，只能存一串数。做法是每隔 \(T_s=1/F_s\) 秒取一个值：</p>
+  <div class="mathbox">
+<div class="math">\[ x[n]\;\equiv\;x(nT_s)=x\!\left(\frac{n}{F_s}\right),\qquad T_s=\frac{1}{F_s},\quad n=0,1,\dots,N-1 \tag{2-1} \]</div>
+<div class="mathnote"><p>\(F_s\) 是采样率（Hz），\(T_s\) 是采样间隔（s），\(N\) 是总点数，观测时长 \(T_{\mathrm{obs}}=NT_s=N/F_s\)。
+例：\(F_s=8000\,\mathrm{Hz}\)、时长 \(0.5\,\mathrm{s}\) → \(N=F_sT=8000\times0.5=4000\) 点，\(T_s=0.125\,\mathrm{ms}\)。</p></div>
+</div>
   <p>这 4000 个数就是你后面所有操作的原材料。打印出来看，它只是一个上下波动的数列——<strong>所有的"频率""音色""故障"，都藏在这个数列的变化规律里</strong>，需要后面的工具才能挖出来。</p>
 
   <h4>动手 1：合成一个复合音并"看"它</h4>
@@ -272,12 +342,63 @@ print('长度', len(x), '最大幅值', round(np.abs(x).max(), 3))</code></pre>
   <p>运行后你会看到类似 <code>[0. 0.15 0.29 ...]</code> 的一串小数，长度 8000，最大幅值约 1.8（三个分量在某个时刻同相叠加的结果，恰好大于 1）。这个"大于 1"很重要：<strong>叠加后幅值会超出单个分量</strong>，所以后面做 int16 量化时要注意限幅，否则会削波。</p>
   <figure><img src="assets/wave_compare.png" alt="波形对比"><figcaption>正常与局部放电的时域波形对比：正常样本是连续周期波动，局放样本在平缓背景上突然出现尖脉冲——只看波形就能分辨一类故障</figcaption></figure>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 1 讲　声音、分贝与复指数</div>
+
+<h4>1. 符号对照表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>单位</th><th>本讲义典型值</th></tr>
+<tr><td>\(x(t)\)</td><td>瞬时声压</td><td>Pa</td><td>\(10^{-3}\sim1\)</td></tr>
+<tr><td>\(p_0\)</td><td>听阈参考声压</td><td>Pa</td><td>\(2\times10^{-5}\)</td></tr>
+<tr><td>\(A\)</td><td>峰值振幅</td><td>Pa</td><td>1（归一化信号）</td></tr>
+<tr><td>\(f_0\)</td><td>基频</td><td>Hz</td><td>100（变压器）、80–300（人声）</td></tr>
+<tr><td>\(\omega\)</td><td>角频率</td><td>rad/s</td><td>\(2\pi f\)</td></tr>
+<tr><td>\(c\)</td><td>声速</td><td>m/s</td><td>343（20 ℃ 空气）</td></tr>
+</table>
+
+<h4>2. 为什么分贝前面是 20 而不是 10</h4>
+<p>声压是<b>幅度量</b>，声强（单位面积功率）正比于声压的平方：\(I=p^2/(\rho c)\)，其中 \(\rho\) 为空气密度、\(\rho c\) 为声阻抗。分贝的定义针对的是<b>功率比</b>：</p>
+<div class="math sub">\[ L=10\log_{10}\frac{I}{I_0}=10\log_{10}\frac{p^2}{p_0^2}=10\log_{10}\left(\frac{p}{p_0}\right)^2=20\log_{10}\frac{p}{p_0} \tag{1-4} \]</div>
+<p>所以「20」来自平方，不是另一个约定。同理，幅度谱画 dB 时也是 \(20\log_{10}|X|\)，而功率谱画 dB 时用 \(10\log_{10}P\)——因为 \(P=|X|^2\) 已经是功率量。<b>混用这两者是频谱图最常见的标定错误</b>。</p>
+<p>数值例：把幅值降到原来的 \(1/10\) → \(20\log_{10}(0.1)=-20\,\mathrm{dB}\)；降到 \(1/\sqrt2\) → \(-3.01\,\mathrm{dB}\)（这就是 −3 dB 半功率点的来历）。</p>
+
+<h4>3. 为什么一定要引入复数：欧拉公式把两个实数合成一个</h4>
+<div class="math sub">\[ e^{j\theta}=\cos\theta+j\sin\theta,\qquad \cos\theta=\frac{e^{j\theta}+e^{-j\theta}}{2},\qquad \sin\theta=\frac{e^{j\theta}-e^{-j\theta}}{2j} \tag{1-5} \]</div>
+<p>一个实正弦需要<b>振幅 + 相位</b>两个实数描述，或用<b>一个复数</b> \(X=|X|e^{j\varphi}\) 描述。用复指数的好处是：求导、相乘、平移都变成指数运算，不必反复套三角恒等式。例如把信号延迟 \(n_0\) 点：</p>
+<div class="math sub">\[ x[n-n_0]\;\xleftrightarrow{\ \mathrm{DFT}\ }\;X[k]\,e^{-j2\pi kn_0/N},\qquad \big|e^{-j2\pi kn_0/N}\big|=1 \tag{1-6} \]</div>
+<p>即时延<b>只改相位、不改幅度谱</b>。这条性质解释了为什么声纹特征常丢掉相位：录音起点不同、麦克风距离不同，相位全变，但幅度谱稳。</p>
+
+<h4>4. 谐波叠加：一个算到底的例子</h4>
+<p>设 \(f_0=100\,\mathrm{Hz}\)、\(A_1=1\)、\(A_2=0.5\)、\(A_3=0.2\)，相位全为 0。在 \(t=2.5\,\mathrm{ms}\)（即 \(2\pi f_0t=\pi/2\)）处：</p>
+<div class="math sub">\[ \begin{aligned}
+x(t)&=\sin(\pi/2)+0.5\sin(\pi)+0.2\sin(3\pi/2)\\
+&=1+0-0.2=0.8
+\end{aligned} \tag{1-7} \]</div>
+<p>把 \(\varphi_2\) 从 0 改成 \(\pi/2\)，第二项变成 \(0.5\sin(\pi+\pi/2)=-0.5\)，于是 \(x(t)=1-0.5-0.2=0.3\)。<b>三个振幅没变、功率谱没变，波形却明显不同</b>——这就是「相位决定波形形状、幅度谱决定能量分布」的具体含义，也是后面 MFCC 只用幅度谱的代价与理由。</p>
+
+<h4>5. 公式 ↔ 代码</h4>
+<pre><code># 式(1-2)：单频正弦
+t = np.arange(N) / fs
+x = A * np.sin(2 * np.pi * f * t + phi)
+
+# 式(1-3)：谐波叠加（K 次）
+x = sum(A[k] * np.sin(2*np.pi*(k+1)*f0*t + ph[k]) for k in range(K))
+
+# 式(1-4)：声压级
+Lp = 20 * np.log10(np.sqrt(np.mean(x**2)) / 2e-5 + 1e-12)</code></pre>
+<p><code>acoustic-lab/src/dsp.py</code> 里的 <code>make_signal()</code> 就是上面三行，六类故障信号的差别只在 \(A_k\) 的取值（正常以 100 Hz 为主；直流偏磁额外加 150/250/350 Hz 的奇次倍频）。</p>
+
+<h4>6. 边界与失效条件</h4>
+<ul><li>\(A\) 超过 ADC 满量程 → <b>削波</b>，波形被削平，凭空产生大量高次谐波，频谱里出现本不存在的峰。任何后续分析都救不回来。</li>
+<li>叠加只是<b>线性</b>模型；声压很大、传播距离很远时会出现非线性失真，此时 \(A_k\) 不再独立。</li>
+<li>「相位听不出来」只对<b>单个稳态纯音</b>成立；多分量叠加、瞬态、双耳定位时相位是可听的。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>把"频率高"当成"声音大"。</b>频率和振幅是两个独立维度：高频可以很小声，低频可以很大声。② <b>以为基频决定音色。</b>决定音色的是谐波比例。③ <b>把"采样点数多"当成"信息多"。</b>采样率不够时，点再多也只是把混叠后的假信号画得更细（第 2 讲会算给你看）。</div>
 
   <h3>自检</h3>
   <div class="checklist">
-    <label><input type="checkbox" data-k="q1-1"> 我能写出 <code>x(t)=A·sin(2πft+φ)</code>，并说出 A、f、φ 各影响什么。</label>
+    <label><input type="checkbox" data-k="q1-1"> 我能写出 \(x(t)=A\sin(2\pi ft+\varphi)\)，并说出 A、f、φ 各影响什么。</label>
     <label><input type="checkbox" data-k="q1-2"> 我能解释：为什么钢琴和小提琴弹同一个音听起来不一样？</label>
     <label><input type="checkbox" data-k="q1-3"> 我能算出 100 Hz 正弦在 8 kHz 采样下一个周期有 80 个点。</label>
     <label><input type="checkbox" data-k="q1-4"> 我能说出变压器本体噪声基频为什么是 100 Hz 而不是 50 Hz。</label>
@@ -304,12 +425,20 @@ print('长度', len(x), '最大幅值', round(np.abs(x).max(), 3))</code></pre>
   <h3>① 采样：为什么必须"两倍"</h3>
   <p>采样就是把连续信号每隔 Ts 秒"拍一张照片"。问题在于：如果拍得太稀，快慢不同的两个信号会拍出<strong>完全一样的照片</strong>，你就再也分不清了。这叫混叠（aliasing）。</p>
   <p>采样定理（奈奎斯特）说：要无失真地恢复最高频率为 f_max 的信号，采样率必须满足</p>
-  <div class="eq">Fs > 2 · f_max        （2·f_max 称为奈奎斯特频率）
-反过来：能正确表示的最高频率只有 Fs/2，称为"奈奎斯特上限"</div>
+  <div class="mathbox">
+<div class="math">\[ F_s\gt 2f_{\max}\quad\Longleftrightarrow\quad f_{\max}\lt \frac{F_s}{2}=f_{\mathrm{Nyq}} \tag{2-2} \]</div>
+<div class="mathnote"><p>\(f_{\mathrm{Nyq}}=F_s/2\) 称<b>奈奎斯特频率</b>。<b>本讲义 \(F_s=8\,\mathrm{kHz}\)，
+所以有效期率上限是 \(4000\,\mathrm{Hz}\)</b>；再扣掉抗混叠滤波器的过渡带，工程可用带宽约 \(3.4\,\mathrm{kHz}\)。
+注意这是「严格大于」：等号成立时若采样相位恰好落在过零点，信号会整体消失。</p></div>
+</div>
   <p><strong>手算一个混叠例子：</strong>有一个 1000 Hz 的正弦，用 Fs = 800 Hz 采样（明显不够）。采样后它看起来是多少 Hz？混叠频率的算法是</p>
-  <div class="eq">f_alias = |f − k·Fs| 中落在 [0, Fs/2] 的那个值
-取 k = 1：|1000 − 800| = 200 Hz → 落在 [0, 400] 内，所以看起来是 200 Hz
-结论：一个 1000 Hz 的信号，用 800 Hz 采样，会被误认成 200 Hz —— 而且<b>再怎么增加采样点数也救不回来</b></div>
+  <div class="mathbox">
+<div class="math">\[ f_{\mathrm{alias}}=\min_{k\in\mathbb{Z}}\big|f-kF_s\big|\;\in\;[0,F_s/2] \tag{2-3} \]</div>
+<div class="mathnote"><p>取 \(k=1\) 的例子：\(f=1000\,\mathrm{Hz}\)、\(F_s=800\,\mathrm{Hz}\) →
+\(|1000-800|=200\,\mathrm{Hz}\)，落在 \([0,400]\) 内，于是这个 1000 Hz 的信号被<b>永久误认</b>成 200 Hz。
+关键是：<b>采样完成后信息已经丢失，增加采样点数、换更好的算法都救不回来</b>。
+所以抗混叠必须是采样<b>之前</b>的模拟低通滤波，这是硬件责任，不是软件责任。</p></div>
+</div>
   <p>这就是为什么"采样率"是设备选型的第一参数：一旦定了 <b>8 kHz</b>，<b>4000 Hz 以上的成分注定是假的</b>——不是"变模糊"，而是原封不动地折叠成低频混进来，事后任何算法都分不开。反过来，也不是越高越好——第 0 讲提过，16 kHz 之后识别率几乎不再提升，纯属浪费存储和算力。</p>
   <div class="note"><span class="t">4000 Hz 是理论值，工程上还要打折</span>8 kHz 的奈奎斯特上限是 Fs/2 = <b>4000 Hz</b>，这是"能表示"的极限，不是"能用"的带宽。要真做到不失真，采样之前必须先用抗混叠低通把 4000 Hz 以上滤掉；而真实滤波器不是悬崖，它有过渡带——一般从 3400 Hz 就开始滚降，到 4000 Hz 才压够，所以保护带要留 10%–20%。<b>工程上把 8 kHz 的可用带宽认作 3.4 kHz 左右</b>。电话语音标准之所以是 300–3400 Hz，就是因为要给这个滤波器留出过渡带，而不是因为 3400 Hz 以上没用。</div>
   <div class="tip"><span class="t">所以选型该这样问</span>不是问"我要用的最高频率是多少"，而是问"最高频率 × 1.2 是多少，哪个采样率超过它"。比如要分析 3 kHz 的局放超声成分，8 kHz 只剩 3.4 kHz 的可信带，已经贴着边了；要看 4 kHz 以上，必须上 16 kHz。</div>
@@ -324,10 +453,11 @@ print('长度', len(x), '最大幅值', round(np.abs(x).max(), 3))</code></pre>
   <h3>② 量化：一个比特值多少分贝</h3>
   <p>采样只离散了时间，振幅还是连续的。量化把振幅切成有限个等级：B 个比特 → <strong>2^B 个等级</strong>。16 bit → 65536 级，把 −1 到 +1 的电压范围分完，每一级约 3.05×10⁻⁵。</p>
   <p>量化的误差可以看成均匀分布在 ±q/2 之间的随机噪声（q 是级距），其功率为 q²/12。信号是满幅正弦时功率为 A²/2，两者一比得到著名的经验公式：</p>
-  <div class="eq">SNR(dB) ≈ 6.02·B + 1.76
-B = 16 → 6.02×16 + 1.76 ≈ 98 dB
-B = 8  → 6.02×8  + 1.76 ≈ 50 dB
-每多 1 bit，信噪比提高约 6 dB —— 这就是"一个比特 6 dB"的来历</div>
+  <div class="mathbox">
+<div class="math">\[ \mathrm{SNR}_{\mathrm{dB}}=10\log_{10}\frac{P_x}{P_q}\approx6.02\,B+1.76\quad(\text{满幅正弦输入}) \tag{2-4} \]</div>
+<div class="mathnote"><p>\(B=16\) → \(6.02\times16+1.76\approx98\,\mathrm{dB}\)；\(B=8\) → \(\approx50\,\mathrm{dB}\)。
+每多 1 bit 提高约 6 dB，这就是「一个比特 6 dB」的来历。完整推导见本讲「推导详解」。</p></div>
+</div>
   <p>拿它跟需求比：语音的动态范围约 55 dB，所以 10 bit（62 dB）以上就够；现场设备用 16 bit（98 dB）是为了留出余量——传声器前置放大器的本底噪声、突发冲击声（短路冲击）的峰值，都需要这 40 dB 的余量。</p>
   <div class="warn"><span class="t">一个容易踩的坑</span>int16 的取值范围是 <b>−32768 ~ +32767</b>，不是 ±32768。所以定点转换要用 <code>np.clip(x, -1, 1) * 32767</code>，不要乘 32768；否则 +1.0 会溢出成 −32768，波形上出现一个突然的"反向尖峰"，后面所有特征都会被它污染。</div>
 
@@ -338,19 +468,29 @@ B = 8  → 6.02×8  + 1.76 ≈ 50 dB
   <h3>③ 分帧：因为语音是"短时平稳"的</h3>
   <p>一整句话从"开"到"始"，声学特性完全不同（这叫非平稳）。但发声器官的肌肉运动比声波振动慢得多，所以在<strong>10–30 ms</strong> 这么短的时间窗内，可以近似认为特性不变——这就是"短时平稳假设"，也是所有短时分析的前提。</p>
   <p>于是我们把长序列切成一段段"帧"，每帧单独分析。两个参数：</p>
-  <div class="eq">帧长 L（frame length）：一帧包含多少个采样点，常用 20–30 ms
-帧移 S（frame shift / hop）：相邻两帧起点间隔，常用 10 ms
-重叠 = L − S；50% 重叠即 S = L/2</div>
+  <div class="defbox"><div class="dh">分帧三参数</div>
+<table class="sym"><tr><th>参数</th><th>定义</th><th>常用值</th></tr>
+<tr><td>帧长 \(L\)</td><td>一帧包含的采样点数</td><td>20–30 ms（准平稳假设的窗口）</td></tr>
+<tr><td>帧移 \(S\)</td><td>相邻两帧起点的间隔（hop）</td><td>10 ms</td></tr>
+<tr><td>重叠 \(L-S\)</td><td>相邻帧共用的点数</td><td>50%–66%，即 \(S=L/2\sim L/3\)</td></tr>
+</table>
+<p>为什么必须分帧：语音/设备声的频谱随时间变化，但在一个短窗口内近似不变（<b>短时平稳</b>）。
+窗太长会跨过变化点，窗太短则频率分辨率不够（见第 5 讲的不确定关系）。</p></div>
   <p><strong>把毫秒换成点数</strong>（这一步初学者最常算错，务必自己算一遍）：</p>
-  <div class="eq">点数 = 时长(ms) × Fs / 1000
-16 kHz、25 ms → 25 × 16000 / 1000 = 400 点
-16 kHz、10 ms → 160 点
-8 kHz、25 ms  → 200 点
-8 kHz、10 ms  → 80 点</div>
+  <div class="mathbox">
+<div class="math">\[ L=\frac{t_{\mathrm{ms}}\,F_s}{1000},\qquad S=\frac{s_{\mathrm{ms}}\,F_s}{1000} \tag{2-6} \]</div>
+<div class="mathnote"><table class="sym compact"><tr><th>\(F_s\)</th><th>25 ms 帧长</th><th>10 ms 帧移</th></tr>
+<tr><td>16000 Hz</td><td>\(25\times16000/1000=400\) 点</td><td>160 点</td></tr>
+<tr><td>8000 Hz</td><td>\(25\times8000/1000=200\) 点</td><td>80 点</td></tr></table></div>
+</div>
   <p><strong>帧数怎么算：</strong>长度 N 的序列，帧长 L，帧移 S，不补零时</p>
-  <div class="eq">帧数 = floor((N − L) / S) + 1
-例：N = 16000（1 秒 @16 kHz），L = 400，S = 160
-    → (16000 − 400)/160 + 1 = 97.5 → 取整 97，再 +1 = 98 帧</div>
+  <div class="mathbox">
+<div class="math">\[ M=\left\lfloor\frac{N-L}{S}\right\rfloor+1 \tag{2-7} \]</div>
+<div class="mathnote"><p>例：\(N=16000\)（1 s @ 16 kHz）、\(L=400\)、\(S=160\) →
+\(\lfloor(16000-400)/160\rfloor+1=\lfloor97.5\rfloor+1=97+1=98\) 帧。
+最后一帧若不足 \(L\) 点，通常补零或丢弃；本讲义的 <code>frame_signal</code> 采用「丢弃不足帧」，
+所以实际帧数会随实现略有差异，写代码时务必打印形状确认。</p></div>
+</div>
   <p>98 帧这个数字很关键：1 秒语音原本 16000 个数，变成 98 个"帧"。如果每帧再压成 13 维 MFCC，就只剩 98×13 ≈ 1274 个数——<strong>数据量降了一个数量级</strong>，而判别信息基本保留。这就是"特征提取"存在的意义。</p>
 
   <h3>④ 加窗：为什么不能直接"切一刀"</h3>
@@ -381,6 +521,88 @@ F = frame_signal(x, 400, 160)     # 16 kHz 下 25ms/10ms
 print(F.shape)                    # 1 秒 → (98, 400)</code></pre>
   <p>注意这里用"索引矩阵"一次性取出所有帧，比 for 循环快一个数量级，而且天然支持批量运算——后面做 FFT、做 CNN 输入都靠它。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 2 讲　采样定理、混叠与量化噪声</div>
+
+<h4>1. 符号对照表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>单位</th><th>本讲义取值</th></tr>
+<tr><td>\(F_s\)</td><td>采样率</td><td>Hz</td><td>8000</td></tr>
+<tr><td>\(T_s\)</td><td>采样间隔 \(1/F_s\)</td><td>s</td><td>0.000125</td></tr>
+<tr><td>\(f_{\mathrm{Nyq}}\)</td><td>奈奎斯特频率</td><td>Hz</td><td>4000</td></tr>
+<tr><td>\(B\)</td><td>量化位数</td><td>bit</td><td>16</td></tr>
+<tr><td>\(L/S\)</td><td>帧长 / 帧移</td><td>点</td><td>200 / 80</td></tr>
+<tr><td>\(q\)</td><td>量化步长 \(\Delta=2A_{\max}/2^B\)</td><td>—</td><td>\(2/65536\)</td></tr>
+</table>
+
+<h4>2. 采样定理的完整推导（不跳步）</h4>
+<p><b>第 1 步：把采样建模成与冲激串相乘。</b>定义周期冲激串 \(s(t)=\sum_{n=-\infty}^{\infty}\delta(t-nT_s)\)，采样信号为</p>
+<div class="math sub">\[ x_s(t)=x(t)\,s(t)=\sum_n x(nT_s)\,\delta(t-nT_s) \tag{2-5} \]</div>
+<p><b>第 2 步：求 \(s(t)\) 的傅里叶变换。</b>它是周期函数，展开成傅里叶级数 \(s(t)=\frac{1}{T_s}\sum_{k}e^{j2\pi k t/T_s}\)，于是</p>
+<div class="math sub">\[ S(f)=\frac{1}{T_s}\sum_{k=-\infty}^{\infty}\delta\!\left(f-\frac{k}{T_s}\right)=\frac{1}{T_s}\sum_k\delta(f-kF_s) \tag{2-6} \]</div>
+<p><b>第 3 步：时域相乘 = 频域卷积。</b></p>
+<div class="math sub">\[ X_s(f)=X(f)*S(f)=\frac{1}{T_s}\sum_{k=-\infty}^{\infty}X(f-kF_s) \tag{2-7} \]</div>
+<p>这是整个采样定理的核心：<b>采样后频谱是原频谱以 \(F_s\) 为间隔的无限次平移复制</b>。</p>
+<p><b>第 4 步：读出无混叠条件。</b>设原信号带限于 \(f_{\max}\)，即 \(X(f)=0\) 当 \(|f|\gt f_{\max}\)。相邻两份副本的中心相距 \(F_s\)，各自半宽 \(f_{\max}\)。要不重叠，必须</p>
+<div class="math sub">\[ F_s-f_{\max}\gt f_{\max}\quad\Longrightarrow\quad F_s\gt 2f_{\max} \tag{2-8} \]</div>
+<p>满足时，用截止频率 \(F_s/2\) 的理想低通（增益 \(T_s\)）就能从 \(X_s(f)\) 中<b>完整取出</b> \(X(f)\)；时域上对应 Whittaker–Shannon 插值 \(x(t)=\sum_n x[n]\,\mathrm{sinc}\big((t-nT_s)/T_s\big)\)。<b>不满足时两份副本重叠，重叠区不可逆地相加，没有任何数学手段能拆开</b>。</p>
+
+<h4>3. 混叠频率公式的来历</h4>
+<p>一个频率 \(f\gt F_s/2\) 的复指数，在采样点上的值满足</p>
+<div class="math sub">\[ e^{j2\pi f n/F_s}=e^{j2\pi (f-kF_s)n/F_s}\cdot e^{j2\pi k n}=e^{j2\pi (f-kF_s)n/F_s} \tag{2-9} \]</div>
+<p>因为 \(e^{j2\pi kn}=1\)（\(k,n\) 都是整数）。<b>所有相差整数倍 \(F_s\) 的频率在采样点上完全相同</b>，这叫「频率混叠等价类」。选 \(k\) 使结果落进 \([0,F_s/2]\)，就是式 (2-3)。更一般地，还要关于 \(F_s/2\) 折叠（实信号的共轭对称）：</p>
+<div class="math sub">\[ f_{\mathrm{alias}}=\Big|\big(f\bmod F_s\big)-\mathbb 1\big[f\bmod F_s\gt F_s/2\big]\cdot F_s\Big| \tag{2-10} \]</div>
+<p>算例：\(F_s=8000\)，\(f=7500\,\mathrm{Hz}\) → \(7500\bmod8000=7500\gt 4000\) → \(|7500-8000|=500\,\mathrm{Hz}\)。
+所以 <b>7.5 kHz 的超声成分会伪装成 500 Hz 的正常振动</b>。这就是为什么抗混叠滤波器必须在 ADC <b>之前</b>用模拟电路实现——采样完成再滤波，500 Hz 处的假峰已经和数据融为一体了。</p>
+
+<h4>4. 6.02B + 1.76 dB 的完整推导</h4>
+<p>设满幅正弦 \(x(t)=A\sin(2\pi ft)\)，量化范围 \([-A,A]\) 被均分成 \(2^B\) 级，步长 \(\Delta=2A/2^B\)。</p>
+<p><b>信号功率：</b>\(P_x=\dfrac{1}{T}\int_0^T A^2\sin^2(2\pi ft)\,\mathrm{d}t=\dfrac{A^2}{2}\)。</p>
+<p><b>量化噪声功率：</b>把量化误差 \(e=x_q-x\) 近似成 \([-\Delta/2,\Delta/2]\) 上均匀分布的白噪声（在步长足够小、信号足够复杂时成立），则 \(P_q=\mathbb E[e^2]=\dfrac{1}{\Delta}\int_{-\Delta/2}^{\Delta/2}e^2\,\mathrm{d}e=\dfrac{\Delta^2}{12}\)。</p>
+<p><b>代入并化简：</b></p>
+<div class="math sub">\[ \begin{aligned}
+\mathrm{SNR}&=\frac{P_x}{P_q}=\frac{A^2/2}{\Delta^2/12}=\frac{6A^2}{\Delta^2}
+=\frac{6A^2}{(2A/2^B)^2}=\frac{6}{4}\,2^{2B}=\frac{3}{2}\,2^{2B}\\[4pt]
+\mathrm{SNR}_{\mathrm{dB}}&=10\log_{10}\!\left(\tfrac32\right)+20B\log_{10}2
+=1.7609+6.0206\,B
+\end{aligned} \tag{2-11} \]</div>
+<p>「1.76」来自 \(10\log_{10}(3/2)\)（满幅正弦的波形因子），「6.02」来自 \(20\log_{10}2\)。若输入不是满幅正弦而是均匀分布信号，常数项会变；若信号幅度远小于满量程，有效位数下降，实际 SNR 是 \(6.02B+1.76-20\log_{10}(A/A_{\max})\)。<b>所以录音电平调到接近但不触及满幅，是提升有效精度的免费手段。</b></p>
+
+<h4>5. 分帧与加窗的定量细节</h4>
+<p>汉明窗定义（\(0\le n\le L-1\)）：</p>
+<div class="math sub">\[ w[n]=0.54-0.46\cos\frac{2\pi n}{L-1},\qquad
+w_{\mathrm{Hann}}[n]=0.5-0.5\cos\frac{2\pi n}{L-1} \tag{2-12} \]</div>
+<p>加窗在时域是逐点相乘，在频域是卷积，因此窗的频谱决定了泄漏形状：</p>
+<table class="sym"><tr><th>窗</th><th>主瓣宽度（相对矩形窗）</th><th>最高旁瓣</th><th>适用</th></tr>
+<tr><td>矩形</td><td>\(1\times\)</td><td>−13 dB</td><td>频率恰为 \(\Delta f\) 整数倍时才可用</td></tr>
+<tr><td>汉宁</td><td>\(2\times\)</td><td>−31 dB</td><td>通用频谱分析</td></tr>
+<tr><td>汉明</td><td>\(2\times\)</td><td>−43 dB</td><td><b>语音/MFCC 默认</b>，旁瓣最低</td></tr>
+<tr><td>布莱克曼</td><td>\(3\times\)</td><td>−58 dB</td><td>强弱信号并存、需极高动态范围</td></tr>
+</table>
+<p>注意代价：主瓣变宽意味着<b>频率分辨率变差</b>。汉明窗主瓣约 \(4\pi/L\)（归一化角频率），对应约 2 个谱线间隔，所以「用汉明窗后能分开的最小频率间隔」约为 \(2F_s/L\)。这是选窗时必须算的一笔账。</p>
+<p>帧数：\(N=16000\)、\(L=400\)、\(S=160\) → \(M=\lfloor(16000-400)/160\rfloor+1=98\) 帧，总覆盖时长 \((M-1)S+L=97\times160+400=15920\) 点，末尾 80 点被丢弃（不足一帧）。</p>
+
+<h4>6. 公式 ↔ 代码</h4>
+<pre><code># 式(2-1)：采样
+t = np.arange(N) / fs                       # Ts = 1/fs 隐含在这里
+x = np.sin(2*np.pi*f*t)
+
+# 式(2-4)：量化（B bit，满幅 [-1,1]）
+q = np.round((x + 1) * (2**B - 1) / 2)     # 量化到整数
+xq = q * 2 / (2**B - 1) - 1                # 反量化回 [-1,1]
+
+# 式(2-10) / (2-11)：分帧 + 汉明窗
+L, S = int(0.025*fs), int(0.010*fs)
+frames = np.array([x[i:i+L] for i in range(0, len(x)-L+1, S)])
+win = 0.54 - 0.46*np.cos(2*np.pi*np.arange(L)/(L-1))
+frames = frames * win</code></pre>
+
+<h4>7. 边界与失效条件</h4>
+<ul><li><b>等号不成立：</b>\(F_s=2f_{\max}\) 时，若采样相位恰好落在每个过零点，采到的全是 0。工程上留 10–20% 余量。</li>
+<li><b>抗混叠过渡带：</b>实际滤波器不可能陡降到 0，所以 \(F_s=8\,\mathrm{kHz}\) 的<b>可用带宽约 3.4 kHz</b> 而非 4 kHz。</li>
+<li><b>量化噪声白噪声假设失效：</b>信号幅度很小、或信号是纯正弦且频率与 \(F_s\) 成简单整数比时，误差与信号相关，会变成谐波失真而非白噪声，此时 SNR 公式偏乐观。</li>
+<li><b>短时平稳假设：</b>25 ms 窗对稳态嗡鸣成立，对「敲击 / 放电脉冲」这类瞬态不成立，需要更短窗或小波（第 7 讲）。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>"采样率越高越好"。</b>超过信号最高频率两倍的部分不带来新信息，只带来存储与算力开销。② <b>"加窗会丢信息"。</b>加窗是抑制截断造成的高频泄漏，不是丢信息；真正丢信息的是一次只看一小段。③ <b>"帧长越短越好"。</b>帧太短 → 频率分辨率差（后面 MFCC 就分不开相邻谐波）；帧太长 → 违背短时平稳假设。25 ms 是无数实验折中出来的经验值。④ <b>忘记 int16 的 32767 上限</b>，导致削波。⑤ <b>把奈奎斯特上限当可用带宽</b>。8 kHz 的 4000 Hz 是理论极限，实际留 10%–20% 给抗混叠过渡带，用到 3.4 kHz 就算满了。</div>
 
@@ -397,7 +619,7 @@ print(F.shape)                    # 1 秒 → (98, 400)</code></pre>
   <div class="goal">
     <div class="g">目标</div>
     <ul><li>能手算短时能量、短时过零率、短时自相关三个特征。</li>
-    <li>能用 <code>ZCR = 2f/Fs</code> 从过零率反推频率。</li>
+    <li>能用 \(Z/N=2f/F_s\) 从过零率反推频率。</li>
     <li>知道为什么时域特征只能做"快筛"，做不了精细分类。</li></ul>
   </div>
   <div class="goal">
@@ -411,29 +633,48 @@ print(F.shape)                    # 1 秒 → (98, 400)</code></pre>
 
   <h3>① 短时能量：把一帧的"响度"变成一个数</h3>
   <p>物理上，能量与振幅的平方成正比（电阻上的功率 P = U²/R）。对离散信号，一帧内所有采样点平方求和，就得到这一帧的能量：</p>
-  <div class="eq">E_m = Σ_{n=0}^{N-1} x_m[n]²      （第 m 帧，N 为帧长）
-工程上常取对数：E_m^log = log(1 + E_m / a)，a 是防止 log(0) 的小常数</div>
+  <div class="mathbox">
+<div class="math">\[ E_m=\sum_{n=0}^{N-1}x_m^2[n],\qquad E_m^{\log}=\log\!\left(1+\frac{E_m}{a}\right) \tag{3-1} \]</div>
+<div class="mathnote"><p>第 \(m\) 帧、帧长 \(N\)。取对数是为了压缩动态范围：强信号与弱信号在同一个坐标里都看得见。
+\(a\) 是防 \(\log 0\) 的小常数。注意能量对幅值增益敏感（幅度翻倍 → 能量变 4 倍），
+所以跨设备比较前必须做幅度归一化。</p></div>
+</div>
   <p><strong>手算：</strong>一帧 4 个采样点 <code>[1, −2, 0, 2]</code>，则 E = 1² + (−2)² + 0² + 2² = <strong>9</strong>。若幅值整体放大 2 倍变成 <code>[2, −4, 0, 4]</code>，能量变成 <strong>36</strong>——放大 4 倍，因为能量是幅值的平方。这条性质决定了一个重要事实：<strong>能量对幅值极敏感，对增益（音量）不稳定</strong>。</p>
   <div class="note"><span class="t">为什么声纹里很少直接用电能作为主特征</span>因为录音设备增益一变，绝对能量就全变了。所以能量更多用来做"端点检测"（找出哪里有人说话/有冲击）和"加权"（能量大的帧更可信），而不是直接做分类特征。</div>
 
   <h3>② 短时过零率：最便宜的"频率计"</h3>
   <p>过零率统计一帧内信号穿过零点的次数，反映"变化有多快"，也就是频率高低：</p>
-  <div class="eq">Z_m = (1/2) · Σ_{n=1}^{N-1} |sgn(x_m[n]) − sgn(x_m[n−1])|
-sgn 是符号函数：正数取 1，负数取 −1，0 取 0。除以 2 是因为一个完整周期要穿零两次</div>
+  <div class="mathbox">
+<div class="math">\[ Z_m=\frac{1}{2}\sum_{n=1}^{N-1}\big|\operatorname{sgn}(x_m[n])-\operatorname{sgn}(x_m[n-1])\big| \tag{3-2} \]</div>
+<div class="mathnote"><p>\(\operatorname{sgn}\) 为符号函数（正取 1、负取 −1、零取 0）。每穿越零点一次，
+相邻两项之差的绝对值为 2，乘 \(1/2\) 恰好记一次过零。它是<b>区分清音/浊音、判断高频成分强弱</b>的粗指标，
+对直流偏置和低频漂移敏感，因此通常只在预加重与去均值之后使用。</p></div>
+</div>
   <p><strong>推导 ZCR 与频率的关系：</strong>一个频率 f 的正弦，每秒穿零 2f 次。帧长 N 个点对应时长 N/Fs 秒，所以一帧内的穿零次数为</p>
-  <div class="eq">Z = 2f · (N / Fs)      →      f = Z · Fs / (2N)
-例：Fs = 8000、N = 200（25 ms）、信号 500 Hz
-    Z = 2×500×200/8000 = 25 次 → 反推 f = 25×8000/(2×200) = 500 Hz ✓
-另一个说法更常用：过零率 Z/N = 2f/Fs，即"归一化过零率"直接正比于 f/Fs</div>
+  <div class="mathbox">
+<div class="math">\[ Z=2f\cdot\frac{N}{F_s}\quad\Longleftrightarrow\quad f=\frac{Z\,F_s}{2N},\qquad \frac{Z}{N}=\frac{2f}{F_s} \tag{3-3} \]</div>
+<div class="mathnote"><p>一个周期穿越零点两次，一帧时长 \(N/F_s\) 内包含 \(fN/F_s\) 个周期，故过零 \(2fN/F_s\) 次。
+例：\(F_s=8000\)、\(N=200\)（25 ms）、\(f=500\,\mathrm{Hz}\) → \(Z=2\times500\times200/8000=25\) 次；
+反推 \(f=25\times8000/(2\times200)=500\,\mathrm{Hz}\) ✓。归一化过零率 \(Z/N\) 直接正比于 \(f/F_s\)。</p></div>
+</div>
   <p>这个公式在实践中的用法是<strong>判清音/浊音</strong>：浊音（声带振动，有基频）能量大、过零率低；清音（气流摩擦，像"s"）能量小、过零率高。放到变压器上：风机轴承的宽带噪声、局部放电的高频脉冲，过零率都明显高于 100 Hz 基频主导的正常噪声。</p>
   <div class="warn"><span class="t">注意</span>过零率对直流偏置和低频噪声极其敏感：如果信号整体偏了 0.01，本来穿零的地方就不穿了，ZCR 会骤降。所以算 ZCR 前要先<strong>去均值</strong>（每帧减掉均值），这一步漏掉是最常见的实现错误。</div>
 
   <h3>③ 短时自相关：从"重复性"里找周期</h3>
   <p>自相关衡量信号与"自己平移 k 个点"之后的相似程度：</p>
-  <div class="eq">R_m(k) = Σ_{n=0}^{N-1-k} x_m[n] · x_m[n+k]，k = 0, 1, …, K</div>
+  <div class="mathbox">
+<div class="math">\[ R_m(k)=\sum_{n=0}^{N-1-k}x_m[n]\,x_m[n+k],\qquad k=0,1,\dots,K \tag{3-4} \]</div>
+<div class="mathnote"><p>自相关衡量「信号与它自己平移 \(k\) 点之后有多像」。周期信号在 \(k\) 等于周期（及其整数倍）处出现峰值。
+无偏版本会再除以 \(N-k\)，但那样在 \(k\) 大时噪声被放大，工程上常用上式（有偏估计）并配归一化
+\(\rho(k)=R_m(k)/R_m(0)\)。</p></div>
+</div>
   <p>直觉：如果信号每隔 T 个点重复一次，那么把信号平移 T 之后，波形几乎重合，R(T) 就会很大。所以 <strong>R(k) 的第二个峰（第一个峰在 k=0）出现的位置 k₀，就是周期</strong>：</p>
-  <div class="eq">基频估计：f₀ = Fs / k₀
-例：Fs = 8000，自相关在 k₀ = 80 处出现峰 → f₀ = 8000/80 = 100 Hz ✓（正是变压器基频）</div>
+  <div class="mathbox">
+<div class="math">\[ k_0=\mathop{\arg\max}_{k\in[k_{\min},k_{\max}]}\rho(k),\qquad f_0=\frac{F_s}{k_0} \tag{3-5} \]</div>
+<div class="mathnote"><p>例：\(F_s=8000\)，自相关在 \(k_0=80\) 处出现峰 → \(f_0=8000/80=100\,\mathrm{Hz}\) ✓（变压器基频）。
+搜索区间要按目标基频范围设定：找 80–400 Hz 对应 \(k\in[20,100]\)；不设下界容易把 \(k=0\) 的
+全局最大值（\(R(0)\) 恒等于能量）当成答案——这是最常见的实现 bug。</p></div>
+</div>
   <p><strong>手算：</strong>序列 <code>[1, 0, −1, 0, 1, 0, −1, 0]</code>（周期为 4 的方波状信号）。R(0) = 1+0+1+0+1+0+1+0 = 4；R(4) = 1·1 + 0·0 + (−1)(−1) + 0·0 = 2，是 k>0 的最大值 → 周期 4 个点。若 Fs = 8000，则 f₀ = 2000 Hz。</p>
   <p>自相关的价值在于：它比 FFT 更"抗噪"地找周期，而且计算量小，所以在基频估计、声门周期检测里用得很多。缺点是对非周期成分（噪声、瞬态）不敏感——这也正好是它的定位。</p>
 
@@ -463,13 +704,70 @@ E, Z, R = frame_feats(x)
 print('能量最大帧', E.argmax(), '峰值', round(E.max(), 1))</code></pre>
   <p>对"短路冲击"样本跑一遍，你会看到能量曲线在某一帧突然跳起 1~2 个数量级——<strong>只看这一条曲线就能定位冲击发生在 0.5 秒里的第几毫秒</strong>。这就是时域特征最实用的场景。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 3 讲　时域特征的完整推导</div>
+
+<h4>1. 从连续能量到短时能量</h4>
+<p>连续信号的总能量是 \(E=\int_{-\infty}^{\infty}x^2(t)\,\mathrm{d}t\)。对离散、加窗后的第 \(m\) 帧，积分换成求和：</p>
+<div class="math sub">\[ E_m=\sum_{n=0}^{N-1}\big(x[n]\,w[n-mS]\big)^2=\sum_{n=0}^{N-1}x_m^2[n] \tag{3-6} \]</div>
+<p>注意<b>窗函数平方也进来了</b>：汉明窗两端接近 0.08，平方后仅 0.0064，意味着帧两端的样本对能量贡献被压掉 99%。这是加窗的必然代价，也是帧与帧要重叠 50% 以上的原因——否则边界信息会周期性丢失。</p>
+<p>归一化到「平均功率」要除以 \(\sum_n w^2[n]\) 而不是 \(N\)：\(\bar P_m=\dfrac{E_m}{\sum_n w^2[n]}\)。对汉明窗，\(\sum w^2\approx0.397L\)，除以 \(L\) 会低估约 2.5 倍（约 4 dB）。</p>
+
+<h4>2. 过零率公式为什么有系数 2</h4>
+<p>纯正弦 \(x(t)=A\sin(2\pi ft)\) 在一个周期 \(T=1/f\) 内穿越零点 2 次（上升沿、下降沿各一次）。一帧时长 \(T_{\mathrm{frame}}=N/F_s\)，包含 \(T_{\mathrm{frame}}/T=fN/F_s\) 个周期，故</p>
+<div class="math sub">\[ Z=2\cdot\frac{fN}{F_s},\qquad \frac{Z}{N}=\frac{2f}{F_s},\qquad f=\frac{Z\,F_s}{2N} \tag{3-7} \]</div>
+<p>代入数字：\(F_s=8000\)、\(N=200\)、\(f=500\) → \(Z=2(500)(200)/8000=25\)。
+反过来 \(f=25\times8000/(2\times200)=500\,\mathrm{Hz}\) ✓。</p>
+<p><b>这个反推的适用条件很窄</b>：只对单频、无直流、无噪声的正弦成立。真实信号里谐波也会过零，噪声更会制造大量虚假过零，所以过零率只能当「高频成分多不多」的粗指标，<b>不能当基频估计器</b>——基频要靠自相关（下式）。</p>
+
+<h4>3. 自相关为什么能测周期：一步不跳的证明</h4>
+<p>设 \(x[n]\) 周期为 \(P\)，即 \(x[n+P]=x[n]\)。把它代入自相关定义：</p>
+<div class="math sub">\[ R(P)=\sum_n x[n]\,x[n+P]=\sum_n x^2[n]=R(0)=E,\qquad
+\rho(P)=\frac{R(P)}{R(0)}=1 \tag{3-8} \]</div>
+<p>即周期整数倍处的归一化自相关恒为 1；而非周期倍数处，乘积正负相消，\(\rho(k)\) 明显小于 1。
+有偏估计 \(R(k)=\sum_{n=0}^{N-1-k}x[n]x[n+k]\) 的求和项随 \(k\) 增大而减少，所以峰值会随 \(k\) 缓慢下降——
+这反而有助于抑制大 \(k\) 处的伪峰。若改用无偏估计（除以 \(N-k\)），在 \(k\to N\) 时只剩极少数样本，方差爆炸，反而更容易选错峰。<b>「有偏」在这里是特性不是缺陷。</b></p>
+<p>峰值搜索必须避开 \(k=0\)：\(\rho(0)\equiv1\) 是全局最大值。按目标基频范围设区间：</p>
+<div class="math sub">\[ k\in\left[\left\lfloor\frac{F_s}{f_{\max}}\right\rfloor,\ \left\lceil\frac{F_s}{f_{\min}}\right\rceil\right]
+\;\xrightarrow{\;F_s=8000,\ f\in[80,400]\mathrm{Hz}\;}\;k\in[20,\,100] \tag{3-9} \]</div>
+<p>例：在 \(k_0=80\) 处取到峰 → \(f_0=8000/80=100\,\mathrm{Hz}\)，周期 \(T=1/100=10\,\mathrm{ms}\) = 80 点 ✓。</p>
+
+<h4>4. 双门限端点检测：把两个特征合起来用</h4>
+<p>单靠能量会把强噪声当语音，单靠过零率会把静音段的微弱直流漂移当清音。工程做法是<b>三级状态机</b>：</p>
+<div class="math sub">\[ \begin{cases}
+E_m\gt \tau_{\mathrm{high}} &\Rightarrow \text{进入「有效段」}\\
+\tau_{\mathrm{low}}\lt E_m\le\tau_{\mathrm{high}}\ \text{且}\ Z_m\lt \tau_{Z} &\Rightarrow \text{暂留（可能是尾部）}\\
+E_m\le\tau_{\mathrm{low}} &\Rightarrow \text{判为静音，回退到高门限越过的起点}
+\end{cases} \tag{3-10} \]</div>
+<p>门限常按背景噪声自适应：\(\tau_{\mathrm{low}}=\mu_E+2\sigma_E\)、\(\tau_{\mathrm{high}}=4\tau_{\mathrm{low}}\)（前 100 ms 假定为静音用于估计 \(\mu_E,\sigma_E\)）。低门限负责「不切掉弱起音」，高门限负责「不被噪声骗开」，两者缺一不可。</p>
+
+<h4>5. 公式 ↔ 代码</h4>
+<pre><code># 式(3-1) 能量 / 式(3-2) 过零率
+E = np.sum(frames**2, axis=1)
+Z = 0.5*np.sum(np.abs(np.diff(np.sign(frames), axis=1)), axis=1)
+
+# 式(3-4)(3-5) 归一化自相关 + 限定区间找峰
+def pitch(x, fs, fmin=80, fmax=400):
+    x = x - x.mean()
+    r = np.correlate(x, x, 'full')[len(x)-1:]      # R(k), k=0..N-1
+    lo, hi = int(fs/fmax), min(int(fs/fmin), len(r)-1)
+    k0 = lo + np.argmax(r[lo:hi+1] / (r[0] + 1e-12))
+    return fs / k0, k0</code></pre>
+<p>注意 <code>np.correlate(x,x,'full')</code> 取后半段才是 \(k\ge0\) 的部分；写成 <code>[:len(x)]</code> 会得到反向序列，峰位置全错。配套项目的 <code>autocorr_pitch()</code> 已按上式实现并做了去直流。</p>
+
+<h4>6. 边界与失效条件</h4>
+<ul><li><b>直流偏置</b>：哪怕只有 0.01 的直流，也会让过零率几乎归零。必须先去均值或预加重。</li>
+<li><b>倍周期 / 半周期错误</b>：自相关在 \(2P,3P\) 处同样有峰，在 \(P/2\) 处对某些波形也有较强峰。取「第一个超过阈值的峰」比取全局最大更稳。</li>
+<li><b>帧长不够</b>：要可靠看到 \(f_{\min}=80\,\mathrm{Hz}\) 的一个周期，帧长至少 \(F_s/f_{\min}=100\) 点（12.5 ms @8 kHz），实务上取 2–3 个周期以上。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>算 ZCR 不去均值。</b>直流偏置会让过零率完全失真。② <b>把能量当"音色"特征。</b>能量是响度，换个录音增益就变。③ <b>用自相关找周期却不限制 k 范围。</b>k 应该限制在"可能的基频范围"内（如 50–500 Hz 对应 k = 16–160 @8 kHz），否则会被倍周期或噪声峰骗到。④ <b>拿一帧的结果当结论。</b>单帧特征抖动很大，实际都按"一段时间的统计量"（均值、方差、分位数）使用。</div>
 
   <h3>自检</h3>
   <div class="checklist">
     <label><input type="checkbox" data-k="q3-1"> 我能手算 <code>[1,−2,0,2]</code> 的短时能量（9）。</label>
-    <label><input type="checkbox" data-k="q3-2"> 我能用 <code>Z = 2fN/Fs</code> 算出 500 Hz、200 点帧、8 kHz 下的过零率（25 次）。</label>
+    <label><input type="checkbox" data-k="q3-2"> 我能用 \(Z=2fN/F_s\) 算出 500 Hz、200 点帧、8 kHz 下的过零率（25 次）。</label>
     <label><input type="checkbox" data-k="q3-3"> 我能解释自相关峰位置怎么换算成基频。</label>
     <label><input type="checkbox" data-k="q3-4"> 我能说出时域特征为什么分不开"同能量的不同频率故障"。</label>
   </div>
@@ -492,44 +790,75 @@ print('能量最大帧', E.argmax(), '峰值', round(E.max(), 1))</code></pre>
     <div class="tip"><span class="t">配套可拖演示</span>打开同目录下的 <code>labs.html</code>（第一个标签页），把探测频率从 0 拖到 4000：当 f 命中真实分量时，圆里的点会朝一边堆叠、质心明显偏离圆心；f 对不上时点铺满一圈、质心回到圆心。那段动画就是 DFT 本身，比任何文字解释都直接。</div>
 
 <h3>先修知识与准备</h3>
-  <p>需要：复数与欧拉公式 <code>e^(jθ) = cosθ + j·sinθ</code>、内积（点乘）、求和符号 Σ。这三样就够，不需要任何泛函知识。</p>
+  <p>需要：复数与欧拉公式 \(e^{j\theta}=\cos\theta+j\sin\theta\)、内积（点乘）、求和符号 Σ。这三样就够，不需要任何泛函知识。</p>
 
   <h3>① 核心直觉：频谱是"投影系数"</h3>
-  <p>先看一个平面几何事实：向量 <code>a=(1,0)</code> 与 <code>b=(0,1)</code> 的内积为 0，叫<strong>正交</strong>。正交的好处是"互不干扰"：你想知道 a 在 x 方向的分量，就用 a 和 x 轴单位向量做内积，y 方向的存在完全不影响结果。</p>
-  <p>傅里叶变换做的正是这件事，只不过向量换成了"函数"，内积换成了"相乘再求和/积分"。频率为 f 的复指数 <code>e^(j2πft)</code> 就是"频率轴上的单位向量"。不同频率的复指数彼此正交：</p>
-  <div class="eq">∫ e^(j2πf₁t) · conj(e^(j2πf₂t)) dt = 0   （当 f₁ ≠ f₂）
-所以"信号在频率 f 上的分量" = 信号与 e^(j2πft) 的内积 = 信号与那个频率的相似程度</div>
+  <p>先看一个平面几何事实：向量 \(\mathbf a=(1,0)\) 与 \(\mathbf b=(0,1)\) 的内积为 0，叫<strong>正交</strong>。正交的好处是"互不干扰"：你想知道 a 在 x 方向的分量，就用 a 和 x 轴单位向量做内积，y 方向的存在完全不影响结果。</p>
+  <p>傅里叶变换做的正是这件事，只不过向量换成了"函数"，内积换成了"相乘再求和/积分"。频率为 f 的复指数 \(e^{j2\pi ft}\) 就是"频率轴上的单位向量"。不同频率的复指数彼此正交：</p>
+  <div class="mathbox">
+<div class="math">\[ \left\langle e^{j2\pi f_1t},\,e^{j2\pi f_2t}\right\rangle=\int_{0}^{T}e^{j2\pi f_1t}\,\overline{e^{j2\pi f_2t}}\,\mathrm{d}t=0\quad(f_1\neq f_2) \tag{4-1} \]</div>
+<div class="mathnote"><p>复指数 \(e^{j2\pi ft}=\cos(2\pi ft)+j\sin(2\pi ft)\)（欧拉公式）就是「频率轴上的单位向量」，
+不同频率彼此正交，所以「信号在频率 \(f\) 上的分量」＝信号与该频率复指数的内积。
+离散情形下正交性由几何级数保证，完整推导见本讲「推导详解」。</p></div>
+</div>
   <p>这就是为什么频谱能"分离混在一起的谐波"：各频率互不干扰，各投各的影。理解了这一句，DFT 的公式就不需要背了。</p>
 
   <h3>② DFT 公式与每个符号的含义</h3>
-  <div class="eq">X[k] = Σ_{n=0}^{N-1} x[n] · e^(−j·2π·k·n/N)，  k = 0, 1, …, N−1
-x[n]：第 n 个采样点（时域）
-X[k]：第 k 个频率分量（频域，复数）
-e^(−j2πkn/N)：第 k 个"基函数"，就是一个频率为 k 的复正弦
-k 对应的物理频率：f_k = k · Fs / N</div>
+  <div class="mathbox">
+<div class="math">\[ X[k]=\sum_{n=0}^{N-1}x[n]\,e^{-j\frac{2\pi kn}{N}}
+=\sum_{n=0}^{N-1}x[n]\,W_N^{kn},\qquad W_N\;\equiv\;e^{-j2\pi/N},\quad k=0,\dots,N-1 \tag{4-2} \]</div>
+<div class="mathnote"><table class="sym"><tr><th>符号</th><th>含义</th></tr>
+<tr><td>\(x[n]\)</td><td>第 \(n\) 个采样点（时域，实数或复数）</td></tr>
+<tr><td>\(X[k]\)</td><td>第 \(k\) 个频率分量（频域，<b>复数</b>）；模长＝强度，辐角＝相位</td></tr>
+<tr><td>\(W_N^{kn}\)</td><td>旋转因子（twiddle factor），第 \(k\) 个基函数在 \(n\) 处的值</td></tr>
+<tr><td>\(f_k\)</td><td>第 \(k\) 根谱线的物理频率 \(f_k=kF_s/N\)，间隔 \(\Delta f=F_s/N\)</td></tr>
+</table>
+<p>逐项翻译：对每个 \(k\)，把整段信号与第 \(k\) 个复正弦<b>逐点相乘再求和</b>。含该频率则同号居多、求和结果大；
+不含则正负相消、结果近 0。逆变换为 \(x[n]=\frac{1}{N}\sum_{k=0}^{N-1}X[k]e^{j2\pi kn/N}\)——
+注意 \(1/N\) 只在逆变换一侧，这个约定决定了后面幅度谱要乘 \(2/N\)。</p></div>
+</div>
   <p>逐项翻译：对每个 k，把整段信号 x[n] 与第 k 个复正弦<strong>逐点相乘再求和</strong>。如果信号里含有这个频率，乘积同号居多，求和结果就大；如果信号里没有，正负相消，结果接近 0。<code>X[k]</code> 是复数，模长是"这个频率有多强"，辐角是"这个频率的相位"。</p>
-  <div class="note"><span class="t">记住一个换算</span>频率分辨率 <b>Δf = Fs / N</b>，即第 k 根谱线对应 k·Δf。这个数字决定了"两个频率能不能分开"。例：Fs = 8000、N = 256 → Δf = 31.25 Hz，意味着 100 Hz 和 120 Hz 两个成分在图上会糊在一起；N = 1024 → Δf = 7.8 Hz，就能分开。</div>
+  <div class="note"><span class="t">记住一个换算</span>频率分辨率 <b>\(\Delta f=F_s/N\)</b>，即第 k 根谱线对应 k·Δf。这个数字决定了"两个频率能不能分开"。例：Fs = 8000、N = 256 → Δf = 31.25 Hz，意味着 100 Hz 和 120 Hz 两个成分在图上会糊在一起；N = 1024 → Δf = 7.8 Hz，就能分开。</div>
 
   <h3>③ 手算一个 4 点 DFT</h3>
   <p>取 <code>x = [1, 0, 1, 0]</code>（周期为 2 的交替序列），N = 4。基函数是 4 个点上的复指数，取值只有 <code>1, −j, −1, j</code> 四种：</p>
-  <div class="eq">k=0：X[0] = 1·1 + 0·1 + 1·1 + 0·1 = 2
-k=1：X[1] = 1·1 + 0·(−j) + 1·(−1) + 0·(j) = 1 − 1 = 0
-k=2：X[2] = 1·1 + 0·(−1) + 1·1 + 0·(−1) = 2
-k=3：X[3] = 1·1 + 0·(j) + 1·(−1) + 0·(−j) = 0
-结果：X = [2, 0, 2, 0]</div>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+X[0]&=1+0+1+0=2\\
+X[1]&=1\cdot1+0\cdot(-j)+1\cdot(-1)+0\cdot j=1-1=0\\
+X[2]&=1\cdot1+0\cdot(-1)+1\cdot1+0\cdot(-1)=2\\
+X[3]&=1\cdot1+0\cdot j+1\cdot(-1)+0\cdot(-j)=0
+\end{aligned}\quad\Rightarrow\quad X=[2,\,0,\,2,\,0] \tag{4-3} \]</div>
+<div class="mathnote"><p>取 \(x=[1,0,1,0]\)、\(N=4\)，基函数在 4 个点上的取值只有 \(1,-j,-1,j\)。
+怎么读：\(X[0]=2\) 是直流（均值 \(\times N=0.5\times4=2\) ✓）；\(X[2]=2\) 对应
+\(f=2F_s/4=F_s/2\)，正是「1,0,1,0」的交替频率；\(X[1]=X[3]=0\) 说明没有其他成分。
+<b>DFT 只是把信号往每个频率上射一次影</b>。</p></div>
+</div>
   <p>怎么读这个结果？X[0]=2 是直流分量（均值×N = 0.5×4 = 2 ✓）；X[2]=2 对应频率 k=2，即 f = 2·Fs/4 = Fs/2，正是这个"1,0,1,0"序列的交替频率；X[1]=X[3]=0 说明没有其他成分。<strong>算一遍就明白：DFT 只是把信号往每个频率上射一次影。</strong></p>
 
   <h3>④ 三个必须搞清的工程细节</h3>
   <h4>细节 1：单边谱要乘 2/N 才是真实幅值</h4>
   <p>实信号的频谱是共轭对称的（X[N−k] = conj(X[k])），负频率没有独立信息，所以工程上只看前 N/2+1 根谱线。此时那根谱线的模要除以 N/2 才等于正弦的真实振幅：</p>
-  <div class="eq">单边幅度谱：A[k] = 2·|X[k]| / N      （k = 0 除外，直流不乘 2）
-例：幅值 1.0 的 100 Hz 正弦，N = 1024，在 k 对应 100 Hz 处 |X[k]| ≈ 512 → A = 2×512/1024 = 1.0 ✓</div>
+  <div class="mathbox">
+<div class="math">\[ A[k]=\begin{cases}\dfrac{|X[0]|}{N},&k=0\\[6pt]\dfrac{2\,|X[k]|}{N},&1\le k\lt N/2\end{cases} \tag{4-4} \]</div>
+<div class="mathnote"><p>实信号的频谱共轭对称：\(X[N-k]=\overline{X[k]}\)，负频率没有独立信息，只看前 \(N/2+1\) 根谱线。
+幅度为 \(A\) 的实正弦 \(A\sin(2\pi f t)\) 由 \(\pm f\) 两个复指数各分到 \(A/2\)，
+DFT 求和后每侧模长为 \(AN/2\)，因此乘 \(2/N\) 才还原成 \(A\)。
+例：幅值 1.0、\(N=1024\) → \(|X[k]|\approx512\) → \(A=2\times512/1024=1.0\) ✓。
+忘了这个归一化就会得出「信号幅值 512 Pa」的荒谬结论。</p></div>
+</div>
   <p>忘了这个 2/N，画出来的谱幅值是 512 而不是 1，就会得出"信号幅值 512 Pa"这种荒谬结论——这是初学者最常见的错误之一。</p>
 
   <h4>细节 2：补零不能提高分辨率</h4>
   <p>把 256 点信号补零到 1024 点再做 FFT，谱线看起来"更密"（Δf 从 31.25 变成 7.8 Hz），但<strong>分辨率并没有变好</strong>。因为分辨率由"实际观测时长 T = N_original/Fs"决定，补零只是把同一条曲线插值画得更细——本来糊在一起的两个峰，补零后还是糊在一起，只是多画了几个点。</p>
-  <div class="eq">真实分辨率 Δf = 1 / T_obs = Fs / N_original
-补零到 M 点只改变"画图密度"：Δf_display = Fs / M，不改变分辨能力</div>
+  <div class="mathbox">
+<div class="math">\[ \Delta f_{\mathrm{true}}=\frac{1}{T_{\mathrm{obs}}}=\frac{F_s}{N_{\text{original}}},\qquad
+\Delta f_{\mathrm{display}}=\frac{F_s}{M}\;\;(M\ge N_{\text{original}}) \tag{4-5} \]</div>
+<div class="mathnote"><p>把 256 点补零到 1024 点，谱线从 31.25 Hz 变「密」到 7.8 Hz，但<b>分辨能力没变</b>：
+补零只是对同一条连续频谱曲线做更细的插值采样。本来糊在一起的两个峰，补零后仍糊在一起，只是多画了几个点。
+要分辨间隔 5 Hz 的两个成分，观测时长至少 \(1/5=0.2\,\mathrm{s}\)——这就是声纹分析用
+0.2–1 s 片段而不是单帧 25 ms 的原因。</p></div>
+</div>
   <p>要用好这条：需要分辨间隔 5 Hz 的两个成分，观测时长至少 1/5 = 0.2 s。这也是为什么声纹分析一般用 0.2–1 s 的片段而不是 25 ms 单帧。</p>
 
   <h4>细节 3：频谱泄漏</h4>
@@ -537,9 +866,13 @@ k=3：X[3] = 1·1 + 0·(j) + 1·(−1) + 0·(−j) = 0
 
   <h3>⑤ FFT：为什么能快两个数量级</h3>
   <p>直接按公式算 N 点 DFT，需要约 N² 次复数乘法。N = 1024 时是 100 万次。Cooley–Tukey 的分治思路是：把 N 点 DFT 拆成两个 N/2 点 DFT（偶数点一组、奇数点一组），再递归下去：</p>
-  <div class="eq">复杂度：DFT 约 N² 次复数乘法 → FFT 约 (N/2)·log₂N
-N = 1024：DFT ≈ 1,048,576 次，FFT ≈ 5120 次 —— 相差 200 倍
-N = 8192：DFT ≈ 6.7×10⁷，FFT ≈ 5.3×10⁴ —— 相差 1200 倍</div>
+  <div class="mathbox">
+<div class="math">\[ C_{\mathrm{DFT}}=N^2,\qquad C_{\mathrm{FFT}}=\frac{N}{2}\log_2 N \tag{4-6} \]</div>
+<div class="mathnote"><table class="sym compact"><tr><th>\(N\)</th><th>DFT 复数乘法</th><th>FFT</th><th>加速比</th></tr>
+<tr><td>1024</td><td>\(1\,048\,576\)</td><td>\(5\,120\)</td><td>≈ 205×</td></tr>
+<tr><td>8192</td><td>\(6.7\times10^{7}\)</td><td>\(5.3\times10^{4}\)</td><td>≈ 1260×</td></tr></table>
+<p>实时系统要求 FFT 长度取 2 的幂，不是数学要求，而是 Cooley–Tukey 分治要能一直二分下去。</p></div>
+</div>
   <p>这就是为什么所有实时系统都要求 FFT 长度是 2 的幂：不是数学要求，而是分治算法要求能一直二分下去。</p>
 
   <h3>⑥ 代码：三行 DFT 与对拍</h3>
@@ -555,6 +888,107 @@ print('与 numpy 最大偏差', np.abs(X - np.fft.fft(x)).max())   # ~1e-13
 idx = np.abs(X[:128]).argmax()
 print('峰值频率', idx*8000/256, 'Hz')                       # ≈ 100 Hz</code></pre>
   <figure><img src="assets/spectrum_compare.png" alt="频谱对比"><figcaption>六类声纹的频谱对比：正常以 100 Hz 基频为主，直流偏磁在 150/250/350 Hz（50 Hz 的奇次倍频）出现明显新增峰——不同故障在频域有不同"指纹"</figcaption></figure>
+
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 4 讲　DFT 正交性、归一化与 FFT 蝶形</div>
+
+<h4>1. 符号对照表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>备注</th></tr>
+<tr><td>\(N\)</td><td>DFT 点数</td><td>本讲义 256 / 1024</td></tr>
+<tr><td>\(W_N\)</td><td>旋转因子 \(e^{-j2\pi/N}\)</td><td>\(W_N^N=1\)</td></tr>
+<tr><td>\(X[k]\)</td><td>频域第 \(k\) 点</td><td>复数，\(k=0..N-1\)</td></tr>
+<tr><td>\(\Delta f\)</td><td>谱线间隔 \(F_s/N\)</td><td>31.25 Hz @8000/256</td></tr>
+<tr><td>\(T_{\mathrm{obs}}\)</td><td>观测时长 \(N/F_s\)</td><td>决定真实分辨率</td></tr>
+</table>
+
+<h4>2. 离散正交性：用几何级数算出来</h4>
+<p>把基函数列成向量 \(\mathbf u_k=\big[W_N^{-kn}\big]_{n=0}^{N-1}\)。两个不同基的内积为</p>
+<div class="math sub">\[ \langle\mathbf u_p,\mathbf u_q\rangle=\sum_{n=0}^{N-1}e^{j2\pi(p-q)n/N}
+=\sum_{n=0}^{N-1}r^{n},\qquad r=e^{j2\pi(p-q)/N} \tag{4-7} \]</div>
+<p>若 \(p=q\)，则 \(r=1\)，和为 \(N\)。若 \(p\neq q\) 且 \(|p-q|\lt N\)，由等比级数求和</p>
+<div class="math sub">\[ \sum_{n=0}^{N-1}r^n=\frac{1-r^N}{1-r}
+=\frac{1-e^{j2\pi(p-q)}}{1-e^{j2\pi(p-q)/N}}=\frac{1-1}{1-r}=0 \tag{4-8} \]</div>
+<p>合并得 \(\langle\mathbf u_p,\mathbf u_q\rangle=N\delta_{pq}\)。<b>正交性不是公理，是「整数个周期求和为零」的直接结果</b>。这也解释了为什么 DFT 点数必须正好覆盖整数个基函数周期：一旦 \(k\) 不是整数（信号频率不落在谱线上），式 (4-8) 的分子不再为 0，能量就漏到相邻谱线——这就是<b>频谱泄漏</b>的数学来源。</p>
+
+<h4>3. 逆变换里的 1/N 是怎么定出来的</h4>
+<p>把 DFT 写成矩阵 \(X=F x\)，其中 \(F_{kn}=W_N^{kn}\)。由上式 \(F^{\mathsf H}F=N I\)（共轭转置），故 \(F^{-1}=\frac{1}{N}F^{\mathsf H}\)，于是</p>
+<div class="math sub">\[ x[n]=\frac{1}{N}\sum_{k=0}^{N-1}X[k]\,e^{j2\pi kn/N} \tag{4-9} \]</div>
+<p>把 DFT 正变换代进去可验证：\(\frac{1}{N}\sum_k\sum_m x[m]e^{-j2\pi km/N}e^{j2\pi kn/N}
+=\sum_m x[m]\,\frac{1}{N}\sum_k e^{j2\pi k(n-m)/N}=\sum_m x[m]\delta_{nm}=x[n]\) ✓。
+<b>归一化的位置是约定问题</b>：有的库把 \(1/\sqrt N\) 平分给正反变换（对称约定），numpy 采用「正变换不除、逆变换除 \(N\)」。
+写成代码对拍时，必须先确认用的是哪一套，否则结果会差 \(N\) 倍。</p>
+
+<h4>4. 共轭对称与 2/N 的完整来历</h4>
+<p>实信号 \(x[n]\in\mathbb R\) 时：</p>
+<div class="math sub">\[ X[N-k]=\sum_n x[n]e^{-j2\pi(N-k)n/N}
+=\sum_n x[n]e^{j2\pi kn/N}\underbrace{e^{-j2\pi n}}_{=1}
+=\overline{X[k]} \tag{4-10} \]</div>
+<p>再看幅度为 \(A\) 的实正弦，用欧拉公式展开：</p>
+<div class="math sub">\[ x[n]=A\sin\frac{2\pi k_0n}{N}=\frac{A}{2j}\left(e^{j2\pi k_0n/N}-e^{-j2\pi k_0n/N}\right) \tag{4-11} \]</div>
+<p>正频率 \(k_0\) 那一支与 DFT 基相消后求和得 \(N\) 个 1，故 \(X[k_0]=\frac{A}{2j}N\)，模长 \(|X[k_0]|=AN/2\)；
+负频率 \(N-k_0\) 处同样有 \(AN/2\)。<b>能量被正负频率各分一半</b>，只看单边就要补回 2 倍，再除以 \(N\) 消掉求和积累：</p>
+<div class="math sub">\[ A[k]=\frac{2|X[k]|}{N},\qquad A[0]=\frac{|X[0]|}{N}=\frac{1}{N}\left|\sum_n x[n]\right|=|\bar x| \tag{4-12} \]</div>
+<p>直流不乘 2，因为它没有「负频率伙伴」，\(X[0]=\sum_n x[n]=N\bar x\) 本身就直接给出均值。</p>
+
+<h4>5. 补零为什么只改显示密度：从 DTFT 看</h4>
+<p>把 \(N_0\) 点信号 \(x[n]\) 补零到 \(M\) 点，其 \(M\) 点 DFT 为</p>
+<div class="math sub">\[ X_M[k]=\sum_{n=0}^{N_0-1}x[n]e^{-j2\pi kn/M}=X_{\mathrm{DTFT}}\!\left(\omega=\frac{2\pi k}{M}\right) \tag{4-13} \]</div>
+<p>注意求和上限仍是 \(N_0\)：<b>补零没有增加任何新信息</b>，只是把同一条连续频谱 \(X_{\mathrm{DTFT}}(\omega)\) 在更密的频率网格上采样。
+两个频率能否分开，取决于这条连续曲线的主瓣宽度 \(\approx2\pi/N_0\)，与采样网格密度 \(2\pi/M\) 无关。
+这就是「\(\Delta f_{\mathrm{true}}=F_s/N_0\)，\(\Delta f_{\mathrm{display}}=F_s/M\)」的严格表述。</p>
+
+<h4>6. FFT：Cooley–Tukey 按时间抽取的完整分解</h4>
+<p><b>第 1 步：把求和按 \(n\) 的奇偶拆开</b>（设 \(N\) 为偶数，\(n=2r\) 与 \(n=2r+1\)，\(r=0..N/2-1\)）：</p>
+<div class="math sub">\[ \begin{aligned}
+X[k]&=\sum_{r=0}^{N/2-1}x[2r]W_N^{k(2r)}+\sum_{r=0}^{N/2-1}x[2r+1]W_N^{k(2r+1)}\\
+&=\underbrace{\sum_r x[2r]W_{N/2}^{kr}}_{E[k]}+W_N^{k}\underbrace{\sum_r x[2r+1]W_{N/2}^{kr}}_{O[k]}
+=E[k]+W_N^{k}O[k]
+\end{aligned} \tag{4-14} \]</div>
+<p>用了 \(W_N^{2kr}=e^{-j2\pi(2kr)/N}=e^{-j2\pi kr/(N/2)}=W_{N/2}^{kr}\)。\(E,O\) 恰是两个 \(N/2\) 点 DFT。</p>
+<p><b>第 2 步：利用周期性与对称性省掉一半计算。</b>因为 \(E,O\) 以 \(N/2\) 为周期，且</p>
+<div class="math sub">\[ W_N^{k+N/2}=e^{-j2\pi(k+N/2)/N}=W_N^{k}\,e^{-j\pi}=-W_N^{k} \tag{4-15} \]</div>
+<p>于是对 \(k=0..N/2-1\) 配对计算（这就是<b>蝶形运算</b>）：</p>
+<div class="math sub">\[ \begin{cases}X[k]=E[k]+W_N^{k}O[k]\\ X[k+N/2]=E[k]-W_N^{k}O[k]\end{cases} \tag{4-16} \]</div>
+<p>一次蝶形 = 1 次复乘 + 2 次复加，同时产出两个输出。</p>
+<p><b>第 3 步：复杂度递推。</b>\(T(N)=2T(N/2)+\frac{N}{2}\)（每层 \(N/2\) 个蝶形），共 \(\log_2N\) 层：</p>
+<div class="math sub">\[ T(N)=\frac{N}{2}\log_2N,\qquad
+\frac{T(N)}{N^2}=\frac{\log_2N}{2N}\xrightarrow{N=1024}\frac{1}{205} \tag{4-17} \]</div>
+<p>与式 (4-6) 的表格完全一致。递归到最后是 2 点 DFT，输入需按<b>位反转顺序</b>重排（或递归时自动完成）。</p>
+
+<h4>7. 频谱泄漏的定量描述</h4>
+<p>对长度为 \(N\) 的矩形窗，其 DTFT 是 Dirichlet 核：</p>
+<div class="math sub">\[ W(\omega)=e^{-j\omega(N-1)/2}\,\frac{\sin(N\omega/2)}{\sin(\omega/2)} \tag{4-18} \]</div>
+<p>主瓣零点在 \(\omega=\pm2\pi/N\)，第一旁瓣约 −13 dB。若信号频率落在两根谱线中间（\(k_0+0.5\)），
+相邻谱线恰好采在旁瓣上，会出现「主峰降低约 3.9 dB（扇形损失）+ 两侧一串旁瓣」。
+汉明窗把旁瓣压到 −43 dB，代价是主瓣展宽 2 倍。这就是第 2 讲那张窗函数表的定量依据。</p>
+
+<h4>8. 公式 ↔ 代码</h4>
+<pre><code># 式(4-2)：DFT 基矩阵（每一行是一个频率）
+def dft(x):
+    N = len(x); n = np.arange(N); k = n.reshape(-1, 1)
+    W = np.exp(-2j*np.pi*k*n/N)      # W_N^{kn}
+    return W @ x
+
+# 式(4-9)：逆变换，注意 1/N
+def idft(X):
+    N = len(X); n = np.arange(N); k = n.reshape(-1, 1)
+    return np.exp(2j*np.pi*k*n/N) @ X / N
+
+# 式(4-12)：单边幅度谱
+A = np.abs(X[:N//2+1]) * 2 / N
+A[0] /= 2                            # 直流不乘 2
+
+# 式(4-16)：一个 2 点蝶形（递归 FFT 的核心）
+Xe, Xo = fft(x[0::2]), fft(x[1::2])
+T = np.exp(-2j*np.pi*np.arange(N//2)/N) * Xo
+X = np.concatenate([Xe + T, Xe - T])</code></pre>
+
+<h4>9. 边界与失效条件</h4>
+<ul><li>\(N\) 不是 2 的幂时上述二分不成立，需 Bluestein / 混合基算法；numpy 会变慢但不报错。</li>
+<li>信号含 \(\gt F_s/2\) 成分时 DFT 结果本身已是混叠后的，<b>频域无法补救</b>（回到第 2 讲）。</li>
+<li>相位谱在 \(|X[k]|\approx0\) 处数值不稳定，取 \(\arg X[k]\) 前应先设幅度阈值。</li>
+<li>浮点误差：DFT 基矩阵是 \(O(N^2)\) 内存，\(N=8192\) 时约 1 GB（complex128），大点数必须走 FFT。</li></ul>
+</div>
 
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>补零 = 提高分辨率。</b>错，分辨率由观测时长决定。② <b>忘记 2/N 归一化。</b>③ <b>把 X[0] 当"频率 0 的分量"却不知它是直流/均值×N。</b>④ <b>拿负频率当"另一种信号"。</b>实信号的负频率只是共轭镜像，没有新信息。⑤ <b>FFT 点数随便取非 2 的幂。</b>能用但慢，实时系统会要命。</div>
@@ -588,16 +1022,23 @@ print('峰值频率', idx*8000/256, 'Hz')                       # ≈ 100 Hz</co
   <h3>① FFT 的盲区：它只知道"有哪些频率"，不知道"什么时候"</h3>
   <p>对整段 0.5 秒信号做一次 FFT，得到的是这段时间的<strong>平均</strong>频谱。如果局放脉冲只出现在第 200 ms，FFT 会告诉你"存在高频成分"，但完全无法告诉你在第 200 ms。对于稳态故障（铁芯松动、风机老化）这没关系，但瞬态故障（局放、短路冲击）的时间位置本身就是最重要的判别信息。</p>
   <p>STFT 的思路很直接：<strong>把长信号切成很多短帧，每帧做一次 FFT，再把结果按时间排起来</strong>。这样每一列是一个时刻的频谱，横着看就是频率随时间的变化。</p>
-  <div class="eq">STFT：X[m, k] = Σ_{n} x[n] · w[n − m·S] · e^(−j·2π·k·n/N)
-m：第几帧（时间轴）；k：第几根谱线（频率轴）
-w：窗函数；S：帧移
-输出是一个二维复数矩阵，尺寸 = 帧数 × (N/2+1)</div>
+  <div class="mathbox">
+<div class="math">\[ X[m,k]=\sum_{n=-\infty}^{\infty}x[n]\,w[n-mS]\,e^{-j\frac{2\pi kn}{N}} \tag{5-1} \]</div>
+<div class="mathnote"><p>\(m\)：帧号（时间轴）；\(k\)：谱线号（频率轴）；\(w[\cdot]\)：窗函数；\(S\)：帧移。
+输出是二维复数矩阵，尺寸 \(M\times(N/2+1)\)。取模后取对数就是<b>语谱图</b>。
+与 DFT 的唯一差别是多了 \(w[n-mS]\)：把无限长信号截成局部，代价是频谱泄漏（窗的频域旁瓣）。</p></div>
+</div>
 
   <h3>② 唯一要调的旋钮：窗长</h3>
   <p>窗长决定了两件事，而且是矛盾的：</p>
-  <div class="eq">窗长 L → 时间分辨率 Δt ≈ L / Fs
-窗长 L → 频率分辨率 Δf = Fs / L
-两者乘积 Δt · Δf ≈ 1 （这是不确定原理的工程形态，不可能同时变小）</div>
+  <div class="mathbox">
+<div class="math">\[ \Delta t\approx\frac{L}{F_s},\qquad \Delta f\approx\frac{F_s}{L},\qquad
+\Delta t\cdot\Delta f\approx1\;\;\left(\text{严格界：}\Delta t\,\Delta f\ge\frac{1}{4\pi}\right) \tag{5-2} \]</div>
+<div class="mathnote"><p>这是海森堡不确定原理在工程上的形态：窗长 \(L\) 同时决定时间分辨率和频率分辨率，
+<b>不可能同时变小</b>。\(L=200\) 点 @8 kHz → \(\Delta t=25\,\mathrm{ms}\)、\(\Delta f=40\,\mathrm{Hz}\)；
+\(L=800\) 点 → \(\Delta t=100\,\mathrm{ms}\)、\(\Delta f=10\,\mathrm{Hz}\)。
+选窗就是选一个折中：要抓「敲击的瞬间」用短窗，要分辨「100 Hz 与 120 Hz」用长窗。</p></div>
+</div>
   <p><strong>带数字算两遍</strong>（8 kHz 采样）：</p>
   <table data-cap="不同窗长对应的时间与频率分辨率（8 kHz）">
     <tr><th>窗长</th><th>点数 L</th><th>时间分辨率 Δt</th><th>频率分辨率 Δf</th><th>适合看</th></tr>
@@ -609,8 +1050,13 @@ w：窗函数；S：帧移
 
   <h3>③ 为什么必须取对数显示</h3>
   <p>语音/声纹的能量动态范围很大：基频能量可能比第 10 次谐波高 40 dB（1 万倍）。如果按线性幅度画图，弱谐波在图上就是一片全黑，什么也看不见。取对数后：</p>
-  <div class="eq">显示值 = 20·log₁₀(|X[m,k]| + ε)   （dB）
-40 dB 的差距在图上变成"一格半"的灰度差，弱结构就看得见了</div>
+  <div class="mathbox">
+<div class="math">\[ S_{\mathrm{dB}}[m,k]=20\log_{10}\!\big(|X[m,k]|+\varepsilon\big) \tag{5-3} \]</div>
+<div class="mathnote"><p>线性幅度下，强基频会把弱谐波完全压成一条平线；取 20 log 后动态范围被压缩，
+40 dB 的差距在图上变成「一格半」的灰度差，弱结构才看得见。
+为什么是 20 log：功率 \(\propto\) 幅度平方，\(10\log_{10}(A^2)=20\log_{10}A\)。
+\(\varepsilon\) 取 \(10^{-10}\) 量级，防止 \(\log 0=-\infty\)。</p></div>
+</div>
   <p>这就是为什么所有语谱图都标着 dB，也是本讲义里所有谱图都用 <code>log</code> 显示的原因。</p>
 
   <h3>④ 怎么读一张语谱图</h3>
@@ -637,6 +1083,64 @@ X = stft(x)                                 # 8 kHz、25 ms 窗、10 ms 移
 S_db = 20*np.log10(np.abs(X) + 1e-8)        # 转 dB
 print(S_db.shape)                           # (帧数, 101)</code></pre>
   <p>注意 <code>rfft</code>：实信号只算正频率那一半，输出 101 列（200/2+1），比 <code>fft</code> 省一半内存。项目里还多做了一步 Mel 滤波（第 6 讲），把 101 个频率通道压到 26 个，这样图更"干净"、维度更低。</p>
+
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 5 讲　STFT、不确定关系与语谱图</div>
+
+<h4>1. STFT 的定义与反变换</h4>
+<p>STFT 就是「加窗 + DFT」在每一帧上重复：</p>
+<div class="math sub">\[ X[m,k]=\sum_{n}x[n]\,w[n-mS]\,e^{-j2\pi kn/N}
+=\big\langle \mathbf x,\ \underbrace{w[\cdot-mS]e^{j2\pi k\cdot/N}}_{g_{m,k}}\big\rangle \tag{5-4} \]</div>
+<p>\(g_{m,k}\) 叫 <b>Gabor 原子</b>：平移 \(mS\) 选时间、调制 \(k\) 选频率。反变换（重叠相加 OLA）为</p>
+<div class="math sub">\[ x[n]=\frac{\sum_m\sum_k X[m,k]\,e^{j2\pi kn/N}}{\sum_m w[n-mS]},\qquad
+\text{需满足}\ \sum_m w[n-mS]\neq0 \tag{5-5} \]</div>
+<p>分母是各帧窗的和。汉明窗取 \(S=L/2\) 时 \(\sum_m w[n-mS]\approx1.08\) 近似常数，满足 <b>COLAs</b>（常数重叠相加）条件，因此可以无损重构；若取 \(S=L\)（无重叠），汉明窗之和在帧边界处起伏，重构会失真。<b>这就是「帧移不能随便取大」的硬理由。</b></p>
+
+<h4>2. 时频不确定关系：从傅里叶尺度性质推出来</h4>
+<p>把窗 \(w(t)\) 看作一个「波形包」，定义其能量归一化的一、二阶矩：</p>
+<div class="math sub">\[ \Delta t^2=\frac{\int(t-\mu_t)^2|w(t)|^2\mathrm{d}t}{\int|w|^2\mathrm{d}t},\qquad
+\Delta f^2=\frac{\int(f-\mu_f)^2|W(f)|^2\mathrm{d}f}{\int|W|^2\mathrm{d}f} \tag{5-6} \]</div>
+<p>由傅里叶变换的尺度性质 \(w(at)\leftrightarrow\frac{1}{|a|}W(f/a)\)：把窗在时间上压窄 \(a\) 倍，频谱必然展宽 \(a\) 倍。
+用柯西–施瓦茨不等式可严格证明 \(\Delta t\,\Delta f\ge\dfrac{1}{4\pi}\)，等号仅当 \(w\) 是<b>高斯函数</b>时取到（Gabor 变换用高斯窗的原因）。</p>
+<p>对长度 \(L\) 的矩形窗，\(\Delta t\approx L/F_s\)、\(\Delta f\approx F_s/L\)，乘积约 1——比理论下界大 \(4\pi\) 倍，因为矩形窗远非高斯。<b>工程上的结论是：乘积是个常数，只能换，不能双赢。</b></p>
+
+<h4>3. 选窗的一笔定量账</h4>
+<table class="sym"><tr><th>窗长 \(L\)（@8 kHz）</th><th>\(\Delta t\)</th><th>\(\Delta f=F_s/L\)</th><th>能分辨的最小频率间隔</th><th>适用</th></tr>
+<tr><td>80 点（10 ms）</td><td>10 ms</td><td>100 Hz</td><td>约 200 Hz（含汉明主瓣）</td><td>瞬态、敲击起点</td></tr>
+<tr><td>200 点（25 ms）</td><td>25 ms</td><td>40 Hz</td><td>约 80 Hz</td><td><b>语音 MFCC 默认</b></td></tr>
+<tr><td>800 点（100 ms）</td><td>100 ms</td><td>10 Hz</td><td>约 20 Hz</td><td>分辨 100/120 Hz 谐波</td></tr>
+<tr><td>1600 点（200 ms）</td><td>200 ms</td><td>5 Hz</td><td>约 10 Hz</td><td>稳态嗡鸣精细谱</td></tr>
+</table>
+<p>变压器诊断要看 50 Hz 间隔的谐波（100/150/200 Hz），25 ms 窗的 80 Hz 分辨力不够，所以配套项目在画「精细谱」时用的是整段 0.5 s 加长窗，而 MFCC 仍用 25 ms 短窗——<b>同一个系统里可以并存两套时频尺度，各管一件事</b>。</p>
+
+<h4>4. dB 换算与动态范围</h4>
+<div class="math sub">\[ S_{\mathrm{dB}}=20\log_{10}(|X|+\varepsilon),\qquad
+P_{\mathrm{dB}}=10\log_{10}(P+\varepsilon),\qquad P=|X|^2/N \tag{5-7} \]</div>
+<p>验证二者一致：\(10\log_{10}(|X|^2)=20\log_{10}|X|\) ✓。取 20 log 后，幅值比 \(10^3\)（60 dB）在灰度上映射成 60 dB 的跨度；
+若用线性幅度，最大值 1.0 之下 0.001 的成分只有 1/1000 像素亮度，肉眼完全看不见。
+显示时通常再设 <b>下限钳位</b>：\(S_{\mathrm{show}}=\max(S_{\mathrm{dB}},\,S_{\max}-D)\)，\(D=60\sim80\,\mathrm{dB}\)，
+把低于最大值 60 dB 以下的全部涂成背景色，避免底噪把图糊满。</p>
+
+<h4>5. 公式 ↔ 代码</h4>
+<pre><code># 式(5-1) STFT：分帧 + 窗 + rfft
+F = frame_signal(x, L=200, S=80) * np.hamming(200)
+X = np.fft.rfft(F, n=256, axis=1)          # (M, 129) 复数
+
+# 式(5-7) 语谱图（含下限钳位）
+S = 20*np.log10(np.abs(X) + 1e-10)
+S = np.maximum(S, S.max() - 70)
+
+# 式(5-5) OLA 重构需要的窗和
+wsum = np.zeros(len(x))
+for i in range(0, len(x)-L+1, S): wsum[i:i+L] += np.hamming(L)
+print(wsum.min(), wsum.max())              # 应近似常数、且 > 0</code></pre>
+
+<h4>6. 边界与失效条件</h4>
+<ul><li>帧移 \(S\gt L\) → 窗和中出现 0，式 (5-5) 分母为零，重构出现周期性空洞。</li>
+<li>补零到 \(N\gt L\) 只让频率轴变密，<b>不改变本讲的 \(\Delta f\)</b>（回到式 4-13）。</li>
+<li>STFT 是<b>线性</b>时频表示，多分量交叉项不会像 Wigner–Ville 分布那样产生伪影，但也换来分辨率受限。</li>
+<li>对数显示会压缩强弱差异，做定量幅值比较时必须回到线性域。</li></ul>
+</div>
 
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>用一个窗长应付所有故障。</b>看瞬态用短窗、看谐波用长窗，选错了会"看不见"关键信息。② <b>用线性幅度画语谱图。</b>弱谐波全部淹没。③ <b>以为 STFT 能突破不确定原理。</b>任何改进（小波、EMD）都只是"按需分配分辨率"，不是突破。④ <b>帧移取得比窗长还大。</b>会漏掉帧与帧之间的信号，瞬态可能整个被跳过。</div>
@@ -671,23 +1175,36 @@ print(S_db.shape)                           # (帧数, 101)</code></pre>
   <p>MFCC 就是为了解决这三点，用一条"人耳仿真流水线"把一帧 400 个采样点压成 13 个数。下面是完整 7 步，每一步都标注它在模仿人耳的哪个环节。</p>
 
   <h3>② 第 1 步：预加重</h3>
-  <div class="eq">y[n] = x[n] − α·x[n−1]，  α 通常取 0.95 ~ 0.97
-作用：提升高频（相当于 6 dB/倍频程的高通），抵消口唇辐射造成的高频衰减</div>
+  <div class="mathbox">
+<div class="math">\[ y[n]=x[n]-\alpha\,x[n-1],\qquad H(z)=1-\alpha z^{-1},\quad
+\big|H(e^{j\omega})\big|^2=(1-\alpha)^2+4\alpha\sin^2\!\frac{\omega}{2} \tag{6-1} \]</div>
+<div class="mathnote"><p>\(\alpha\) 通常取 0.95–0.97。这是<b>一阶高通</b>，约 6 dB/倍频程，
+用来抵消口唇辐射造成的高频衰减（语音）。<b>但设备声纹要慎用</b>：变压器判别信息集中在
+100 Hz 基频及其低次谐波，预加重会把这一段相对压低，等于扔掉主要特征。
+本讲义流程中默认 \(\alpha=0.95\) 仅用于演示，实际设备诊断建议 \(\alpha=0\) 或 0.5 以下。</p></div>
+</div>
   <p>为什么需要它？声带产生的声音经过口腔辐射出去时，高频能量会以约 6 dB/倍频程衰减。预加重把这个倾斜"抬平"，让 FFT 之后的频谱更好分析、动态范围更小。</p>
   <div class="warn"><span class="t">注意（这条对变压器声纹很关键）</span>预加重是<b>为语音</b>设计的。变压器声纹的主要判别信息在 100 Hz 低次谐波上，预加重会把低频相对压低——所以做设备声纹时，很多工作会<b>跳过预加重</b>或改用很小的 α。这是"语音方法迁移到设备声纹"时最典型的坑之一。</div>
 
   <h3>③ 第 2–3 步：分帧、加窗、FFT 取功率谱</h3>
-  <div class="eq">帧长 25 ms、帧移 10 ms、汉明窗（第 2 讲）
-每帧做 N 点 FFT（N 取 256 或 512，补零到 2 的幂）
-功率谱：P[k] = |X[k]|² / N      （k = 0 … N/2）</div>
+  <div class="mathbox">
+<div class="math">\[ P[k]=\frac{\big|X[k]\big|^2}{N},\qquad k=0,1,\dots,\frac{N}{2} \tag{6-2} \]</div>
+<div class="mathnote"><p>流程：帧长 25 ms、帧移 10 ms、汉明窗（第 2 讲）→ 每帧做 \(N\) 点 FFT
+（\(N=256\) 或 512，补零到 2 的幂）→ 取模平方并除以 \(N\) 得功率谱。
+以 8 kHz、25 ms（200 点）、补零到 256 为例，得 129 根谱线，间隔 \(8000/256=31.25\,\mathrm{Hz}\)。</p></div>
+</div>
   <p>以 8 kHz、25 ms（200 点）为例，补零到 256 点做 FFT，得到 129 根谱线，频率间隔 8000/256 = 31.25 Hz。</p>
 
   <h3>④ 第 4 步：Mel 滤波器组——把人耳的"非线性"装进来</h3>
   <p>人耳对频率的感知不是线性的：100 Hz 与 200 Hz 的差别听起来很大，而 3000 Hz 与 3100 Hz 几乎听不出。为了让特征符合听觉，用 Mel 刻度重排频率轴：</p>
-  <div class="eq">mel(f) = 2595 · log₁₀(1 + f / 700)
-反变换：f = 700 · (10^(mel/2595) − 1)
-例：f = 0 → 0 mel；f = 1000 Hz → 2595·log₁₀(2.43) ≈ 1000 mel（有趣的巧合）
-    f = 4000 Hz → 2595·log₁₀(6.71) ≈ 2146 mel</div>
+  <div class="mathbox">
+<div class="math">\[ m(f)=2595\log_{10}\!\left(1+\frac{f}{700}\right),\qquad
+f(m)=700\left(10^{m/2595}-1\right) \tag{6-3} \]</div>
+<div class="mathnote"><p>例：\(f=0\to0\) mel；\(f=1000\,\mathrm{Hz}\to2595\log_{10}(2.4286)\approx1000\) mel（巧合）；
+\(f=4000\,\mathrm{Hz}\to2595\log_{10}(6.714)\approx2146\) mel。
+700 Hz 是经验折点：低于它对频率近似线性，高于它近似对数。
+在 Mel 轴上等间隔放 \(M\) 个三角滤波器，映射回 Hz 后<b>低频窄而密、高频宽而疏</b>，正好模仿人耳。</p></div>
+</div>
   <p>做法：在 Mel 轴上<strong>等间隔</strong>放 M 个三角滤波器（通常 M = 24~26），每个滤波器的中心在 Mel 轴上等距，覆盖 0 到 Fs/2。因为 Mel 轴是压缩过的，映射回 Hz 之后，<strong>低频的滤波器又窄又密，高频的又宽又疏</strong>——这正是人耳的频率分辨特性。</p>
   <h4>8 kHz 采样、26 个滤波器时的中心频率（前 10 个）</h4>
   <table data-cap="8 kHz、26 个 Mel 滤波器的中心频率与带宽（前 10 个）">
@@ -697,27 +1214,58 @@ print(S_db.shape)                           # (帧数, 101)</code></pre>
   </table>
   <p>看带宽这一行：从 51 Hz 一路涨到 95 Hz，后面的滤波器的带宽会到 300 Hz 以上。所以 MFCC 在 100–500 Hz 这一段的分辨率最高——刚好覆盖了变压器声纹最关心的基频与低次谐波。</p>
   <p>每个滤波器的输出是该频带内的加权能量和：</p>
-  <div class="eq">E_m = Σ_{k} P[k] · H_m[k]      （H_m 是第 m 个三角滤波器的频率响应）
-这一步把 129 根谱线压成 26 个数，同时完成了"降维 + 按听觉加权"</div>
+  <div class="mathbox">
+<div class="math">\[ E_m=\sum_{k=0}^{N/2}P[k]\,H_m[k],\qquad
+H_m(k)=\begin{cases}
+0,&k\lt  f_{m-1}\\[3pt]
+\dfrac{k-f_{m-1}}{f_m-f_{m-1}},&f_{m-1}\le k\lt f_m\\[9pt]
+\dfrac{f_{m+1}-k}{f_{m+1}-f_m},&f_m\le k\le f_{m+1}\\[9pt]
+0,&k\gt f_{m+1}
+\end{cases} \tag{6-4} \]</div>
+<div class="mathnote"><p>\(f_{m-1},f_m,f_{m+1}\) 是第 \(m\) 个三角滤波器的左端点、中心、右端点（已换算到 FFT 谱线索引），
+且相邻滤波器重叠 50%，保证 \(\sum_m H_m[k]=1\)（能量不凭空增减）。
+这一步把 129 根谱线压成 26 个数，同时完成「降维 + 按听觉加权」。
+频率到谱线索引的换算是 \(k=fN/F_s\)，写错这个是最常见的 off-by-one 来源。</p></div>
+</div>
   <figure><img src="assets/mel_filters.png" alt="Mel 滤波器组"><figcaption>26 个三角滤波器在频率轴上的排布：低频尖而密，高频宽而疏，这就是 Mel 刻度的形状</figcaption></figure>
 
   <h3>⑤ 第 5 步：取对数</h3>
-  <div class="eq">L_m = log(E_m + ε)</div>
+  <div class="mathbox">
+<div class="math">\[ L_m=\ln\!\big(E_m+\varepsilon\big) \tag{6-5} \]</div>
+<div class="mathnote"><p>两个理由。<b>感知上</b>：人耳对响度的响应近似对数（这正是 dB 存在的原因）。
+<b>工程上</b>：声源与信道在时域是卷积 \(x*h\)，频域变相乘 \(X\cdot H\)，取对数后变<b>相加</b>
+\(\log|X\cdot H|=\log|X|+\log|H|\)，信道影响退化成一个加性常量，
+后面的倒谱均值归一化（CMN）可以直接把它减掉。这一步是「倒谱」名称的由来
+（cepstrum = spectrum 前四个字母倒过来），也是<b>同态信号处理</b>的核心。</p></div>
+</div>
   <p>两个理由。物理上：人耳对响度的感知近似对数（这也是 dB 存在的原因）。工程上：声源与信道在时域是卷积（x 经过信道 h 变成 x*h），在<strong>频域是相乘</strong>，取对数后变成<strong>相加</strong>——于是信道的影响变成一个加性常量，后面的倒谱均值归一化（CMN）能直接把它减掉。这一步是"倒谱"这个名字的由来（cepstrum = spectrum 的前四个字母倒过来）。</p>
 
   <h3>⑥ 第 6 步：DCT，把 26 维压成 13 维</h3>
   <p>相邻的 Mel 通道高度相关（第 3 个和第 4 个滤波器覆盖的频带是重叠的），需要去相关。DCT（离散余弦变换）就是为此设计的正交变换：</p>
-  <div class="eq">c_i = Σ_{m=1}^{M} L_m · cos[ (π·i/M) · (m − 0.5) ]，  i = 0, 1, …, M−1
-c_0 反映总能量（常丢弃或单独用），c_1…c_12 反映频谱包络的形状
-通常只保留前 13 个系数（含 c_0）或 c_1…c_13</div>
+  <div class="mathbox">
+<div class="math">\[ c_i=\sqrt{\frac{2}{M}}\sum_{m=1}^{M}L_m\cos\!\left[\frac{\pi i}{M}\left(m-\tfrac12\right)\right],
+\qquad i=0,1,\dots,M-1 \tag{6-6} \]</div>
+<div class="mathnote"><p>这是 DCT-II 型（正交归一化版本）。\(c_0\) 反映总能量（对增益敏感，常丢弃或单独用），
+\(c_1\dots c_{12}\) 反映频谱包络的形状，通常保留前 13 个系数。
+为什么有效：Mel 对数谱是一条平滑曲线，能量集中在「倒频率」低的系数上——
+前几个系数就描述了整条包络，后面的对应快速起伏（多为噪声）。丢掉后面的既降维又降噪。
+DCT 与 PCA 目的一样（去相关 + 能量集中），但基是固定余弦、不需从数据里学，所以极快且换数据集不用重算。</p></div>
+</div>
   <p>为什么 DCT 有效？因为 Mel 对数谱是一条平滑的曲线，能量集中在"低频"（即系数下标小的那几个）——<strong>前几个系数就描述了整条包络的形状，后面的系数对应快速起伏的细节（多为噪声）</strong>。丢掉后面的系数，既降维又降噪。</p>
   <p>注意：DCT 与 PCA 目的相同（去相关+能量集中），但 DCT 的基是固定的余弦函数，不需要从数据里学，所以计算极快、也不存在"换数据集就要重算"的问题。</p>
 
   <h3>⑦ 第 7 步：加一阶、二阶差分（这一步比加维度重要得多）</h3>
   <p>静态 MFCC 描述的是"这一帧的频谱形状"，但声音是动态的：辅音到元音的过渡、敲击的起始沿，信息都在<strong>变化</strong>里。差分特征就是帧间的斜率：</p>
-  <div class="eq">d_t = Σ_{n=1}^{N} n·(c_{t+n} − c_{t−n}) / (2·Σ_{n=1}^{N} n²)
-N = 2 时：d_t = [(c_{t+1}−c_{t−1}) + 2(c_{t+2}−c_{t−2})] / 10
-二阶差分：对 d_t 再做一次同样的运算</div>
+  <div class="mathbox">
+<div class="math">\[ d_t=\frac{\displaystyle\sum_{n=1}^{N}n\big(c_{t+n}-c_{t-n}\big)}
+{2\displaystyle\sum_{n=1}^{N}n^2}
+\;\xrightarrow{\;N=2\;}\;
+\frac{(c_{t+1}-c_{t-1})+2(c_{t+2}-c_{t-2})}{10} \tag{6-7} \]</div>
+<div class="mathnote"><p>这不是简单相减，而是对局部窗口做<b>最小二乘直线拟合后的斜率</b>：
+用 \(\pm n\) 对称的样本估计 \(\partial c/\partial t\)，分母 \(2\sum n^2\) 正是正规方程的解。
+\(N=2\) 时分母 \(2(1^2+2^2)=10\)。二阶差分 \(dd_t\) 即对 \(d_t\) 再做一次同样运算。
+维度：13 静态 + 13 一阶 \(\Delta\) + 13 二阶 \(\Delta\Delta\) = <b>39 维</b>。</p></div>
+</div>
   <p>维度变化：13（静态）+ 13（一阶 Δ）+ 13（二阶 ΔΔ）= <strong>39 维</strong>。</p>
   <div class="note"><span class="t">一条被反复验证的实测结论</span>韩书表 3-3 的实验结果是：单纯<b>增加倒谱维数</b>（13 → 20 → 30）几乎不降低误识率；而<b>加入一阶、二阶差分</b>能让误识率下降约 20%。原因就是上面说的：静态特征丢掉了时间演化信息。所以做声纹一定要加 Δ/ΔΔ，别只堆维度。</div>
   <figure><img src="assets/mfcc_39.png" alt="39 维 MFCC 构成"><figcaption>39 维 MFCC 的构成：C1 静态、ΔC1 一阶差分、ΔΔC1 二阶差分（此处示前 2 维）。差分曲线明显比静态曲线"更能看出节奏"</figcaption></figure>
@@ -737,13 +1285,128 @@ feat = np.hstack([C, D, DD])      # (T, 39)</code></pre>
   <p>算一下压缩比：0.5 秒、8 kHz = 4000 个采样点；25 ms/10 ms 分帧 → 23 帧；23×39 = <strong>897 个数</strong>。压缩到原来的 1/4.5，而判别信息基本保留。</p>
   <p>最后一步是<strong>倒谱均值归一化（CMN）</strong>：每个系数减去它在整段语音上的均值。这一步专门对付信道差异（不同麦克风、不同距离），是声纹系统必备的后处理。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 6 讲　MFCC 七步，每一步都推到底</div>
+
+<h4>1. 全局符号对照表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>本讲义取值</th><th>形状</th></tr>
+<tr><td>\(x[n]\)</td><td>原始采样序列</td><td>0.5 s @8 kHz</td><td>(4000,)</td></tr>
+<tr><td>\(F\)</td><td>分帧矩阵</td><td>25 ms / 10 ms</td><td>(T, 200)</td></tr>
+<tr><td>\(P[k]\)</td><td>功率谱</td><td>256 点 rfft</td><td>(T, 129)</td></tr>
+<tr><td>\(H_m[k]\)</td><td>第 \(m\) 个三角滤波器</td><td>\(M=26\)</td><td>(26, 129)</td></tr>
+<tr><td>\(E_m\)</td><td>Mel 通道能量</td><td>—</td><td>(T, 26)</td></tr>
+<tr><td>\(c_i\)</td><td>倒谱系数</td><td>取前 13</td><td>(T, 13)</td></tr>
+<tr><td>\(d_t,dd_t\)</td><td>一阶 / 二阶差分</td><td>窗宽 \(N=2\)</td><td>(T, 13)</td></tr>
+</table>
+
+<h4>2. 第 1 步：预加重的传递函数与频率响应</h4>
+<p>差分方程 \(y[n]=x[n]-\alpha x[n-1]\) 取 Z 变换：\(Y(z)=X(z)-\alpha z^{-1}X(z)\)，故</p>
+<div class="math sub">\[ H(z)=1-\alpha z^{-1},\qquad
+H(e^{j\omega})=1-\alpha e^{-j\omega}=(1-\alpha\cos\omega)+j\alpha\sin\omega \tag{6-8} \]</div>
+<div class="math sub">\[ |H(e^{j\omega})|^2=(1-\alpha\cos\omega)^2+(\alpha\sin\omega)^2
+=1-2\alpha\cos\omega+\alpha^2=(1-\alpha)^2+4\alpha\sin^2\frac{\omega}{2} \tag{6-9} \]</div>
+<p>代入 \(\alpha=0.95\)：\(\omega=0\) 时 \(|H|^2=0.0025\)（−26 dB）；\(\omega=\pi\) 时 \(|H|^2=3.8025\)（+5.8 dB）。
+<b>低频被压掉近 30 dB</b>。对语音（判别信息在 1–3 kHz 共振峰）这是好事；对变压器（判别信息在 100–500 Hz）这是灾难。
+定量结论：若要保留 100 Hz，需 \(20\log_{10}|H(e^{j2\pi100/8000})|\ge-3\,\mathrm{dB}\)，反解要求 \(\alpha\lesssim0.45\)。</p>
+
+<h4>3. 第 4 步：Mel 滤波器边界的完整计算</h4>
+<p>给定 \(F_s=8000\)、\(N=256\)、\(M=26\)，把 Hz 上下限换成 mel：\(m_{\mathrm{low}}=m(0)=0\)，
+\(m_{\mathrm{high}}=m(4000)=2595\log_{10}(1+4000/700)=2146.1\) mel。在 mel 轴等分 \(M+2=28\) 个点：</p>
+<div class="math sub">\[ m_j=m_{\mathrm{low}}+j\cdot\frac{m_{\mathrm{high}}-m_{\mathrm{low}}}{M+1}
+= j\cdot\frac{2146.1}{27}=j\cdot79.49\ \mathrm{mel},\quad j=0,\dots,27 \tag{6-10} \]</div>
+<p>再反变换回 Hz：\(f_j=700(10^{m_j/2595}-1)\)，最后换成 FFT 谱线索引 \(k_j=\left\lfloor\dfrac{(N+1)f_j}{F_s}\right\rfloor\)。
+前几个结果：\(f_0=0\)、\(f_1=700(10^{79.49/2595}-1)=51.0\,\mathrm{Hz}\)、\(f_2=106.1\,\mathrm{Hz}\)、\(f_3=165.2\,\mathrm{Hz}\)……
+与讲义正文「前 10 个中心频率」表完全一致。<b>注意分母是 \(M+1\) 而不是 \(M\)：因为有 \(M\) 个三角形，
+需要 \(M+2\) 个边界点（每个三角形用左、中、右三个相邻点），相邻滤波器因此自然重叠 50%。</b></p>
+<p>验证归一化：对任意谱线 \(k\)，落在它上面的只有相邻两个非零三角形，且二者在该点的值之和为 1，故 \(\sum_m H_m[k]=1\)。
+这保证「滤波组不放大也不衰减总能量」，只是重新分配。</p>
+
+<h4>4. 第 5 步：同态解卷积，取 log 到底在解什么</h4>
+<p>真实录音是声源 \(s\) 经过信道 \(h\)（麦克风频响、房间反射、距离）：\(x=s*h\)。取傅里叶变换：</p>
+<div class="math sub">\[ X(f)=S(f)\,H(f)\ \xrightarrow{\ \log|\cdot|\ }\
+\log|X|=\log|S|+\underbrace{\log|H|}_{\text{与说话人无关}} \tag{6-11} \]</div>
+<p>卷积 → 乘积 → 求和，这三步叫<b>同态解卷积</b>。若信道在一段录音内不变，\(\log|H|\) 是一个沿时间轴恒定的偏置；
+CMN（每维减去整段的均值）恰好把它消掉：</p>
+<div class="math sub">\[ \tilde c_i[t]=c_i[t]-\frac{1}{T}\sum_{t'=1}^{T}c_i[t']
+\;\Rightarrow\; \log|H|\ \text{项被抵消} \tag{6-12} \]</div>
+<p>因为 DCT 是线性变换，减均值的操作在 Mel 域和倒谱域等价。<b>这就是「为什么 MFCC 要取 log」的完整答案</b>：
+不取 log，信道是乘性的，减均值消不掉；取了 log，信道变加性，一步减法就解决。
+另外人耳响度感知近似对数（Weber–Fechner 定律），与工程动机正好一致。</p>
+
+<h4>5. 第 6 步：DCT-II 的正交性验证</h4>
+<p>取基向量 \(\phi_i[m]=\cos\!\big[\frac{\pi i}{M}(m-\tfrac12)\big]\)，\(m=1..M\)。用积化和差可证</p>
+<div class="math sub">\[ \sum_{m=1}^{M}\phi_i[m]\phi_{j}[m]=
+\begin{cases}M,&i=j=0\\ M/2,&i=j\gt 0\\ 0,&i\neq j\end{cases} \tag{6-13} \]</div>
+<p>所以归一化的正交 DCT 系数是 \(c_i=\sqrt{2/M}\,\lambda_i\sum_m L_m\phi_i[m]\)（\(\lambda_0=1/\sqrt2\)，其余为 1），
+逆变换为 \(L_m=\sqrt{2/M}\sum_i\lambda_i c_i\phi_i[m]\)。
+<b>只保留前 13 个系数等价于把 Mel 对数谱投影到「变化最慢」的 13 个余弦基上</b>——
+低频基描述包络总体形状，高频基描述细节起伏。若把 26 个系数全留下，逆变换能精确还原 \(L_m\)；
+截断到 13 相当于做了一次低通平滑，正好滤掉了通道间噪声。</p>
+
+<h4>6. 第 7 步：差分系数是最小二乘斜率，不是随便相减</h4>
+<p>假设在 \(t\) 附近，第 \(i\) 维倒谱随时间近似线性：\(c_{t+n}^{(i)}\approx a+b\,n\)，其中 \(b\) 就是想要的斜率 \(d_t\)。
+对 \(n=-N,\dots,N\) 最小化 \(\sum_n\big(c_{t+n}-a-bn\big)^2\)。对 \(a,b\) 求偏导置零：</p>
+<div class="math sub">\[ \begin{aligned}
+\frac{\partial}{\partial a}&:\ \sum_n(c_{t+n}-a-bn)=0\ \Rightarrow\ a=\frac{1}{2N+1}\sum_n c_{t+n}\quad(\text{因}\ \textstyle\sum n=0)\\
+\frac{\partial}{\partial b}&:\ \sum_n n(c_{t+n}-a-bn)=0\ \Rightarrow\
+b=\frac{\sum_n n\,c_{t+n}}{\sum_n n^2}
+\end{aligned} \tag{6-14} \]</div>
+<p>把正负 \(n\) 配对：\(\sum_{n=-N}^{N}n\,c_{t+n}=\sum_{n=1}^{N}n(c_{t+n}-c_{t-n})\)，
+\(\sum_{n=-N}^{N}n^2=2\sum_{n=1}^{N}n^2\)，于是</p>
+<div class="math sub">\[ d_t=b=\frac{\sum_{n=1}^{N}n(c_{t+n}-c_{t-n})}{2\sum_{n=1}^{N}n^2},
+\qquad N=2:\ \frac{1(c_{t+1}-c_{t-1})+2(c_{t+2}-c_{t-2})}{2(1+4)}=\frac{\cdots}{10} \tag{6-15} \]</div>
+<p>分母 10 就是这么来的。这个推导说明差分特征<b>对噪声有一定抑制</b>（用了 2N+1 帧拟合而非相邻两帧相减），
+且窗口越宽越平滑、时间分辨率越差。<b>边界处理</b>：首尾不足 \(N\) 帧时通常复制边缘帧，否则前 2 帧的差分恒为 0。</p>
+
+<h4>7. 全流程维度账（算到底）</h4>
+<div class="math sub">\[ \begin{aligned}
+&0.5\,\mathrm{s}\times8000=4000\ \text{点}\ \xrightarrow{L=200,S=80}\
+T=\left\lfloor\frac{4000-200}{80}\right\rfloor+1=48\ \text{帧}\\
+&4000\ \text{点}\ \to\ (48,200)\ \to\ (48,129)\ \to\ (48,26)\ \to\ (48,13)\\
+&\xrightarrow{+\Delta+\Delta\Delta}\ (48,39)=1872\ \text{个数}
+\end{aligned} \tag{6-16} \]</div>
+<p>压缩比 \(4000/1872\approx2.1\)。若再做时间上的统计池化（各维取均值与标准差）得 78 维，
+压缩比约 51——这就是第 14 讲 x-vector 之前「手工特征 + 统计量」路线的终点。</p>
+
+<h4>8. 公式 ↔ 代码（逐行对应）</h4>
+<pre><code>def mfcc(x, fs, n_mels=26, n_ceps=13, N=256, L=200, S=80, alpha=0.0):
+    # 式(6-1) 预加重：y[n]=x[n]-alpha*x[n-1]
+    y = np.append(x[0], x[1:] - alpha*x[:-1])
+    # 式(2-11) 分帧 + (2-12) 汉明窗
+    F = frame_signal(y, L, S) * (0.54-0.46*np.cos(2*np.pi*np.arange(L)/(L-1)))
+    # 式(6-2) 功率谱：|X|^2/N
+    P = np.abs(np.fft.rfft(F, n=N, axis=1))**2 / N        # (T,129)
+    # 式(6-3)(6-4) Mel 滤波器组 → 式(6-5) 能量
+    fb = mel_filterbank(n_mels, N, fs)                     # (26,129)
+    E = P @ fb.T + 1e-10                                  # (T,26)
+    # 式(6-6) 取 log  L_m
+    Lm = np.log(E)
+    # 式(6-7) DCT-II，取前 n_ceps 列
+    C = dct(Lm, type=2, norm='ortho')[:, :n_ceps]           # (T,13)
+    # 式(6-15) 一阶/二阶差分
+    D, DD = delta(C, N=2), delta(delta(C, N=2), N=2)
+    feat = np.hstack([C, D, DD])                            # (T,39)
+    # 式(6-12) CMN
+    return feat - feat.mean(axis=0)</code></pre>
+<p>对照 <code>acoustic-lab/src/dsp.py</code>：<code>mel_filterbank()</code> 里的 <code>points = np.linspace(mel_low, mel_high, n_mels+2)</code>
+对应式 (6-10) 的 28 个边界点；<code>delta()</code> 的分母 <code>2*sum(n**2)</code> 对应式 (6-15)。</p>
+
+<h4>9. 边界与失效条件</h4>
+<ul><li>\(E_m=0\) 时 \(\log\) 发散 → 必须加 \(\varepsilon\)（\(10^{-10}\)）；也可对功率谱设下限。</li>
+<li>频率上限必须用 \(F_s/2\)：把 8000 Hz 采样的数据按 16000 Hz 建滤波器组，高频通道全空，特征后半段恒为 0。</li>
+<li>Mel 滤波器数 \(M\) 与倒谱维数要匹配：\(n_{\mathrm{ceps}}\gt M\) 没有意义（后面系数恒为 0）。</li>
+<li>CMN 要求同一段内信道不变；若录音中途换了设备，分段做 CMN 才有效。</li>
+<li>设备声纹的 \(f_0=100\,\mathrm{Hz}\) 落在第 2–3 个 Mel 滤波器里，而语音的判别信息多在上千 Hz；
+<b>照搬语音的 26 通道配置会把最关键的频带只分到 2–3 个通道</b>。可改用线性滤波器组、或把 Mel 下限抬到 50 Hz 后加密低频通道。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>照搬语音的预加重到设备声纹。</b>会把 100 Hz 基频相对压低，等于扔掉主要判别信息。② <b>只取 13 维静态 MFCC 就下结论。</b>不加 Δ/ΔΔ 会白白多出约 20% 的误识。③ <b>以为 Mel 滤波器越多越好。</b>太多会引入冗余和过拟合，26 是语音的经验值；设备声纹常取 24–40，需实验。④ <b>忘了 CMN。</b>换一套录音设备就崩。⑤ <b>把 c_0 当特征用却不理解它。</b>c_0 近似总能量，对增益敏感。</div>
 
   <h3>自检</h3>
   <div class="checklist">
     <label><input type="checkbox" data-k="q6-1"> 我能按顺序说出 MFCC 七步，并说出每步模仿人耳的哪一部分。</label>
-    <label><input type="checkbox" data-k="q6-2"> 我能用 <code>mel(f)=2595·log₁₀(1+f/700)</code> 算出 1000 Hz 约等于 1000 mel。</label>
+    <label><input type="checkbox" data-k="q6-2"> 我能用 \(m(f)=2595\log_{10}(1+f/700)\) 算出 1000 Hz 约等于 1000 mel。</label>
     <label><input type="checkbox" data-k="q6-3"> 我能解释为什么低频滤波器密、高频疏。</label>
     <label><input type="checkbox" data-k="q6-4"> 我知道 13→39 维是怎么来的，也能说出加差分比加维度更有用。</label>
   </div>
@@ -776,22 +1439,41 @@ feat = np.hstack([C, D, DD])      # (T, 39)</code></pre>
   <p>小波的解法是：<strong>用"可伸缩的窗"——分析高频时用很短的窗，分析低频时用很长的窗</strong>。这正好符合"高频变化快、需要看细；低频变化慢、可以看粗"的直觉。</p>
 
   <h3>② 连续小波变换：把"频率"换成"尺度"</h3>
-  <div class="eq">W(a, b) = ∫ x(t) · ψ*((t − b)/a) dt
-ψ：母小波（mother wavelet），一个"小段振荡、两端衰减到 0"的函数
-a：尺度（scale）→ 控制伸缩，a 大 = 窗宽 = 看低频
-b：平移（translation）→ 控制位置，b 就是时间</div>
+  <div class="mathbox">
+<div class="math">\[ W(a,b)=\int_{-\infty}^{\infty}x(t)\,\frac{1}{\sqrt{a}}\,
+\overline{\psi\!\left(\frac{t-b}{a}\right)}\,\mathrm{d}t,\qquad a\gt 0 \tag{7-1} \]</div>
+<div class="mathnote"><p>\(\psi\) 是<b>母小波</b>：一小段振荡、两端衰减到 0、且均值为零
+（容许条件 \(C_\psi=\int|\hat\psi(\omega)|^2/|\omega|\,\mathrm{d}\omega\lt \infty\)）。
+\(a\) 是<b>尺度</b>：\(a\) 大 → 小波被拉宽 → 看低频；\(b\) 是<b>平移</b>：直接对应时间位置。
+前面的 \(1/\sqrt a\) 是能量归一化，保证不同尺度下的系数可直接比较。
+与 STFT 的根本差别：STFT 窗宽固定，CWT 的窗宽随 \(a\) 自动变——<b>低频用长窗、高频用短窗</b>。</p></div>
+</div>
   <p>尺度与频率的换算关系是理解小波图的关键：</p>
-  <div class="eq">f ≈ f_c · Fs / a      （f_c 是母小波的中心频率，Morlet 小波约 0.8~1）
-例：Fs = 8000，a = 8  → f ≈ 1000 Hz
-    Fs = 8000，a = 80 → f ≈ 100 Hz</div>
+  <div class="mathbox">
+<div class="math">\[ f\approx\frac{f_c\,F_s}{a},\qquad f_c=\frac{\text{母小波中心频率(归一化)}}{T_s} \tag{7-2} \]</div>
+<div class="mathnote"><p>例：\(F_s=8000\)、Morlet 的 \(f_c\approx0.8125\) →
+\(a=8\Rightarrow f\approx812\,\mathrm{Hz}\)；\(a=80\Rightarrow f\approx81\,\mathrm{Hz}\)。
+尺度轴是 \(1/f\) 关系，所以画 CWT 图时若把 \(a\) 当线性频率轴标注，会把 100 Hz 错标成 900 Hz——
+本讲义配套代码曾踩过这个坑，修法是先把尺度对应的频率算出来，再重采样到线性频率轴。</p></div>
+</div>
   <p>常用的母小波是复 Morlet：一个高斯包络调制的复正弦。用复数小波的好处是能同时得到幅值和相位，幅值图就是"该尺度在该时刻有多强"。</p>
   <figure><img src="assets/cwt_scalogram.png" alt="Morlet 尺度图"><figcaption>局放样本的 Morlet 尺度图（已换成线性频率轴并做稳态抑制）：竖直亮条是放电脉冲出现的时刻，底部连续亮带是 100 Hz 基频谐波。<b>这张图是全局 FFT 给不出的信息</b></figcaption></figure>
 
   <h3>③ 离散小波变换：工程上真正在用的版本</h3>
   <p>连续小波要在所有 a、b 上算积分，计算量巨大。工程上用"二进离散"：a 取 2 的幂（1, 2, 4, 8…），b 取整数倍，得到 DWT。它可以用一对滤波器（低通 h₀、高通 h₁）反复迭代实现，这就是 Mallat 算法：</p>
-  <div class="eq">第 1 层：x → 低通+降采样 → cA₁（近似）；高通+降采样 → cD₁（细节）
-第 2 层：cA₁ → cA₂, cD₂ ……
-3 层分解后：cA₃ + cD₃ + cD₂ + cD₁ 可以<b>无损重构</b>回原信号</div>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+cA_{j+1}[n]&=\sum_{k}h[k-2n]\,cA_j[k],&
+cD_{j+1}[n]&=\sum_{k}g[k-2n]\,cA_j[k]\\
+x[n]&=\sum_{k}\tilde h[n-2k]\,cA_J[k]+\sum_{j=1}^{J}\sum_{k}\tilde g[n-2k]\,cD_j[k]
+\end{aligned} \tag{7-3} \]</div>
+<div class="mathnote"><p>这是 <b>Mallat 塔式算法</b>：\(h\) 低通、\(g\) 高通，两者后跟 \(\downarrow2\) 降采样。
+第 1 层 \(x\to cA_1\)（近似）+ \(cD_1\)（细节），第 2 层再分解 \(cA_1\)，
+3 层后得到 \(cA_3+cD_3+cD_2+cD_1\)，可以<b>无损重构</b>回原信号。
+正交/双正交小波满足 \(A^{\mathsf T}A=I\)，所以重构就是分析算子的转置 \(A^{\mathsf T}\)。
+配套项目里 db4 的重构曾因把 \(A^{\mathsf T}\) 误写成另一套卷积相位而产生 1.40 的误差，
+改成显式转置后降到 \(10^{-12}\) 量级——这正是「公式要落到代码」的反面教材。</p></div>
+</div>
   <p>算一下长度（N = 4000）：</p>
   <table data-cap="3 层 DWT 的系数长度与对应频带">
     <tr><th>层</th><th>输出</th><th>长度</th><th>对应频带（8 kHz）</th></tr>
@@ -812,16 +1494,22 @@ def dwt_haar(x):
 
   <h3>④ EMD：连基函数都不要了</h3>
   <p>小波有个前提问题：母小波要人挑（Haar？db4？Morlet？），挑错了效果就不好。EMD（经验模态分解）的思路是<strong>让数据自己决定基函数</strong>：把信号拆成若干个"本征模态函数"（IMF），每个 IMF 满足两个条件：</p>
-  <div class="eq">① 极值点个数与过零点个数相差不超过 1
-② 上包络（极大值拟合）与下包络（极小值拟合）的均值为 0（局部对称）</div>
+  <div class="defbox"><div class="dh">本征模态函数（IMF）的两个判定条件</div>
+<ol><li>极值点个数与过零点个数相差不超过 1（保证没有叠加的骑行波）；</li>
+<li>上包络（局部极大值拟合）与下包络（局部极小值拟合）的<b>均值为 0</b>（局部对称）。</li></ol>
+<p>满足这两条的分量才有明确的瞬时频率，才能做 Hilbert 谱。EMD 不需要预设基函数，
+是<b>数据驱动</b>的自适应分解，适合非线性、非平稳信号；代价是没有正交性保证、且对噪声敏感（模态混叠）。</p></div>
   <p>筛分（sifting）的流程：</p>
-  <div class="eq">① 找 x 的所有局部极大值、极小值
-② 用三次样条插值连成上包络 e_max 与下包络 e_min
-③ 求均值 m = (e_max + e_min)/2
-④ 令 h = x − m，判断 h 是否满足 IMF 条件；不满足就把 h 当新的 x 重复 ①②③
-⑤ 满足则记为一个 IMF，剩下的残差 r = x − IMF 继续下一轮
-⑥ 残差单调或极值太少时停止</div>
-  <p>结果：<code>x = Σ IMF_i + r</code>，前面的 IMF 是高频快变，后面的是低频慢变——<strong>和傅里叶的"基频+谐波"思路完全不同，它是按时间尺度自适应分层的</strong>。</p>
+  <div class="defbox"><div class="dh">EMD 筛分（sifting）流程</div>
+<ol><li>找出 \(x\) 的所有局部极大值、极小值；</li>
+<li>用三次样条插值连成上包络 \(e_{\max}\) 与下包络 \(e_{\min}\)；</li>
+<li>求均值包络 \(m=(e_{\max}+e_{\min})/2\)；</li>
+<li>令 \(h=x-m\)，判断 \(h\) 是否满足 IMF 两条件；不满足则把 \(h\) 当作新的 \(x\) 回到 ①；</li>
+<li>满足则记为一个 IMF，令残差 \(r=x-\mathrm{IMF}\)，对 \(r\) 继续下一轮；</li>
+<li>残差变单调、或极值点少于 2 个时停止，最后得到 \(x=\sum_j \mathrm{IMF}_j+r\)。</li></ol>
+<p>停止准则常用「连续两次筛分的标准差 \(\mathrm{SD}=\sum_t|h_{k-1}(t)-h_k(t)|^2/\sum_t h_{k-1}^2(t)\lt 0.2\sim0.3\)」，
+过筛会抹掉振幅调制信息，欠筛则 IMF 不够对称。端点效应需用镜像延拓抑制。</p></div>
+  <p>结果：\(x=\sum_i \mathrm{IMF}_i+r\)，前面的 IMF 是高频快变，后面的是低频慢变——<strong>和傅里叶的"基频+谐波"思路完全不同，它是按时间尺度自适应分层的</strong>。</p>
   <figure><img src="assets/emd_imfs.png" alt="EMD 分量"><figcaption>铁芯松动样本的 IMF 分解：从上到下时间尺度由细到粗，最后一行是残差（趋势）。重构所有分量应能还原原信号（误差 1e−17 量级）</figcaption></figure>
   <h4>EMD 的三个已知问题（必须知道）</h4>
   <table data-cap="EMD 的三个已知问题与缓解办法">
@@ -841,13 +1529,112 @@ def dwt_haar(x):
   </table>
   <p>给声纹场景的建议：<strong>要定位"脉冲什么时候出现"用短窗 STFT 或小波；要分析"谐波比例"用长窗 STFT 或直接 FFT；要处理形态未知的复杂非平稳信号再考虑 EMD</strong>。文献里（如李楠 2023 用"小波变换生成声纹特征图谱"再做多传感器融合）走的就是小波路线，因为松动故障的关键是撞击瞬态。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 7 讲　小波、Mallat 算法与 EMD 筛分</div>
+
+<h4>1. 符号对照表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>与 STFT 的对应</th></tr>
+<tr><td>\(a\)</td><td>尺度参数，&gt;0；拉宽小波</td><td>相当于「窗长」，但随频率自适应</td></tr>
+<tr><td>\(b\)</td><td>平移参数，时间位置</td><td>相当于帧起点 \(mS\)</td></tr>
+<tr><td>\(\psi\)</td><td>母小波，零均值、有限能量</td><td>相当于窗，但必须振荡且均值为 0</td></tr>
+<tr><td>\(h,g\)</td><td>分解低通 / 高通滤波器</td><td>—</td></tr>
+<tr><td>\(\tilde h,\tilde g\)</td><td>重构（综合）滤波器</td><td>—</td></tr>
+<tr><td>\(cA_j,cD_j\)</td><td>第 \(j\) 层近似 / 细节系数</td><td>—</td></tr>
+</table>
+
+<h4>2. 为什么母小波必须零均值：容许条件</h4>
+<p>由 \(\int\psi(t)\,\mathrm{d}t=\hat\psi(0)\)，若要能从 \(W(a,b)\) 反演原信号，需要</p>
+<div class="math sub">\[ C_\psi=\int_{-\infty}^{\infty}\frac{\big|\hat\psi(\omega)\big|^2}{|\omega|}\,\mathrm{d}\omega\lt \infty
+\quad\Longrightarrow\quad \hat\psi(0)=0\ \Leftrightarrow\ \int\psi(t)\,\mathrm{d}t=0 \tag{7-6} \]</div>
+<p>否则 \(\omega\to0\) 时被积函数 \(\sim|\hat\psi(0)|^2/|\omega|\) 发散。零均值意味着 \(\psi\) 必须有正有负、呈振荡状——
+这就是「小波（wavelet）」名字的由来。有了它，连续小波反变换为</p>
+<div class="math sub">\[ x(t)=\frac{1}{C_\psi}\int_0^{\infty}\!\!\int_{-\infty}^{\infty}
+W(a,b)\,\frac{1}{\sqrt a}\psi\!\left(\frac{t-b}{a}\right)\frac{\mathrm{d}b\,\mathrm{d}a}{a^2} \tag{7-7} \]</div>
+
+<h4>3. 尺度 → 频率：把 1/a 关系推清楚</h4>
+<p>Morlet 母小波 \(\psi(t)=\pi^{-1/4}e^{j\omega_0t}e^{-t^2/2}\)（\(\omega_0\approx6\) 使容许条件近似成立）。
+尺度 \(a\) 下小波为 \(\psi(t/a)\)，其傅里叶中心频率由尺度性质得 \(\omega=\omega_0/a\)（rad/sample），换算成物理频率：</p>
+<div class="math sub">\[ f=\frac{\omega_0}{2\pi a}\,F_s\approx\frac{0.9549}{a}F_s
+\quad(\omega_0=6),\qquad a=\frac{\omega_0 F_s}{2\pi f} \tag{7-8} \]</div>
+<p>配套实现用 \(f_c\approx0.8125\)（Morlet 的实测中心频率，取决于采样与归一化约定），
+于是 \(F_s=8000\)、\(a=8\Rightarrow f\approx812\,\mathrm{Hz}\)；\(a=80\Rightarrow f\approx81\,\mathrm{Hz}\)。
+<b>关键陷阱</b>：若把尺度按对数取样（常见做法 \(a_j=a_02^{j\Delta}\)），得到的频率轴是<b>指数分布</b>的；
+直接拿线性刻度去标，会把 100 Hz 标成 900 Hz。正确做法是先按式 (7-8) 算出每个尺度对应的频率，
+再重采样插值到均匀线性频率轴——配套项目 <code>cwt_morlet()</code> 的修复正是这一步。</p>
+
+<h4>4. 与 STFT 的分辨率对比（定量）</h4>
+<p>小波在尺度 \(a\) 下的等效窗宽 \(\Delta t_a=a\,\Delta t_\psi\)，等效带宽 \(\Delta f_a=\Delta f_\psi/a\)，故</p>
+<div class="math sub">\[ \Delta t_a\cdot\Delta f_a=\Delta t_\psi\,\Delta f_\psi=\text{常数}
+\quad\text{但}\quad \frac{\Delta f_a}{f}=\frac{\Delta f_\psi}{\omega_0}=\text{常数} \tag{7-9} \]</div>
+<p>即 <b>恒 Q（恒定相对带宽）分析</b>：高频处时间分辨率好、频率分辨率差；低频处反过来。
+STFT 则是恒绝对带宽。对「100 Hz 嗡鸣 + 3 kHz 瞬态放电」这类信号，小波更合适：
+低频要分开 100/150 Hz（需好频率分辨），高频要定位放电时刻（需好时间分辨）。</p>
+
+<h4>5. DWT：把 Mallat 算法写成矩阵，顺便解释那个 1.40 的 bug</h4>
+<p>单层分解可以写成矩阵形式 \(\mathbf y=A\mathbf x\)，其中 \(A\) 的每行是 \(h\) 或 \(g\) 平移 2 点后的滤波器（\(\downarrow2\)）。
+对<b>正交小波</b>（Haar、dbN）有 \(A^{\mathsf T}A=I\)，因此</p>
+<div class="math sub">\[ \mathbf x=A^{\mathsf T}\mathbf y=A^{\mathsf T}\!\begin{bmatrix}cA_1\\cD_1\end{bmatrix}
+=\underbrace{A_h^{\mathsf T}cA_1}_{\text{低通支路}}+\underbrace{A_g^{\mathsf T}cD_1}_{\text{高通支路}} \tag{7-10} \]</div>
+<p>这就是式 (7-3) 第二行的矩阵写法。它说明<b>重构就是分析算子的转置</b>，不需要另推一套公式。</p>
+<p>配套项目里 db4 最初的重构误差达 <b>1.40</b>，原因正是把 \(A^{\mathsf T}\) 误写成「另一套卷积 + 相位偏移」：
+分析用的是 \(\sum_k h[k-2n]x[k]\)，转置后应为 \(x[n]=\sum_j h[n-2j]cA[j]\)（<b>先上采样再卷积，且索引是 \(n-2j\)</b>），
+而错误实现写成了普通相关卷积。改成显式构造 \(A\) 并取 \(A^{\mathsf T}\) 后，误差降到 \(10^{-12}\) 量级。
+这个例子值得记住：<b>「看起来对称」不等于「是转置」，用矩阵写一遍最保险。</b></p>
+<p>db4 的 8 个分解低通系数（归一化到 \(\sum h_k=\sqrt2\)）：</p>
+<div class="math sub">\[ h=\tfrac{1}{4\sqrt2}\big[1+\sqrt3,\ 3+\sqrt3,\ 3-\sqrt3,\ 1-\sqrt3\big]\ \text{的 4 抽头推广}
+\quad\Rightarrow\ g[k]=(-1)^k h[7-k] \tag{7-11} \]</div>
+<p>高通由「低通反转 + 交替变号」得到（正交镜像滤波器 QMF），保证 \(A\) 正交。Haar 是最简单的特例：
+\(h=[1/\sqrt2,1/\sqrt2]\)、\(g=[1/\sqrt2,-1/\sqrt2]\)，此时 \(cA_1[n]=\frac{x[2n]+x[2n+1]}{\sqrt2}\)、
+\(cD_1[n]=\frac{x[2n]-x[2n+1]}{\sqrt2}\)，手工就能验证 \(x[2n]=(cA_1+cD_1)/\sqrt2\) ✓。</p>
+
+<h4>6. EMD：筛分停止准则与端点效应</h4>
+<p>第 \(k\) 次筛分的收敛判据用<b>标准差准则</b>：</p>
+<div class="math sub">\[ \mathrm{SD}_k=\frac{\sum_{t}\big|h_{k-1}(t)-h_k(t)\big|^2}{\sum_t h_{k-1}^2(t)}\lt 0.2\sim0.3 \tag{7-12} \]</div>
+<p>太严（SD 要求极小）会过度筛分，把振幅调制也抹平，IMF 变成等幅的纯调频波；太松则 IMF 上下包络不对称，
+瞬时频率失去意义。分解终止条件：残差 \(r\) 的极值点数 \(\le2\)，或 \(\max|r|\) 与 \(\sum|\mathrm{IMF}|\) 相比可忽略。</p>
+<p><b>端点效应</b>：三次样条在序列两端没有约束，包络会「飞出去」，且误差随筛分逐层向内传播。
+标准补救是<b>镜像延拓</b>：在左右各加一段关于端点对称翻转的极值点，筛完只取中间原长部分。</p>
+<p>得到 IMF 后，对每个分量做 Hilbert 变换 \(\tilde c_j(t)=\frac{1}{\pi}\,\mathrm{p.v.}\!\int\frac{c_j(\tau)}{t-\tau}\mathrm d\tau\)，
+构造解析信号 \(z_j(t)=c_j+j\tilde c_j=a_j(t)e^{j\phi_j(t)}\)，瞬时频率 \(f_j(t)=\frac{1}{2\pi}\frac{\mathrm d\phi_j}{\mathrm dt}\)，
+于是得到时间–频率–能量三维的 <b>Hilbert 谱</b> \(H(f,t)=\sum_j a_j^2(t)\delta(f-f_j(t))\)。
+与语谱图不同，它不受窗长约束，能同时给出高频瞬态的精确定位与低频的精细频率。</p>
+
+<h4>7. 公式 ↔ 代码</h4>
+<pre><code># 式(7-1) CWT：逐尺度与信号做卷积
+for a in scales:
+    psi = morlet(np.arange(-4*a, 4*a) / a) / np.sqrt(a)
+    W[i] = np.convolve(x, psi, 'same')
+
+# 式(7-3) DWT 单层（分析）
+cA = conv_down(x, h, 2); cD = conv_down(x, g, 2)
+
+# 式(7-10) 重构：显式用分析算子的转置（这是修 bug 后的写法）
+A = build_analysis_matrix(len(x), h, g)     # 每行是平移 2 点的 h / g
+y = np.concatenate([cA, cD])
+x_hat = A.T @ y                              # 误差 ~1e-12
+
+# 式(7-12) EMD 筛分
+while True:
+    env_hi = spline(maxima); env_lo = spline(minima)
+    m = (env_hi + env_lo) / 2
+    h_new = h - m
+    if sd(h, h_new) < 0.25: break
+    h = h_new</code></pre>
+
+<h4>8. 边界与失效条件</h4>
+<ul><li><b>模态混叠</b>：一个 IMF 里混入尺度差异极大的成分，或同一尺度被拆到多个 IMF。噪声最容易诱发；EEMD/CEEMDAN 通过加噪集合平均缓解。</li>
+<li>信号长度必须远大于最大小波尺度，否则 \(a\) 大的尺度卷积边界占满整段，系数全是端点伪影（画 CWT 图时应标出「影响锥」cone of influence 并裁掉）。</li>
+<li>DWT 每层降采样使长度减半，长度非 2 的幂时需做对称延拓（<code>mode='symmetric'</code>），否则重构长度对不上。</li>
+<li>EMD 没有正交性保证，各 IMF 能量之和不必等于原信号能量，做能量特征时要先验证。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>以为小波能突破不确定原理。</b>它只是"按频率分配分辨率"，乘积下界不变。② <b>把 CWT 的横轴当线性频率。</b>尺度轴是对数的，直接标线性频率会把 100 Hz 标成 900 Hz（本项目真的踩过这个坑）。③ <b>EMD 分解越深越好。</b>越深端点效应越重，IMF 越多不等于信息越多。④ <b>拿 EMD 的正交性当定论。</b>它只是经验算法。</div>
 
   <h3>自检</h3>
   <div class="checklist">
     <label><input type="checkbox" data-k="q7-1"> 我能说出 STFT 的固定窗在什么场景下会失效。</label>
-    <label><input type="checkbox" data-k="q7-2"> 我能用 <code>f ≈ Fs/a</code> 把小波尺度换算成频率。</label>
+    <label><input type="checkbox" data-k="q7-2"> 我能用 \(f\approx f_cF_s/a\) 把小波尺度换算成频率。</label>
     <label><input type="checkbox" data-k="q7-3"> 我知道 3 层 DWT 的系数长度与对应频带。</label>
     <label><input type="checkbox" data-k="q7-4"> 我能说出 EMD 的 IMF 两个条件与三个已知问题。</label>
   </div>
@@ -857,7 +1644,7 @@ def dwt_haar(x):
   <div class="goal">
     <div class="g">目标</div>
     <ul><li>能写出一个神经元的计算，并说清激活函数为什么必须是非线性的。</li>
-    <li>能自己推出 <code>∂L/∂W = aᵀ·δ</code> 这类反向传播公式，而不是背下来。</li>
+    <li>能自己推出 \(\partial L/\partial W=\mathbf a^{\mathsf T}\boldsymbol\delta\) 这类反向传播公式，而不是背下来。</li>
     <li>会做数值梯度检查，能看懂"误差 1e−11"意味着什么。</li></ul>
   </div>
   <div class="goal">
@@ -872,10 +1659,14 @@ def dwt_haar(x):
   <p>需要：矩阵乘法与维度的推理（<code>(m,n)@(n,p)=(m,p)</code>）、链式法则、<code>exp</code> 与 <code>log</code>。若矩阵维度推不清，反向传播一定写不对——这是最常见的能力缺口，建议先做本讲最后的维度练习。</p>
 
   <h3>① 从一个神经元说起</h3>
-  <div class="eq">z = Σ w_i·x_i + b        （加权和 + 偏置）
-a = σ(z)                  （激活）
-σ(z) = 1 / (1 + e^(−z))   （sigmoid，输出 (0,1)，可解释为概率）</div>
-  <p>为什么要有 σ？因为如果只有加权和，多层网络叠加起来仍然是线性的：<code>W₂(W₁x) = (W₂W₁)x</code>，两层等于一层，学了也没用。<strong>非线性激活是"深度"有意义的前提</strong>。这也是为什么 XOR 这种线性不可分问题，单层感知机永远做不对，加一个隐层就能做对。</p>
+  <div class="mathbox">
+<div class="math">\[ z=\sum_{i=1}^{d}w_i x_i+b=\mathbf w^{\mathsf T}\mathbf x+b,\qquad
+a=\sigma(z)=\frac{1}{1+e^{-z}},\qquad \sigma'(z)=a(1-a) \tag{8-1} \]</div>
+<div class="mathnote"><p>sigmoid 输出 \((0,1)\)，可解释为概率；其导数能直接用输出值算，这是它早年流行的原因。
+但 \(|z|\) 大时 \(\sigma'\to0\)，多层连乘会造成<b>梯度消失</b>，所以现代隐含层多用 ReLU
+\(\sigma_{\mathrm{ReLU}}(z)=\max(0,z)\)。</p></div>
+</div>
+  <p>为什么要有 σ？因为如果只有加权和，多层网络叠加起来仍然是线性的：\(W_2(W_1\mathbf x)=(W_2W_1)\mathbf x\)，两层等于一层，学了也没用。<strong>非线性激活是"深度"有意义的前提</strong>。这也是为什么 XOR 这种线性不可分问题，单层感知机永远做不对，加一个隐层就能做对。</p>
   <h4>常用激活函数</h4>
   <table data-cap="常用激活函数及其导数">
     <tr><th>名称</th><th>公式</th><th>导数</th><th>特点</th></tr>
@@ -885,53 +1676,87 @@ a = σ(z)                  （激活）
   </table>
 
   <h3>② 前向传播：把一帧特征变成概率</h3>
-  <div class="eq">隐层：h = σ(W₁·x + b₁)          x 是 39 维 MFCC 统计量
-输出：z₂ = W₂·h + b₂
-概率：p = softmax(z₂)，  p_c = e^(z₂,c) / Σ_j e^(z₂,j)</div>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+\mathbf z_1&=W_1\mathbf x+\mathbf b_1,& \mathbf h&=\sigma(\mathbf z_1)\\
+\mathbf z_2&=W_2\mathbf h+\mathbf b_2,&
+p_c&=\frac{e^{z_{2,c}}}{\sum_{j}e^{z_{2,j}}}\quad(\mathrm{softmax})
+\end{aligned} \tag{8-2} \]</div>
+<div class="mathnote"><p>输入 \(\mathbf x\) 是 39 维 MFCC 统计量（对整段语音各维取均值/标准差），
+\(W_1\in\mathbb R^{H\times39}\)、\(W_2\in\mathbb R^{C\times H}\)。
+softmax 把任意实数得分压成和为 1 的概率分布；实现时要减去 \(\max_j z_{2,j}\) 防溢出，
+因为 \(e^{z-\max}\) 不会超过 1（平移不改变 softmax 结果）。</p></div>
+</div>
   <p>softmax 的作用是把任意实数变成"和为 1 的概率"。注意它对所有 z 加同一个常数不变（分子分母同乘），所以实现时要先减最大值防止 <code>exp</code> 溢出：<code>z - z.max()</code>。</p>
 
   <h3>③ 损失函数与那个"漂亮"的梯度</h3>
-  <div class="eq">交叉熵损失：L = −Σ_c y_c · log(p_c)
-y 是 one-hot 标签（正确类为 1，其余 0）。若只有一个正确类 c*，则 L = −log(p_c*)</div>
+  <div class="mathbox">
+<div class="math">\[ L(\mathbf p,\mathbf y)=-\sum_{c=1}^{C}y_c\ln p_c=-\ln p_{c^*}
+\quad(\mathbf y\ \text{为 one-hot}) \tag{8-3} \]</div>
+<div class="mathnote"><p>交叉熵来自极大似然：把标签看成真实分布，最小化 \(-\ln p_{c^*}\) 等价于最大化正确类的似然。
+用交叉熵配 softmax 的关键好处是梯度里<b>不含 \(\sigma'\)</b>（见下式），
+不会像「均方误差 + sigmoid」那样在错得很离谱时反而梯度趋零、学不动。</p></div>
+</div>
   <p>对 softmax + 交叉熵求导，会得到一个极其简洁的结果：</p>
-  <div class="eq">∂L/∂z₂ = p − y
-例：三类，输出 p = [0.7, 0.2, 0.1]，真实标签 y = [0, 1, 0]
-    ∂L/∂z₂ = [0.7, −0.8, 0.1]
-含义：预测概率比标签大的往下压（正梯度），比标签小的往上抬（负梯度）</div>
+  <div class="mathbox">
+<div class="math">\[ \boldsymbol\delta_2\equiv\frac{\partial L}{\partial\mathbf z_2}=\mathbf p-\mathbf y,
+\qquad \frac{\partial L}{\partial z_{2,c}}=p_c-y_c \tag{8-4} \]</div>
+<div class="mathnote"><p>推导：\(\frac{\partial L}{\partial z_{2,i}}=
+\sum_c\frac{\partial L}{\partial p_c}\frac{\partial p_c}{\partial z_{2,i}}\)，
+其中 \(\frac{\partial p_c}{\partial z_{2,i}}=p_c(\delta_{ci}-p_i)\)，
+代入 \(L=-\sum_c y_c\ln p_c\) 并用 \(\sum_c y_c=1\) 即得 \(p_i-y_i\)。
+例：三类 \(p=[0.7,0.2,0.1]\)、\(y=[0,1,0]\) → \(\delta_2=[0.7,-0.8,0.1]\)：
+预测比标签大的往下压（正梯度），比标签小的往上抬（负梯度）。</p></div>
+</div>
   <p>这个结果不是巧合，而是"指数族 + 对数损失"的共轭性质。知道它，反向传播的第一层就不用推了。</p>
 
   <h3>④ 反向传播：逐层往回传</h3>
-  <p>记 <code>δ₂ = ∂L/∂z₂ = p − y</code>，则：</p>
-  <div class="eq">∂L/∂W₂ = δ₂ · hᵀ          （形状：输出维 × 隐层维，与 W₂ 一致）
-∂L/∂b₂ = δ₂
-δ₁ = ∂L/∂z₁ = (W₂ᵀ·δ₂) ⊙ σ′(z₁)      ⊙ 是逐元素乘
-∂L/∂W₁ = δ₁ · xᵀ
-∂L/∂b₁ = δ₁</div>
+  <p>记 \(\boldsymbol\delta_2=\partial L/\partial\mathbf z_2=\mathbf p-\mathbf y\)，则：</p>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+\frac{\partial L}{\partial W_2}&=\boldsymbol\delta_2\,\mathbf h^{\mathsf T},&
+\frac{\partial L}{\partial\mathbf b_2}&=\boldsymbol\delta_2\\
+\boldsymbol\delta_1&=\big(W_2^{\mathsf T}\boldsymbol\delta_2\big)\odot\sigma'(\mathbf z_1),&
+\frac{\partial L}{\partial W_1}&=\boldsymbol\delta_1\,\mathbf x^{\mathsf T},\quad
+\frac{\partial L}{\partial\mathbf b_1}=\boldsymbol\delta_1
+\end{aligned} \tag{8-5} \]</div>
+<div class="mathnote"><p>\(\odot\) 是逐元素乘（Hadamard 积）。每个梯度都是「<b>上游误差 × 本层输入</b>」的外积，
+形状自动与权重矩阵一致——这是检查反向传播写对没有的第一道关。
+\(\sigma'(\mathbf z_1)=\mathbf h\odot(1-\mathbf h)\) 可复用前向缓存，不必重算指数。
+参数更新：\(W\leftarrow W-\eta\,\partial L/\partial W\)，\(\eta\) 为学习率。</p></div>
+</div>
   <p>三句话记住结构：<strong>对权重求导 = 该层的 δ 乘上一层的输入（外积）；把 δ 往回传 = 用 W 的转置乘 δ，再乘本层激活的导数。</strong></p>
-  <div class="note"><span class="t">维度是唯一的检查手段</span>如果 <code>∂L/∂W₁</code> 的形状和 <code>W₁</code> 不一样，一定是转置放错了。<code>W₁</code> 是 <code>(h, d)</code>，<code>x</code> 是 <code>(d,)</code>，<code>δ₁</code> 是 <code>(h,)</code>，所以必须写 <code>δ₁[:,None] @ x[None,:]</code> 得到 <code>(h,d)</code>。批量时 <code>X</code> 是 <code>(B,d)</code>，则是 <code>δ₁.T @ X</code>。</div>
+  <div class="note"><span class="t">维度是唯一的检查手段</span>如果 \(\partial L/\partial W_1\) 的形状和 <code>W₁</code> 不一样，一定是转置放错了。<code>W₁</code> 是 <code>(h, d)</code>，<code>x</code> 是 <code>(d,)</code>，<code>δ₁</code> 是 <code>(h,)</code>，所以必须写 <code>δ₁[:,None] @ x[None,:]</code> 得到 <code>(h,d)</code>。批量时 <code>X</code> 是 <code>(B,d)</code>，则是 <code>δ₁.T @ X</code>。</div>
 
   <h3>⑤ 手算一次参数更新</h3>
   <p>用最简单的单神经元（sigmoid 输出、二分类、交叉熵）走一遍，数字都能验算：</p>
-  <div class="eq">输入 x = [1, 2]，权重 w = [0.5, −0.5]，偏置 b = 0，标签 y = 1，学习率 η = 0.1
-
-前向：z = 0.5×1 + (−0.5)×2 + 0 = −0.5
-      p = σ(−0.5) = 1/(1+e^0.5) = 0.3775
-损失：L = −log(0.3775) = 0.974
-
-反向：δ = p − y = 0.3775 − 1 = −0.6225
-      ∂L/∂w = δ·x = [−0.6225, −1.245]
-      ∂L/∂b = δ = −0.6225
-
-更新：w ← w − η·∂L/∂w = [0.5 + 0.06225, −0.5 + 0.1245] = [0.5623, −0.3755]
-      b ← 0 + 0.06225 = 0.0623
-
-验证：新的 z = 0.5623×1 − 0.3755×2 + 0.0623 = −0.1264
-      p = σ(−0.1264) = 0.4685  ← 从 0.3775 升到 0.4685，朝着标签 1 靠近了 ✓</div>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+z&=0.5(1)-0.5(2)+0=-0.5,& p&=\sigma(-0.5)=0.3775\\
+L&=-\ln 0.3775=0.9741,& \delta&=p-y=-0.6225\\
+\partial L/\partial\mathbf w&=\delta\mathbf x=[-0.6225,\,-1.2450],&
+\partial L/\partial b&=-0.6225\\
+\mathbf w_{\text{new}}&=\mathbf w-\eta\,\partial L/\partial\mathbf w=[0.5623,\,-0.3755]
+\end{aligned} \tag{8-6} \]</div>
+<div class="mathnote"><p>输入 \(\mathbf x=[1,2]\)、\(\mathbf w=[0.5,-0.5]\)、\(b=0\)、\(y=1\)、\(\eta=0.1\)。
+再前向一次：\(z'=0.5623\times1-0.3755\times2=-0.1887\)，\(p'=\sigma(-0.1887)=0.4530\)，
+\(L'=0.7919\lt 0.9741\) ✓ <b>损失确实下降了</b>。
+这个「手算一轮、确认损失变小」的习惯，比跑通十次训练更能建立对反向传播的信任。</p></div>
+</div>
   <p>这一步算完，你就掌握了训练的全部本质：<strong>预测 → 算损失 → 求梯度 → 沿负梯度方向挪一小步</strong>。后面所有网络，无非是把这个过程重复几百万次、并且梯度算得更聪明。</p>
 
   <h3>⑥ 梯度检查：怎么确认反向传播没写错</h3>
   <p>解析梯度可能推错，但数值梯度一定对（它就是导数的定义）：</p>
-  <div class="eq">数值梯度：∂L/∂w ≈ [L(w + ε) − L(w − ε)] / (2ε)，  ε 取 1e−5（中心差分，误差 O(ε²)）</div>
+  <div class="mathbox">
+<div class="math">\[ \frac{\partial L}{\partial w_i}\approx
+\frac{L(\mathbf w+\varepsilon\mathbf e_i)-L(\mathbf w-\varepsilon\mathbf e_i)}{2\varepsilon},
+\qquad \varepsilon\sim10^{-5},\ \text{截断误差 }O(\varepsilon^2) \tag{8-7} \]</div>
+<div class="mathnote"><p>中心差分由泰勒展开 \(L(w\pm\varepsilon)=L(w)\pm\varepsilon L'(w)+\frac{\varepsilon^2}{2}L''(w)\pm
+\frac{\varepsilon^3}{6}L'''(w)+\cdots\) 相减得到，偶次项自动抵消，所以误差是 \(O(\varepsilon^2)\)，
+而前向差分只有 \(O(\varepsilon)\)。<b>梯度检查</b>：把解析梯度与上式逐元素比较。
+配套项目实测绝对误差 \(\lt 10^{-10}\)；若某元素相对误差看着大，先检查它是不是接近 0 的极小量
+（例如 \(-2.03\times10^{-6}\) 会把相对误差放大到 \(5\times10^{-6}\)，但绝对误差只有 \(10^{-11}\)，不是 bug）。</p></div>
+</div>
   <p>对每个参数抽几个探针，比较解析梯度与数值梯度。<strong>判据要同时看两个数：</strong></p>
   <table data-cap="梯度检查的两个判据">
     <tr><th>指标</th><th>含义</th><th>合格线</th></tr>
@@ -968,13 +1793,116 @@ y 是 one-hot 标签（正确类为 1，其余 0）。若只有一个正确类 c
         gb1 = d1.sum(0)
         return [gW1, gb1, gW2, gb2]</code></pre>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 8 讲　反向传播的每一项都算出来</div>
+
+<h4>1. 网络结构与维度表</h4>
+<table class="sym"><tr><th>量</th><th>形状</th><th>本讲义取值</th><th>说明</th></tr>
+<tr><td>\(\mathbf x\)</td><td>\((d,1)\)</td><td>\(d=39\)</td><td>MFCC 统计特征</td></tr>
+<tr><td>\(W_1,\mathbf b_1\)</td><td>\((H,d),(H,1)\)</td><td>\(H=32\)</td><td>隐层</td></tr>
+<tr><td>\(\mathbf h\)</td><td>\((H,1)\)</td><td>32</td><td>隐层激活</td></tr>
+<tr><td>\(W_2,\mathbf b_2\)</td><td>\((C,H),(C,1)\)</td><td>\(C=6\)</td><td>六类工况</td></tr>
+<tr><td>\(\mathbf p\)</td><td>\((C,1)\)</td><td>6</td><td>softmax 概率</td></tr>
+</table>
+
+<h4>2. softmax 的导数：δ₂ = p − y 的完整推导</h4>
+<p>记 \(p_c=e^{z_c}/\sum_j e^{z_j}=e^{z_c}/Z\)。先求雅可比，对 \(i\neq c\) 与 \(i=c\) 分别用商法则：</p>
+<div class="math sub">\[ \frac{\partial p_c}{\partial z_i}=
+\begin{cases}
+\dfrac{e^{z_i}Z-e^{z_c}e^{z_i}}{Z^2}=p_i(1-p_c)=p_c(\delta_{ci}-p_i),&i=c\\[8pt]
+\dfrac{-e^{z_c}e^{z_i}}{Z^2}=-p_c p_i=p_c(\delta_{ci}-p_i),&i\neq c
+\end{cases} \tag{8-8} \]</div>
+<p>两种情况可统一写成 \(\partial p_c/\partial z_i=p_c(\delta_{ci}-p_i)\)。代入 \(L=-\sum_c y_c\ln p_c\)：</p>
+<div class="math sub">\[ \begin{aligned}
+\frac{\partial L}{\partial z_i}&=-\sum_c\frac{y_c}{p_c}\frac{\partial p_c}{\partial z_i}
+=-\sum_c\frac{y_c}{p_c}\,p_c(\delta_{ci}-p_i)\\
+&=-\sum_c y_c\delta_{ci}+p_i\sum_c y_c=-y_i+p_i
+\end{aligned} \tag{8-9} \]</div>
+<p>最后一步用了 one-hot 标签 \(\sum_c y_c=1\)。<b>结论：softmax 的雅可比与交叉熵的导数恰好抵消，
+梯度退化成极简的 \(p-y\)</b>。这就是「分类任务用交叉熵而不用 MSE」的数学理由：MSE 的梯度里会多出
+\(p_c(1-p_c)\) 因子，在预测错得离谱（\(p\approx0\) 或 1）时梯度趋零，训练直接卡死。</p>
+
+<h4>3. 逐层回传：链式法则的每一步</h4>
+<p><b>输出层权重</b>：由 \(z_{2,c}=\sum_j W_{2,cj}h_j+b_{2,c}\) 得 \(\partial z_{2,c}/\partial W_{2,ij}=\delta_{ci}h_j\)，于是</p>
+<div class="math sub">\[ \frac{\partial L}{\partial W_{2,ij}}=\frac{\partial L}{\partial z_{2,i}}\,h_j=\delta_{2,i}h_j
+\quad\Longrightarrow\quad \frac{\partial L}{\partial W_2}=\boldsymbol\delta_2\mathbf h^{\mathsf T} \tag{8-10} \]</div>
+<p><b>传到隐层</b>：\(\mathbf z_2=W_2\mathbf h+\mathbf b_2\)，故 \(\partial L/\partial\mathbf h=W_2^{\mathsf T}\boldsymbol\delta_2\)；
+再由 \(\mathbf h=\sigma(\mathbf z_1)\) 逐元素求导 \(\partial h_j/\partial z_{1,j}=\sigma'(z_{1,j})=h_j(1-h_j)\)：</p>
+<div class="math sub">\[ \boldsymbol\delta_1=\frac{\partial L}{\partial\mathbf z_1}
+=\big(W_2^{\mathsf T}\boldsymbol\delta_2\big)\odot\sigma'(\mathbf z_1),\qquad
+\frac{\partial L}{\partial W_1}=\boldsymbol\delta_1\mathbf x^{\mathsf T} \tag{8-11} \]</div>
+<p><b>偏置</b>：\(\partial z/\partial b=1\)，故 \(\partial L/\partial\mathbf b_2=\boldsymbol\delta_2\)、\(\partial L/\partial\mathbf b_1=\boldsymbol\delta_1\)。</p>
+<p>统一规律：<b>每层的权重梯度 = 该层的误差向量 ⊗ 该层的输入向量</b>。
+检查形状是最快的自检：\(\boldsymbol\delta_2\) 是 \((C,1)\)、\(\mathbf h^{\mathsf T}\) 是 \((1,H)\) → 外积 \((C,H)\)，与 \(W_2\) 一致 ✓。</p>
+
+<h4>4. 数值梯度：为什么中心差分是 O(ε²)</h4>
+<p>对 \(L(w)\) 在 \(w\) 处做泰勒展开：</p>
+<div class="math sub">\[ \begin{aligned}
+L(w+\varepsilon)&=L(w)+\varepsilon L'(w)+\tfrac{\varepsilon^2}{2}L''(w)+\tfrac{\varepsilon^3}{6}L'''(w)+O(\varepsilon^4)\\
+L(w-\varepsilon)&=L(w)-\varepsilon L'(w)+\tfrac{\varepsilon^2}{2}L''(w)-\tfrac{\varepsilon^3}{6}L'''(w)+O(\varepsilon^4)
+\end{aligned} \tag{8-12} \]</div>
+<p>两式相减，偶次项全消：\(\dfrac{L(w+\varepsilon)-L(w-\varepsilon)}{2\varepsilon}=L'(w)+\dfrac{\varepsilon^2}{6}L'''(w)+O(\varepsilon^4)\)，
+误差 \(O(\varepsilon^2)\)。而前向差分 \(\frac{L(w+\varepsilon)-L(w)}{\varepsilon}=L'(w)+\frac{\varepsilon}{2}L''(w)+\cdots\) 只有 \(O(\varepsilon)\)。</p>
+<p><b>ε 不能无限小</b>：\(\varepsilon\lt 10^{-8}\) 时两个相近的 \(L\) 值相减会发生灾难性抵消（双精度约 16 位有效数字），
+舍入误差反超截断误差。经验值 \(\varepsilon=10^{-5}\sim10^{-4}\)（\(\sqrt[3]{\epsilon_{\mathrm{mach}}}\) 量级）。
+判据建议用<b>相对误差</b> \(\dfrac{\|g_{\mathrm{analytic}}-g_{\mathrm{numeric}}\|}{\|g_{\mathrm{analytic}}\|+\|g_{\mathrm{numeric}}\|}\lt 10^{-7}\)，
+避免逐元素比较时被近零元素放大。</p>
+
+<h4>5. 完整手算一轮（带所有中间数）</h4>
+<div class="math sub">\[ \begin{aligned}
+&x=[1,2],\ w=[0.5,-0.5],\ b=0,\ y=1,\ \eta=0.1\\
+&z=0.5(1)-0.5(2)=-0.5,\quad p=\frac{1}{1+e^{0.5}}=0.3775407\\
+&L=-\ln p=0.9740770,\quad \delta=p-y=-0.6224593\\
+&\nabla_w=\delta x=[-0.6224593,\,-1.2449187],\quad \nabla_b=-0.6224593\\
+&w'=[0.5+0.0622459,\,-0.5+0.1244919]=[0.5622459,\,-0.3755081]
+\end{aligned} \tag{8-13} \]</div>
+<p>验证：\(z'=0.5622459(1)-0.3755081(2)=-0.1887703\)，\(p'=\sigma(-0.1887703)=0.4529549\)，
+\(L'=-\ln 0.4529549=0.7920007\)。损失从 0.9741 降到 0.7920 ✓。
+一阶近似预测的下降量是 \(\eta\|\nabla\|^2=0.1(0.6225^2+1.2449^2+0.6225^2)=0.2326\)，
+实际下降 0.1821，小于预测——因为步长偏大、二阶项把它拉回来了，这正是<b>学习率不能太大</b>的定量体现。</p>
+
+<h4>6. 梯度消失的定量说明</h4>
+<p>若把 sigmoid 换成 \(L\) 层全 sigmoid 网络，\(\boldsymbol\delta_1\) 中含 \(\prod_{l}\sigma'(z_l)\)，
+而 \(\sigma'(z)\le0.25\)，于是 5 层之后梯度上界为 \(0.25^5\approx10^{-3}\)，10 层后 \(10^{-6}\)。
+ReLU 在正区导数恒为 1，连乘不衰减，这是它能训深网络的原因。代价是「死 ReLU」：
+\(z\lt 0\) 时导数恒 0，该神经元永久不再更新，需靠 Leaky ReLU 或小学习率缓解。</p>
+
+<h4>7. 公式 ↔ 代码</h4>
+<pre><code># 式(8-2) 前向（softmax 减 max 防溢出）
+z1 = W1 @ x + b1; h = sigmoid(z1)
+z2 = W2 @ h + b2
+e = np.exp(z2 - z2.max()); p = e / e.sum()
+
+# 式(8-9) 反向：四行全部与公式一一对应
+d2 = p - onehot(y)                       # delta_2
+gW2 = d2 @ h.T; gb2 = d2                 # 式(8-10)
+d1 = (W2.T @ d2) * (h * (1 - h))         # 式(8-11) sigma'=h(1-h)
+gW1 = d1 @ x.T;  gb1 = d1
+
+# 式(8-12) 梯度检查（中心差分）
+for i in range(W.size):
+    Wp = W.copy(); Wp.flat[i] += eps
+    Wm = W.copy(); Wm.flat[i] -= eps
+    gn = (loss(Wp) - loss(Wm)) / (2*eps)
+    assert abs(gn - g.flat[i]) < 1e-8</code></pre>
+<p>配套 <code>acoustic-lab/src/nn.py</code> 的 <code>grad_check()</code> 实测绝对误差 \(\lt 10^{-10}\)。
+若某元素相对误差显示为 \(5\times10^{-6}\)，先查它是不是量级 \(10^{-6}\) 的近零梯度——
+那个例子里绝对误差只有 \(10^{-11}\)，属正常浮点噪声。</p>
+
+<h4>8. 边界与失效条件</h4>
+<ul><li>权重初始化不能全为 0（对称破缺失败，所有隐单元学到同一东西）；用 He/Xavier：\(\mathrm{Var}(w)=2/d_{\mathrm{in}}\)。</li>
+<li>特征未标准化时，量级大的维度主导梯度，损失曲面狭长，SGD 会来回震荡——MFCC 各维量纲差异大，务必先标准化。</li>
+<li>交叉熵里 \(\ln p_c\) 在 \(p_c\to0\) 时爆炸，实现要加 \(\varepsilon\) 或直接用 log-sum-exp 形式 \(L=-z_{c^*}+\ln\sum_j e^{z_j}\)。</li>
+<li>数值梯度检查要关掉 dropout、固定 batch，否则两次前向的随机性会污染差分。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>权重全零初始化。</b>对称性不破，隐层神经元永远学成一样。② <b>忘记除 batch 大小。</b>梯度随 batch 线性放大，学习率等于白设。③ <b>softmax 不减最大值。</b>数值溢出变成 nan。④ <b>只用相对误差判断梯度。</b>近零梯度会误报（见上文）。⑤ <b>把 sigmoid 用于深层网络。</b>梯度消失，改用 ReLU。</div>
 
   <h3>自检</h3>
   <div class="checklist">
     <label><input type="checkbox" data-k="q8-1"> 我能写出单个神经元的计算，并解释为什么必须非线性。</label>
-    <label><input type="checkbox" data-k="q8-2"> 我能推出 <code>∂L/∂W₂ = δ₂hᵀ</code> 和 <code>δ₁ = (W₂ᵀδ₂)⊙σ′(z₁)</code>。</label>
+    <label><input type="checkbox" data-k="q8-2"> 我能推出 \(\partial L/\partial W_2=\boldsymbol\delta_2\mathbf h^{\mathsf T}\) 和 \(\boldsymbol\delta_1=(W_2^{\mathsf T}\boldsymbol\delta_2)\odot\sigma'(\mathbf z_1)\)。</label>
     <label><input type="checkbox" data-k="q8-3"> 我能跟着手算完成那次参数更新（w 从 [0.5,−0.5] 变成 [0.5623,−0.3755]）。</label>
     <label><input type="checkbox" data-k="q8-4"> 我知道梯度检查要看绝对误差，并能解释相对误差为什么会误报。</label>
   </div>
@@ -1008,38 +1936,70 @@ y 是 one-hot 标签（正确类为 1，其余 0）。若只有一个正确类 c
   </table>
 
   <h3>② 卷积的运算与尺寸</h3>
-  <div class="eq">y[i, j] = Σ_{p} Σ_{q} x[i+p, j+q] · K[p, q] + b
-K 是卷积核（如 3×3），b 是偏置。核在输入上滑动，每停一次算一次加权和</div>
+  <div class="mathbox">
+<div class="math">\[ y[i,j]=\sum_{p=0}^{F-1}\sum_{q=0}^{F-1}x[i+p,\,j+q]\,K[p,q]+b \tag{9-1} \]</div>
+<div class="mathnote"><p>\(K\) 是 \(F\times F\) 卷积核，\(b\) 是偏置。严格说深度学习里做的是<b>互相关</b>而非数学卷积
+（少了核翻转），但因为 \(K\) 是学出来的，翻转与否不影响表达能力。
+两个归纳偏置：<b>局部连接</b>（只看邻域）与<b>权值共享</b>（同一核扫全图）。</p></div>
+</div>
   <p><strong>输出尺寸（必须背下来）：</strong></p>
-  <div class="eq">H_out = floor( (H_in − F + 2P) / S ) + 1      （宽同理）
-F：核大小，P：补零圈数，S：步长
-例：32×32 输入，3×3 核，P=1，S=1 → (32−3+2)/1+1 = 32（尺寸不变，称 same padding）
-例：32×32 输入，3×3 核，P=0，S=2 → (32−3)/2+1 = 15（下采样）</div>
+  <div class="mathbox">
+<div class="math">\[ H_{\mathrm{out}}=\left\lfloor\frac{H_{\mathrm{in}}-F+2P}{S}\right\rfloor+1,\qquad
+W_{\mathrm{out}}=\left\lfloor\frac{W_{\mathrm{in}}-F+2P}{S}\right\rfloor+1 \tag{9-2} \]</div>
+<div class="mathnote"><p>核最后一个位置是 \(H_{\mathrm{in}}-F+2P\)，从 0 出发每次走 \(S\)，故位置数为
+\(\lfloor(H_{\mathrm{in}}-F+2P)/S\rfloor+1\)。
+例：\(32\times32\)、\(F=3\)、\(P=1\)、\(S=1\) → 32（尺寸不变，称 <code>same</code> padding）；
+\(P=0,S=2\) → \(\lfloor29/2\rfloor+1=15\)（下采样）。</p></div>
+</div>
   <p><strong>参数量（也是必考）：</strong></p>
-  <div class="eq">参数 = (F × F × C_in + 1) × C_out
-例：输入 1 通道，4 个 3×3 核 → (3×3×1 + 1)×4 = 40 个参数
-对比全连接：1024 → 1000 需要 1,025,000 个参数，差 25000 倍</div>
+  <div class="mathbox">
+<div class="math">\[ N_{\mathrm{param}}=\big(F\times F\times C_{\mathrm{in}}+1\big)\times C_{\mathrm{out}} \tag{9-3} \]</div>
+<div class="mathnote"><p>每个核有 \(F^2C_{\mathrm{in}}\) 个权重 + 1 个偏置，共 \(C_{\mathrm{out}}\) 个核。
+例：1 通道、4 个 \(3\times3\) 核 → \((9+1)\times4=40\) 个参数。
+对比全连接 \(1024\to1000\) 需 \(1\,025\,000\) 个参数，相差约 25000 倍——
+这就是 CNN 在小样本上不容易过拟合的根本原因。</p></div>
+</div>
   <p>40 个参数就能提取 4 种局部模式——这就是卷积"参数效率"的直观含义。当然 40 个参数能表达的东西有限，所以实际网络会堆很多层、很多通道（ResNet 有上千万参数），但<strong>相对全连接仍然是数量级的节省</strong>。</p>
 
   <h3>③ 池化与感受野</h3>
-  <div class="eq">最大池化：y = max(x[i:i+2, j:j+2])   （2×2、步长 2 → 尺寸减半）
-平均池化：y = mean(…)</div>
+  <div class="mathbox">
+<div class="math">\[ y^{\max}_{i,j}=\max_{0\le p,q\lt 2}x[2i+p,\,2j+q],\qquad
+y^{\mathrm{avg}}_{i,j}=\frac{1}{4}\sum_{p,q}x[2i+p,\,2j+q] \tag{9-4} \]</div>
+<div class="mathnote"><p>\(2\times2\)、步长 2 → 空间尺寸减半。池化<b>没有可学参数</b>，作用是降维并获得一定的平移不变性。
+反向传播时最大池化要把梯度<b>只回传给前向取到最大值的那个位置</b>（需保存 argmax 掩码），
+平均池化则把梯度均分给 4 个位置。</p></div>
+</div>
   <p>池化的作用是降维 + 提供一定的小范围平移鲁棒性（模式挪动一两个像素，最大值还在窗内）。代价是丢失精确定位信息——所以检测任务里要慎用大池化。</p>
   <p><strong>感受野</strong>指"输出上的一个点，能看到输入的多大范围"。3 层 3×3 卷积（步长 1）的感受野是：</p>
-  <div class="eq">1 层：3×3
-2 层：3 + (3−1) = 5×5
-3 层：5 + (3−1) = 7×7
-一般式：RF_k = RF_{k−1} + (F − 1) · Π(前面各层步长)</div>
+  <div class="mathbox">
+<div class="math">\[ \mathrm{RF}_k=\mathrm{RF}_{k-1}+(F_k-1)\prod_{j=1}^{k-1}S_j,\qquad \mathrm{RF}_1=F_1 \tag{9-5} \]</div>
+<div class="mathnote"><p>逐层：1 层 \(3\times3\) → 3；2 层 → \(3+(3-1)=5\)；3 层 → \(5+(3-1)=7\)。
+若中间有步长 2，前面各层的步长要乘进增量。感受野决定「一个输出神经元能看到多长的时间/多大的图」，
+必须覆盖目标模式的尺度：想让网络看见 100 Hz 基频的一个完整周期（10 ms），
+在 8 kHz 下至少要覆盖 80 个采样点。</p></div>
+</div>
 
   <h3>④ im2col：把卷积写成一次矩阵乘法</h3>
   <p>直接用四重循环算卷积在 numpy 里极慢。工业界的做法是把每个"待卷积的小块"拉成一列，拼成矩阵，然后一次 <code>@</code> 算完：</p>
-  <div class="eq">输入 (C, H, W) → 取出所有 F×F 的小块 → 拼成 (C·F·F, H_out·W_out) 的矩阵 X_col
-卷积核展开成 (C_out, C·F·F) 的矩阵 W_col
-输出 = W_col @ X_col → reshape 成 (C_out, H_out, W_out)</div>
+  <div class="mathbox">
+<div class="math">\[ X_{\mathrm{col}}\in\mathbb R^{(C F^2)\times(H_{\mathrm{out}}W_{\mathrm{out}})},\qquad
+W_{\mathrm{col}}\in\mathbb R^{C_{\mathrm{out}}\times(C F^2)},\qquad
+Y=W_{\mathrm{col}}X_{\mathrm{col}} \tag{9-6} \]</div>
+<div class="mathnote"><p><b>im2col</b>：把输入 \((C,H,W)\) 中所有 \(F\times F\) 小块拉成列，拼成大矩阵；
+卷积核展开成行。于是「滑动卷积」变成<b>一次 GEMM 矩阵乘法</b>，可以直接吃 BLAS 优化。
+输出 reshape 回 \((C_{\mathrm{out}},H_{\mathrm{out}},W_{\mathrm{out}})\)。
+代价是内存放大约 \(F^2\) 倍（重叠块被复制），这是典型的「以空间换时间」。</p></div>
+</div>
   <p>这样就把卷积变成了 GEMM（通用矩阵乘法），可以吃满 BLAS 的性能。反向传播也随之变得简单：</p>
-  <div class="eq">前向：out = W_col @ X_col
-反向：dW_col = dout @ X_colᵀ
-      dX_col = W_colᵀ @ dout   → 再用 col2im 还原成 (C,H,W)</div>
+  <div class="mathbox">
+<div class="math">\[ \frac{\partial L}{\partial W_{\mathrm{col}}}=\frac{\partial L}{\partial Y}\,X_{\mathrm{col}}^{\mathsf T},
+\qquad
+\frac{\partial L}{\partial X_{\mathrm{col}}}=W_{\mathrm{col}}^{\mathsf T}\frac{\partial L}{\partial Y}
+\;\xrightarrow{\ \mathrm{col2im}\ }\;\frac{\partial L}{\partial X} \tag{9-7} \]</div>
+<div class="mathnote"><p>既然前向是一次矩阵乘，反向就是第 8 讲那套「上游误差 × 本层输入」的外积公式。
+唯一额外工作是 <code>col2im</code>：把列的梯度<b>累加</b>回原位置（重叠处要相加，不能覆盖）。
+配套项目的 <code>col2im</code> 若忘记累加，梯度检查会在重叠区域先出错——这类 bug 用数值梯度一测就现形。</p></div>
+</div>
   <p>注意 <code>col2im</code> 不能简单 reshape，因为相邻的小块是<strong>重叠</strong>的，重叠位置的梯度要<strong>累加</strong>而不是覆盖。这是手写 CNN 时第二个常见错误（第一个是池化的梯度分配）。</p>
 
   <h3>⑤ 为什么 CNN 特别适合谱图</h3>
@@ -1068,6 +2028,70 @@ F：核大小，P：补零圈数，S：步长
 # 前向：out = (W_col @ cols).reshape(C_out, Ho, Wo) + b[:,None,None]</code></pre>
   <p>维度检查：<code>W_col</code> 是 <code>(C_out, C·F·F)</code>，<code>cols</code> 是 <code>(C·F·F, Ho·Wo)</code>，乘出来 <code>(C_out, Ho·Wo)</code>，reshape 成 <code>(C_out, Ho, Wo)</code>——和手算的输出尺寸对上就说明写对了。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 9 讲　CNN 的尺寸、参数与反向传播</div>
+
+<h4>1. 输出尺寸公式的逐步推导</h4>
+<p>输入高 \(H_{\mathrm{in}}\)，上下各补 \(P\) 圈零 → 有效高 \(H'=H_{\mathrm{in}}+2P\)。
+大小为 \(F\) 的核，其左上角能放的位置满足「右下角不越界」，即起点 \(i\) 从 0 取到 \(H'-F\)。
+步长 \(S\) 时能取到的起点数为 \(\lfloor(H'-F)/S\rfloor+1\)，于是</p>
+<div class="math sub">\[ H_{\mathrm{out}}=\left\lfloor\frac{H_{\mathrm{in}}+2P-F}{S}\right\rfloor+1 \tag{9-8} \]</div>
+<p>算例：\(H=32,F=3,P=1,S=1\to32\)；\(P=0,S=2\to\lfloor29/2\rfloor+1=15\)。
+若希望「same」保持尺寸且 \(S=1\)，解得 \(P=(F-1)/2\)，所以 \(F\) 取奇数——这就是卷积核几乎都是 3、5、7 的原因。</p>
+
+<h4>2. im2col 的维度为什么是 \((CF^2)\times(H_{\mathrm{out}}W_{\mathrm{out}})\)</h4>
+<p>每个输出位置需要一块 \(F\times F\times C\) 的数据，拉平成长度 \(CF^2\) 的列；共 \(H_{\mathrm{out}}W_{\mathrm{out}}\) 个输出位置。
+把 \(C_{\mathrm{out}}\) 个核各拉成一行，卷积就变成</p>
+<div class="math sub">\[ Y_{[C_{\mathrm{out}}\times H_{\mathrm{out}}W_{\mathrm{out}}]}
+=W_{\mathrm{col}}\,[C_{\mathrm{out}}\times CF^2]\;\cdot\;X_{\mathrm{col}}\,[CF^2\times H_{\mathrm{out}}W_{\mathrm{out}}] \tag{9-9} \]</div>
+<p>例：输入 \((1,32,32)\)、\(F=3\)、\(P=1\)、\(C_{\mathrm{out}}=4\) → \(X_{\mathrm{col}}\) 是 \(9\times1024\)，
+\(W_{\mathrm{col}}\) 是 \(4\times9\)，一次 \(4\times9\times1024=36\,864\) 次乘加即得全部输出。
+内存代价：原输入 1024 个数 → 展开后 9216 个，放大 9 倍（\(F^2\)）。</p>
+
+<h4>3. 反向传播三条公式从矩阵乘直接得到</h4>
+<p>由 \(Y=W_{\mathrm{col}}X_{\mathrm{col}}\)，记上游梯度 \(G=\partial L/\partial Y\)（形状同 \(Y\)），套用第 8 讲式 (8-10)：</p>
+<div class="math sub">\[ \frac{\partial L}{\partial W_{\mathrm{col}}}=G\,X_{\mathrm{col}}^{\mathsf T},\qquad
+\frac{\partial L}{\partial X_{\mathrm{col}}}=W_{\mathrm{col}}^{\mathsf T}G \tag{9-10} \]</div>
+<p>验证形状：\(G\) 是 \((C_{\mathrm{out}},N_{\mathrm{pos}})\)、\(X_{\mathrm{col}}^{\mathsf T}\) 是 \((N_{\mathrm{pos}},CF^2)\) →
+结果 \((C_{\mathrm{out}},CF^2)\) 与 \(W_{\mathrm{col}}\) 一致 ✓。</p>
+<p><b>col2im 必须累加</b>：同一个输入像素会出现在多个重叠窗口里，因此 \(\partial L/\partial X\) 的每一处是
+若干个 \(\partial L/\partial X_{\mathrm{col}}\) 元素的<b>和</b>。写成覆盖赋值会让梯度检查在窗口重叠区失败，且失败位置呈周期性——
+这是最容易忽略的实现细节。</p>
+<p><b>池化回传</b>：最大池化前向保存 argmax 掩码 \(M\)，反向 \(\partial L/\partial X=M\odot\mathrm{up}(G)\)（只回传最大值位置）；
+平均池化则把 \(G\) 除以池化窗口面积后广播回全部位置。</p>
+
+<h4>4. 参数量与感受野的两笔账</h4>
+<div class="math sub">\[ N_{\mathrm{param}}=(F^2C_{\mathrm{in}}+1)C_{\mathrm{out}},\qquad
+\mathrm{RF}_k=\mathrm{RF}_{k-1}+(F_k-1)\prod_{j\lt k}S_j \tag{9-11} \]</div>
+<p>三层 \(3\times3\)、步长全 1：RF = 3 → 5 → 7，参数量 \(3\times(9C_{\mathrm{in}}+1)C_{\mathrm{out}}\)；
+若用一层 \(7\times7\) 达到同样感受野，参数量是 \((49C_{\mathrm{in}}+1)C_{\mathrm{out}}\)，约多 1.8 倍，
+而且少两层非线性。<b>「多层小核优于单层大核」</b>就是这么算出来的。</p>
+<p>把感受野换算到物理时间：8 kHz 下 RF=80 点 = 10 ms，恰是 100 Hz 基频的一个周期；
+若网络只有 3 层 \(3\times3\)（RF=7 点 = 0.875 ms），它<b>根本看不到一个完整周期</b>，
+再深的全连接也补不回这个信息。设计网络前先算这笔账，比盲目调层数有用得多。</p>
+
+<h4>5. 公式 ↔ 代码</h4>
+<pre><code># 式(9-8) 尺寸
+Hout = (Hin + 2*P - F)//S + 1
+
+# 式(9-9) im2col（单通道示意）
+cols = np.array([x[i:i+F, j:j+F].ravel()
+                 for i in range(Hout) for j in range(Wout)]).T   # (F*F, Npos)
+out = (W_col @ cols).reshape(Cout, Hout, Wout)
+
+# 式(9-10) 反向 + col2im（注意 += 累加）
+dW_col = dout.reshape(Cout, -1) @ cols.T
+dX_col = W_col.T @ dout.reshape(Cout, -1)
+dx = np.zeros_like(x)
+for idx, (i, j) in enumerate(positions):
+    dx[i:i+F, j:j+F] += dX_col[:, idx].reshape(F, F)   # 累加！</code></pre>
+
+<h4>6. 边界与失效条件</h4>
+<ul><li>边界像素参与的输出位置更少，梯度天然偏小；若不做 padding，输出逐层缩小，几层后就没了。声纹图谱常用 <code>same</code> padding 保持时间轴。</li>
+<li>im2col 在大输入上内存爆炸：\(F=5\)、输入 \(512\times512\) 时放大 25 倍；生产库改用隐式 GEMM 或 Winograd。</li>
+<li>把「语谱图」当普通图像做二维卷积时，两个轴的物理含义不同（时间 vs 频率），平移不变性在时间轴成立、在频率轴<b>不成立</b>（100 Hz 的峰挪到 3 kHz 是完全不同的故障）。因此更严谨的做法是频率轴不共享权重，或只用一维时间卷积。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>输出尺寸算错。</b>永远先用公式算一遍再跑代码，别靠"看起来差不多"。② <b>col2im 时直接 reshape。</b>重叠位置必须累加。③ <b>池化反向传播把梯度全给最大值位置还是平均分？</b>最大池化只把梯度给最大值那一个位置，其余为 0。④ <b>以为卷积核越大越好。</b>两个 3×3 的感受野等于一个 5×5，但参数更少、非线性更多，所以现代网络偏爱小核堆叠。</div>
 
@@ -1095,9 +2119,14 @@ F：核大小，P：补零圈数，S：步长
   </div>
 
   <h3>① 数据怎么分，为什么必须这样分</h3>
-  <div class="eq">训练集 60%：用来更新参数
-验证集 20%：用来选超参数（学习率、网络层数、早停轮数）
-测试集 20%：只在最后用一次，报告性能</div>
+  <div class="defbox"><div class="dh">三集合划分（严格隔离）</div>
+<table class="sym"><tr><th>集合</th><th>占比</th><th>唯一用途</th></tr>
+<tr><td>训练集</td><td>60%</td><td>计算梯度、更新参数</td></tr>
+<tr><td>验证集</td><td>20%</td><td>选超参数（学习率、层数、早停轮数）</td></tr>
+<tr><td>测试集</td><td>20%</td><td><b>只在最后用一次</b>，报告最终性能</td></tr>
+</table>
+<p>划分必须在提取特征<b>之前</b>按「说话人 / 设备编号」分组做，不能按帧随机切：
+同一段录音的相邻帧高度相关，随机切会让测试集里混进训练集的近似副本，指标虚高。</p></div>
   <p>三层划分的意义：如果用测试集去调超参数，测试集的信息就"泄漏"进模型了，最后报出来的数字是虚高的。<strong>测试集只能看一次</strong>，看多了它就不再是"没见过的数据"。</p>
   <h4>数据泄漏的典型例子（都真实发生过）</h4>
   <table data-cap="数据泄漏的典型例子">
@@ -1110,8 +2139,12 @@ F：核大小，P：补零圈数，S：步长
 
   <h3>② 过拟合：训练集满分，测试集不及格</h3>
   <p>过拟合指模型把训练集的噪声也学进去了。判断信号很直接：</p>
-  <div class="eq">训练损失持续下降，验证损失先降后升  → 过拟合
-训练与验证损失都很高          → 欠拟合（模型太小/训练不够）</div>
+  <div class="defbox"><div class="dh">从损失曲线读诊断</div>
+<table class="sym"><tr><th>现象</th><th>结论</th><th>对策</th></tr>
+<tr><td>训练损失持续下降，验证损失先降后升</td><td><b>过拟合</b></td><td>早停、L2、dropout、增数据</td></tr>
+<tr><td>训练与验证损失都很高</td><td><b>欠拟合</b></td><td>加大模型、多训几轮、查特征与学习率</td></tr>
+<tr><td>损失震荡不降甚至 NaN</td><td>学习率过大 / 梯度爆炸</td><td>降 \(\eta\)、梯度裁剪、检查归一化</td></tr>
+</table></div>
   <h4>四类应对手段</h4>
   <table data-cap="过拟合的四类应对手段">
     <tr><th>手段</th><th>怎么做</th><th>代价</th></tr>
@@ -1129,17 +2162,29 @@ F：核大小，P：补零圈数，S：步长
     <tr><td>真实：正常</td><td>TN（真阴）</td><td>FP（假阳，误报）</td></tr>
     <tr><td>真实：故障</td><td>FN（假阴，漏报）</td><td>TP（真阳，正确报警）</td></tr>
   </table>
-  <div class="eq">准确率 Accuracy = (TP+TN) / 全部
-精确率 Precision = TP / (TP+FP)      报了警的里面有多少是真故障（少误报）
-召回率 Recall    = TP / (TP+FN)      真故障里抓到了多少（少漏报）
-F1 = 2·P·R / (P+R)                   两者的调和平均</div>
+  <div class="mathbox">
+<div class="math">\[ \mathrm{Acc}=\frac{TP+TN}{TP+TN+FP+FN},\quad
+P=\frac{TP}{TP+FP},\quad R=\frac{TP}{TP+FN},\quad
+F_1=\frac{2PR}{P+R} \tag{10-3} \]</div>
+<div class="mathnote"><p>精确率 \(P\) 回答「报了警的里面有多少是真故障」（少误报）；召回率 \(R\) 回答
+「真故障里抓到了多少」（少漏报）。\(F_1\) 是两者调和平均，比算术平均更惩罚偏科：
+\(P=1,R=0.1\) 时算术平均 0.55，\(F_1\) 只有 0.18。
+类别不平衡时（故障样本远少于正常）准确率会骗人：全判「正常」也能有 95% 准确率，
+所以必须同时看 \(P,R,F_1\)。</p></div>
+</div>
   <p>工程上怎么选？<strong>漏报代价高（安全类）就提高召回率，误报代价高（人力巡检）就提高精确率</strong>。这也解释了第 12 讲的 DCF：它把两类错误的代价直接写进指标。</p>
 
   <h3>④ ROC 与 AUC：把阈值的影响一次画完</h3>
   <p>分类器输出的其实是概率，取不同的阈值就得到不同的 (FPR, TPR) 点。把所有阈值扫一遍连成曲线，就是 ROC：</p>
-  <div class="eq">FPR = FP/(FP+TN)（假阳率）    TPR = TP/(TP+FN)（真阳率 = 召回率）
-AUC：曲线下面积。0.5 = 随机猜，1.0 = 完美
-注意：这是<b>机器学习教材</b>的画法。声纹领域的传统画法是横轴 FA、纵轴 FR 的递减曲线，AUC 越小越好——第 12 讲会专门讲这个陷阱</div>
+  <div class="mathbox">
+<div class="math">\[ \mathrm{FPR}=\frac{FP}{FP+TN},\qquad
+\mathrm{TPR}=\frac{TP}{TP+FN}=R,\qquad
+\mathrm{AUC}=\int_0^1\mathrm{TPR}(\mathrm{FPR})\,\mathrm{d}\,\mathrm{FPR} \tag{10-4} \]</div>
+<div class="mathnote"><p>ROC 曲线：横轴 FPR、纵轴 TPR，扫阈值得到；\(\mathrm{AUC}=0.5\) 是随机猜，\(1.0\) 是完美，<b>越大越好</b>。
+<div class="warn inline"><span class="t">注意这是陷阱</span>上面是<b>机器学习教材</b>的画法。
+声纹领域传统用 DET 曲线（横轴 FA、纵轴 FR 的递减曲线，常用正态偏差刻度），AUC <b>越小越好</b>；
+第 12 讲会专门讲这套评价体系和阈值的代价模型。</div></p></div>
+</div>
   <figure><img src="assets/roc_curves.png" alt="ROC 曲线"><figcaption>六类声纹的 One-vs-Rest ROC：全部 AUC = 1.00，曲线贴住左上角。这不是好消息，而是<b>数据太容易</b>——合成数据可分性过高，ROC 失去区分度</figcaption></figure>
   <div class="note"><span class="t">从这张图该学到的事</span>当所有模型的 AUC 都等于 1 时，ROC 就没有信息量了。这时要么换更难的数据（加噪声、跨设备），要么换指标（噪声鲁棒性曲线、混淆矩阵里的具体混淆对）。本项目正是因此补了一张"噪声衰减曲线"。</div>
 
@@ -1147,6 +2192,75 @@ AUC：曲线下面积。0.5 = 随机猜，1.0 = 完美
   <p>做法：给测试样本逐级注入高斯噪声（噪声标准差 / 数据标准差 = 0, 0.34, 0.68 … 2.0），看准确率怎么掉。</p>
   <figure><img src="assets/noise_robustness.png" alt="噪声鲁棒性"><figcaption>噪声鲁棒性曲线：噪声比 1.0 时 BPNN 仍有 96%，CNN 掉到 58%；噪声比 2.0 时分别是 75% 与 40%。<b>CNN 更依赖干净的谱图纹理，BPNN 依赖更粗的统计量，所以抗噪表现不同</b></figcaption></figure>
   <p>为什么这条曲线比"100% 准确率"有价值？因为现场永远有噪声。一个在干净数据上 99%、加噪后 50% 的模型，实际不可用；而在干净数据上 95%、加噪后 85% 的模型才是能落地的。文献里也是这么做的：李嘉宁 2025 明确报告"高信噪比 96%、10 dB 时提升 9.4%"，而不是只报最好的那个数。</p>
+
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 10 讲　优化器、正则化与训练动力学</div>
+
+<h4>1. 从 SGD 到 Adam：每个更新式在做什么</h4>
+<div class="math sub">\[ \begin{aligned}
+\text{SGD:}\quad &\theta_{t+1}=\theta_t-\eta\,\nabla_\theta L(\theta_t)\\
+\text{Momentum:}\quad &v_t=\gamma v_{t-1}+\eta\nabla L,\quad \theta_{t+1}=\theta_t-v_t\\
+\text{Adam:}\quad &m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\quad v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2\\
+&\hat m_t=\frac{m_t}{1-\beta_1^t},\quad \hat v_t=\frac{v_t}{1-\beta_2^t},\quad
+\theta_{t+1}=\theta_t-\frac{\eta\,\hat m_t}{\sqrt{\hat v_t}+\epsilon}
+\end{aligned}\tag{10-4} \]</div>
+<p>动量 \(v_t\) 是梯度的指数移动平均，等价于给损失曲面加「惯性」：在狭长谷地里抵消横向震荡、累积纵向推进。
+Adam 的 \(m_t\) 是一阶矩（方向），\(v_t\) 是二阶矩（每维的尺度），相除相当于<b>给每个参数自动配一个学习率</b>——
+梯度长期大的维度步长被压小，梯度小的维度被放大。\(\hat m,\hat v\) 的除项是<b>偏差修正</b>：
+初始 \(m_0=v_0=0\)，前几步估计会系统性偏小，除以 \(1-\beta^t\) 后无偏。常用 \(\beta_1=0.9,\beta_2=0.999,\epsilon=10^{-8}\)。</p>
+
+<h4>2. L2、dropout、BN 的数学形式</h4>
+<div class="math sub">\[ L_{\mathrm{reg}}=L+\frac{\lambda}{2}\|\theta\|_2^2,\qquad
+\nabla L_{\mathrm{reg}}=\nabla L+\lambda\theta,\qquad
+\theta\leftarrow(1-\eta\lambda)\theta-\eta\nabla L \tag{10-5} \]</div>
+<p>可见 L2 每次更新都把权重乘一个 \(\lt 1\) 的因子（权重衰减）。<b>注意</b>：Adam 下 L2 与权重衰减并不等价
+（自适应学习率会把惩罚项也缩放），要严格解耦应使用 AdamW。</p>
+<div class="math sub">\[ \text{dropout:}\quad \tilde h=\frac{m\odot h}{1-p},\ m_i\sim\mathrm{Bernoulli}(1-p),\qquad
+\text{BN:}\quad \hat h=\frac{h-\mu_B}{\sqrt{\sigma_B^2+\epsilon}},\ h'=\gamma\hat h+\beta \tag{10-6} \]</div>
+<p>dropout 除以 \(1-p\) 是<b>反向 dropout</b>，保证训练时激活的期望与推理时一致；忘了除会导致训练/推理输出差 \(1/(1-p)\) 倍。
+BN 在训练时用 batch 内统计量、推理时用滑动平均的全局统计量，两个模式混用是常见线上事故。</p>
+
+<h4>3. 过拟合的偏差–方差分解</h4>
+<div class="math sub">\[ \mathbb E\big[(y-\hat f)^2\big]
+=\underbrace{\big(\mathbb E[\hat f]-f\big)^2}_{\text{偏差}^2}
++\underbrace{\mathbb E\big[(\hat f-\mathbb E\hat f)^2\big]}_{\text{方差}}
++\underbrace{\sigma^2}_{\text{不可约噪声}} \tag{10-7} \]</div>
+<p>模型太小 → 偏差大（训练/验证损失都高）；模型太大且数据少 → 方差大（训练损失低、验证损失高）。
+早停、正则化、增数据都在压方差；加容量、加特征、训更久在压偏差。<b>看两条曲线的相对位置</b>就能判断该往哪边走，
+比盲目调参有效。</p>
+
+<h4>4. 学习率的定量选择</h4>
+<p>损失沿某方向的曲率由 Hessian 特征值 \(\lambda_{\max}\) 决定，SGD 稳定条件是 \(\eta\lt 2/\lambda_{\max}\)；
+超过就震荡甚至发散。实用做法：<b>学习率范围测试</b>——从 \(10^{-6}\) 起每个 batch 按指数增大 \(\eta\)，
+记录损失，取「损失开始稳定下降」到「开始上扬」之间偏左一个数量级的值。
+配合余弦退火 \(\eta_t=\eta_{\min}+\frac{\eta_0-\eta_{\min}}{2}\big(1+\cos(\pi t/T)\big)\) 可兼顾前期快速与后期收敛。</p>
+
+<h4>5. 数据划分的正确姿势（对声纹尤其重要）</h4>
+<p>设某设备有 10 段录音、每段 48 帧，共 480 个样本。若按帧随机切 60/20/20，
+同一段录音的相邻帧会同时出现在训练和测试里，它们的相似度接近 1，测试准确率虚高到接近 100%。
+正确做法是<b>按录音段（或按说话人/设备编号）分组切分</b>，保证测试集中的段在训练时完全没出现过。
+更进一步，评估「未知设备」泛化能力时要用 leave-one-device-out。</p>
+
+<h4>6. 公式 ↔ 代码</h4>
+<pre><code># 式(10-4) Adam（含偏差修正）
+m = b1*m + (1-b1)*g; v = b2*v + (1-b2)*g*g
+mhat = m/(1-b1**t); vhat = v/(1-b2**t)
+theta -= lr*mhat/(np.sqrt(vhat) + 1e-8)
+
+# 式(10-5) L2 / 式(10-6) 反向 dropout
+g += lam*theta
+h = (h * (np.random.rand(*h.shape) > p)) / (1-p)
+
+# 早停：验证损失连续 patience 轮不降即停
+if val_loss < best - 1e-4: best, wait = val_loss, 0
+else: wait += 1
+if wait >= patience: break</code></pre>
+
+<h4>7. 边界与失效条件</h4>
+<ul><li>类别极不平衡时，交叉熵会被多数类主导；改用加权 CE（权重 \(\propto1/n_c\)）或 focal loss。</li>
+<li>小 batch 下 BN 的 \(\mu_B,\sigma_B^2\) 估计噪声大，可换 LayerNorm / GroupNorm。</li>
+<li>验证集被反复用于调参，本质上也会「过拟合到验证集」；超参数调得多时，应再留一个最终测试集。</li></ul>
+</div>
 
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>只报准确率。</b>类别不平衡时毫无意义。② <b>先标准化再划分。</b>数据泄漏。③ <b>同一录音切段后随机划分。</b>等于考原题。④ <b>用测试集调参。</b>⑤ <b>看到 AUC=1 就高兴。</b>先怀疑数据太简单。</div>
@@ -1184,15 +2298,21 @@ AUC：曲线下面积。0.5 = 随机猜，1.0 = 完美
   <p>为什么必须先分清？因为<strong>指标完全不同、算法取舍也完全不同</strong>。验证任务关心"阈值怎么定"，辨认任务关心"排名对不对"，开集还多一个"拒识"环节。拿辨认的准确率去评价一个验证系统，是没有意义的。</p>
 
   <h3>② 与语音识别正交：一句话讲透</h3>
-  <div class="eq">语音识别：想知道"说了什么"，要<b>滤掉</b>说话人信息，只保留文本内容
-声纹识别：想知道"谁说的"，要<b>滤掉</b>文本内容，只保留说话人身份
-方向完全相反，所以叫"正交"</div>
+  <div class="defbox"><div class="dh">两个方向相反的任务</div>
+<table class="sym"><tr><th>任务</th><th>想知道</th><th>要保留</th><th>要滤掉</th></tr>
+<tr><td>语音识别 ASR</td><td>说了<b>什么</b></td><td>文本内容</td><td>说话人身份</td></tr>
+<tr><td>声纹识别 SR</td><td><b>谁</b>说的</td><td>说话人身份</td><td>文本内容</td></tr>
+</table>
+<p>两者要抑制的变量恰好互为对方的信号，所以说它们「正交」。这也解释了为什么 MFCC 在两边都能用：
+它保留的是声道的<b>形状</b>（共振峰），既承载音素也承载说话人生理特征，靠后续模型决定用哪部分。</p></div>
   <p>这个说法（王泉《声纹技术》3.1.1 的表述）非常好用，因为它直接解释了工程上的差异：语音识别要做"说话人自适应"来消除个体差异；声纹识别反而要做"内容归一化"来消除文本差异。同一个 MFCC 特征，两个任务都在用，但后面的建模目标相反。</p>
 
   <h3>③ 系统流程：注册 + 测试</h3>
-  <div class="eq">注册（enrollment）：用户说几段话 → 提特征 → 训练/存储该用户的模型（或一个 embedding 向量）
-测试（test）：说一段话 → 提特征 → 与库里的模型逐一比较 → 得到相似度分数
-判决：分数 &gt; 阈值 → 接受；否则拒绝</div>
+  <div class="defbox"><div class="dh">一次完整验证的三段式</div>
+<ol><li><b>注册 enrollment</b>：用户说几段话 → 提特征 → 训练/存储该用户的模型或一个 embedding 向量；</li>
+<li><b>测试 test</b>：说一段话 → 提特征 → 与库中模型逐一比较 → 得到相似度分数 \(s\)；</li>
+<li><b>判决 decision</b>：\(s\gt \theta\) 则接受，否则拒绝；\(\theta\) 由代价模型或目标 EER 选定。</li></ol>
+<p>对应两种任务：<b>确认</b>（1:1，答案「是/否」，需要阈值）与<b>辨识</b>（1:N，取分数最高者，闭集无需阈值）。</p></div>
   <p>要注意：<strong>分数不是概率</strong>，它只是一个"越像越大"的数。阈值定在哪里，取决于你把"误拒"和"误受"哪个看得更重——这正是第 12 讲的全部内容。</p>
   <h4>文本相关 vs 文本无关</h4>
   <table data-cap="文本相关与文本无关声纹的对比">
@@ -1224,6 +2344,41 @@ AUC：曲线下面积。0.5 = 随机猜，1.0 = 完美
   </table>
   <p>文献里的工作正是这么做的：刘云鹏 2020 用"50 Hz 倍频倒谱系数 + GRU"识别变压器直流偏磁（特征直接利用"偏磁会产生 50 Hz 倍频"这一物理先验）；齐子豪 2025 用多粒度知识特征 + Transformer 做变压器故障声纹辨识。它们都在做同一件事：<strong>把人声纹的成熟框架，配上设备特有的物理先验</strong>。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 11 讲　声纹任务的数学定义</div>
+
+<h4>1. 两种任务的严格表述</h4>
+<p>设注册模型为 \(\lambda_{\mathrm{tar}}\)，测试语音特征为 \(X\)，打分函数 \(s(X,\lambda)\)。</p>
+<div class="math sub">\[ \textbf{确认 (1:1)}:\quad s(X,\lambda_{\mathrm{tar}})\mathop{\gtrless}_{H_1}^{H_0}\theta,\qquad
+\textbf{辨识 (1:N)}:\quad \hat c=\arg\max_{c}s(X,\lambda_c) \tag{11-1} \]</div>
+<p>确认是<b>假设检验</b>：\(H_0\)「不是本人」、\(H_1\)「是本人」，必须设阈值，两类错误都可能出现。
+闭集辨识是<b>分类</b>：只需比大小，无需阈值；但现实中存在「库里根本没有此人」的开集情形，
+此时要加一个拒识门限，否则任何陌生人都会被强行匹配给最像的那个人。</p>
+
+<h4>2. 似然比检验：为什么「比分数」在统计上是对的</h4>
+<p>Neyman–Pearson 引理指出，在给定 FA 水平下使 FR 最小的最优检验是<b>似然比</b>：</p>
+<div class="math sub">\[ \Lambda(X)=\frac{p(X\mid H_1)}{p(X\mid H_0)}\mathop{\gtrless}_{H_0}^{H_1}\theta',\qquad
+\log\Lambda=\log p(X\mid\lambda_{\mathrm{tar}})-\log p(X\mid\lambda_{\mathrm{background}}) \tag{11-2} \]</div>
+<p>GMM-UBM 的打分正是这个式子：目标模型与 UBM 的对数似然之差。
+而「余弦相似度」可以看作在高斯先验、长度归一化 embedding 假设下对似然比的一种简化。
+<b>理解了这个，就不会把打分值当成概率</b>——它只是似然比的单调函数，尺度随模型、数据而变，所以必须做 z/t-norm（第 12 讲）。</p>
+
+<h4>3. 系统的四层数据流</h4>
+<table class="sym"><tr><th>层</th><th>输入 → 输出</th><th>本讲义对应</th></tr>
+<tr><td>① 采集</td><td>声波 → WAV</td><td>第 1–2 讲（\(F_s=8\) kHz、16 bit）</td></tr>
+<tr><td>② 前端</td><td>WAV → 39 维 MFCC 序列</td><td>第 3–7 讲</td></tr>
+<tr><td>③ 后端</td><td>特征序列 → 模型/embedding → 分数</td><td>第 8–10、13–14 讲</td></tr>
+<tr><td>④ 判决</td><td>分数 → 是/否</td><td>第 12 讲（\(\theta\)、DCF、归一化）</td></tr>
+</table>
+<p>任何一层出错都会表现为「指标差」，但根因完全不同：① 混叠无法靠后端补救；② 参数错（如预加重压掉 100 Hz）后端再强也学不到；
+③ 模型容量不足是欠拟合；④ 阈值选错则模型明明很好、用户却频繁被拒。<b>排查时按层从前往后走，别一上来就调网络。</b></p>
+
+<h4>4. 边界与失效条件</h4>
+<ul><li>注册数据太少 → 模型无法覆盖本人的音素/工况变化，FR 飙升。i-vector 与 x-vector 正是为解决少样本注册而生。</li>
+<li>训练与部署的信道不一致（不同麦克风、不同距离、不同采样率）→ 分数分布整体平移，全局阈值失效，必须做分数归一化或域适配。</li>
+<li>时间漂移：设备老化、麦克风灵敏度变化会让人几个月后「不像自己」，需要模板更新机制。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>把辨认的准确率当验证的指标。</b>② <b>以为分数可以当概率用。</b>未做归一化的分数没有概率意义（第 12 讲的 z-norm/t-norm 就是为此）。③ <b>忽略信道差异。</b>换麦克风、换距离，性能可能掉一半。④ <b>用"同一段录音切段"做测试。</b>这是声纹评估里最致命的错误。</div>
 
@@ -1251,23 +2406,38 @@ AUC：曲线下面积。0.5 = 随机猜，1.0 = 完美
   </div>
 
   <h3>① 两类错误，此消彼长</h3>
-  <div class="eq">FA（False Accept，错误接受 / 误受）：把冒充者当成本人 → 安全风险
-FR（False Reject，错误拒绝 / 误拒）：把本人拦在门外 → 体验问题
-FAR = FA 次数 / 冒充试验总次数
-FRR = FR 次数 / 真实试验总次数</div>
+  <div class="mathbox">
+<div class="math">\[ \mathrm{FAR}(\theta)=\frac{N_{\mathrm{FA}}(\theta)}{N_{\mathrm{impostor}}},\qquad
+\mathrm{FRR}(\theta)=\frac{N_{\mathrm{FR}}(\theta)}{N_{\mathrm{target}}} \tag{12-1} \]</div>
+<div class="mathnote"><p><b>FA</b>（False Accept，误受）：把冒充者当成本人 → 安全风险；
+<b>FR</b>（False Reject，误拒）：把本人拦在门外 → 体验问题。
+两者都是阈值 \(\theta\) 的函数，且<b>单调方向相反</b>：\(\theta\) 调严 → FA↓ 但 FR↑。
+这条此消彼长的关系决定了不存在「同时为零」的阈值，必须引入代价（见式 12-5）。</p></div>
+</div>
   <p>关键事实：<strong>它们是同一个阈值的两种后果</strong>。把阈值调高（更严格）：更多真实用户被拒（FR 上升），冒充者更难通过（FA 下降）。把阈值调低则相反。所以"既要又不"是不可能的——只能根据代价选一个工作点。</p>
   <div class="note"><span class="t">一个具体场景</span>门禁：误拒的代价是员工迟到抱怨，误受的代价是陌生人进楼。所以门禁阈值通常调得较严（宁可误拒）。手机解锁：误拒的代价是机主烦躁，误受的代价是被人翻手机——两者都重要，所以厂商通常给出"更快/更安全"两档。</div>
 
   <h3>② EER：把整条曲线压成一个数</h3>
   <p>既然阈值可选，就需要一个"与阈值无关"的指标来比较系统好坏。EER（等错误率）就是那条曲线上 <strong>FA = FR</strong> 的点：</p>
-  <div class="eq">EER = 使 FA(θ) = FR(θ) 成立的那个错误率
-EER 越小，系统整体越好。EER = 1% 意味着在该点上两个方向的错误率都是 1%</div>
+  <div class="mathbox">
+<div class="math">\[ \theta_{\mathrm{EER}}=\mathop{\arg\min}_{\theta}\big|\mathrm{FAR}(\theta)-\mathrm{FRR}(\theta)\big|,
+\qquad \mathrm{EER}=\mathrm{FAR}(\theta_{\mathrm{EER}})=\mathrm{FRR}(\theta_{\mathrm{EER}}) \tag{12-2} \]</div>
+<div class="mathnote"><p>EER 越小系统越好。实际分数是离散的，两条阶梯曲线往往不严格相交，
+工程做法是在交叉区间对 FAR、FRR 分别做<b>线性插值</b>再求交点，而不是取最接近的采样点。
+EER 的优点是<b>与阈值无关</b>，可以跨系统比较；缺点是它默认 FA 与 FR 代价相等，
+而真实门禁场景里放进一个冒充者往往比拒一次本人严重得多。</p></div>
+</div>
 
   <h3>③ 为什么真实错误率是 2×EER（这一节几乎人人误解）</h3>
   <p>EER 是"每个方向各 1%"。但一次实际使用中，用户要么是本人、要么是冒充者，两者不会同时发生——所以<strong>在 EER 工作点上，把所有测试合并统计，出错的比例是 FA + FR = 2×EER</strong>。</p>
-  <div class="eq">EER = 5%  → 在 EER 阈值下，约 10% 的测试会被判错
-                    （其中约一半是本人被拒，一半是冒充被放）
-这不是文字游戏：厂商宣传"EER 5%"，用户实际感受到的出错率是 10%</div>
+  <div class="mathbox">
+<div class="math">\[ P_{\mathrm{err}}\big|_{\mathrm{EER}}=\tfrac12\mathrm{FAR}+\tfrac12\mathrm{FRR}=\mathrm{EER} \tag{12-3} \]</div>
+<div class="mathnote"><p>澄清一个常见误读：EER = 5% <b>不等于</b>「10% 的测试会判错」。
+若真实试验与冒充试验数量相等，总错误率 \(=\tfrac12\mathrm{FAR}+\tfrac12\mathrm{FRR}=\mathrm{EER}=5\%\)。
+但厂商常按「误识率 5%」宣传，用户在<b>先验不均衡</b>（冒充尝试远多于本人，或反之）时的实际感受会不同：
+设 \(P_{\mathrm{target}}=0.01\)，则总错误率 \(=0.01\times0.05+0.99\times0.05=5\%\) 仍相同，
+真正影响体感的是<b>错误落在哪一边</b>——1 次误放和 1 次误拒给人的代价完全不同，所以要 DCF。</p></div>
+</div>
   <p>更严格地说，若真实试验与冒充试验数量相等，总体错误率 = (FA + FR)/2 = EER；若按"每次使用只有一次判决"统计并且两类试验各占一半，则两类错误合计占比为 2×EER。工程上报告指标时务必写清口径：<strong>是"每类各 5%"，还是"总体 10%"</strong>。王书 3.2.4 特意点出这一点，就是为了防止误读。</p>
 
   <h3>④ ROC 的两种画法（看论文时必须先确认）</h3>
@@ -1280,23 +2450,39 @@ EER 越小，系统整体越好。EER = 1% 意味着在该点上两个方向的�
 
   <h3>⑤ DCF：把"代价"写进指标</h3>
   <p>EER 假设两类错误代价相等，但现实不是。检测代价函数（Detection Cost Function）把代价与先验概率都显式写进去：</p>
-  <div class="eq">C_det = C_FR · FR · P_target + C_FA · FA · P_nontarget
-C_FR：漏掉一个真人的代价；C_FA：放进一个冒充者的代价
-P_target：真实用户出现的先验；P_nontarget：冒充者出现的先验
-选让 C_det 最小的阈值 → 这个最小值就是 minDCF</div>
+  <div class="mathbox">
+<div class="math">\[ C_{\mathrm{det}}(\theta)=C_{\mathrm{FR}}\,\mathrm{FRR}(\theta)\,P_{\mathrm{target}}
++C_{\mathrm{FA}}\,\mathrm{FAR}(\theta)\,P_{\mathrm{nontarget}},\qquad
+\mathrm{DCF}=\min_{\theta}\frac{C_{\mathrm{det}}(\theta)}{C_{\mathrm{default}}} \tag{12-4} \]</div>
+<div class="mathnote"><p>\(C_{\mathrm{FR}}\)：漏掉一个真人的代价；\(C_{\mathrm{FA}}\)：放进一个冒充者的代价；
+\(P_{\mathrm{target}}+P_{\mathrm{nontarget}}=1\) 是先验。
+\(C_{\mathrm{default}}=\min(C_{\mathrm{FR}}P_{\mathrm{target}},\,C_{\mathrm{FA}}P_{\mathrm{nontarget}})\)
+是「永远拒绝 / 永远接受」两种平凡策略中较好的那个，用它归一化后 \(\mathrm{DCF}\le1\)，
+1 表示系统毫无价值。NIST SRE 常用 \(C_{\mathrm{FR}}=C_{\mathrm{FA}}=1\)、\(P_{\mathrm{target}}=0.01\)。</p></div>
+</div>
   <p><strong>算一个例子：</strong>设 C_FR = 1、C_FA = 10（放进冒充者的代价是误拒的 10 倍）、P_target = 0.9、P_nontarget = 0.1。</p>
-  <div class="eq">某阈值下 FA = 0.05、FR = 0.02：
-C_det = 1×0.02×0.9 + 10×0.05×0.1 = 0.018 + 0.050 = 0.068
-若换个更严格的阈值：FA = 0.01、FR = 0.08：
-C_det = 1×0.08×0.9 + 10×0.01×0.1 = 0.072 + 0.010 = 0.082   ← 反而更差
-说明：在这个代价设置下，第一个阈值更优</div>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+\theta_1 &: C_{\mathrm{det}}=1(0.02)(0.9)+10(0.05)(0.1)=0.018+0.050=0.068\\
+\theta_2 &: C_{\mathrm{det}}=1(0.08)(0.9)+10(0.01)(0.1)=0.072+0.010=0.082
+\end{aligned} \tag{12-5} \]</div>
+<div class="mathnote"><p>设 \(C_{\mathrm{FR}}=1,\ C_{\mathrm{FA}}=10,\ P_{\mathrm{target}}=0.9\)。
+阈值 \(\theta_1\)（FA=0.05, FR=0.02）得 0.068；更严格的 \(\theta_2\)（FA=0.01, FR=0.08）反而得 0.082，
+<b>更差</b>。原因：本场景里真人占 90%，把 FR 从 2% 抬到 8% 带来的损失（0.054）
+远大于把 FA 从 5% 压到 1% 省下的（0.040）。<b>阈值不是越严越好，是让代价最小才好。</b></p></div>
+</div>
   <p>看这个例子就明白为什么 EER 不够用：两个阈值的 EER 附近可能差不多，但按实际代价算出来的最优工作点完全不同。</p>
 
   <h3>⑥ 分数归一化：z-norm 与 t-norm</h3>
   <p>同一套系统，换一个说话人/换一段录音，分数分布会整体平移。若用一个固定阈值，就会出现"对某人特别宽松、对某人特别严格"。解决办法是用同一人的其他数据把分数标准化：</p>
-  <div class="eq">z-norm：用一批"冒充者"对该模型的打分估计均值 μ、标准差 σ，归一化 s' = (s − μ)/σ
-t-norm：用该条测试语音对一批"背景模型"的打分做归一化
-zt-norm：两者串起来，效果通常最好，代价是计算量翻倍</div>
+  <div class="mathbox">
+<div class="math">\[ s'=\frac{s-\mu_{\mathrm{imp}}}{\sigma_{\mathrm{imp}}},\qquad
+s''=\frac{s-\mu_{\mathrm{cohort}}(x)}{\sigma_{\mathrm{cohort}}(x)} \tag{12-6} \]</div>
+<div class="mathnote"><p><b>z-norm</b>：用一批冒充者语音对该<b>目标模型</b>打分，估计 \(\mu,\sigma\) 后归一化，消除模型间的分数尺度差异；
+<b>t-norm</b>：用该条<b>测试语音</b>对一批背景模型打分后归一化，消除测试语音本身的「难易」差异；
+<b>zt-norm / s-norm</b>：两者串联或对称化，通常最稳，代价是需要额外的冒认/背景数据与约 2 倍计算量。
+归一化的本质是把「绝对分数」变成「在同类分数分布中的相对位置」，从而让全局阈值 \(\theta\) 可用。</p></div>
+</div>
 
   <h3>⑦ 三个指标的分工</h3>
   <table data-cap="三个评价指标的分工">
@@ -1306,6 +2492,90 @@ zt-norm：两者串起来，效果通常最好，代价是计算量翻倍</div>
     <tr><td>固定阈值下的 FAR/FRR</td><td>我实际部署的这个点表现如何</td><td>上线验收</td><td>不能反映其他工作点</td></tr>
   </table>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 12 讲　阈值、DET、EER 与检测代价</div>
+
+<h4>1. 符号对照表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>取值 / 范围</th></tr>
+<tr><td>\(\theta\)</td><td>判决阈值</td><td>打分值域内</td></tr>
+<tr><td>\(N_{\mathrm{tar}},N_{\mathrm{imp}}\)</td><td>真实试验 / 冒充试验次数</td><td>常不等</td></tr>
+<tr><td>\(\mathrm{FAR},\mathrm{FRR}\)</td><td>误受率 / 误拒率</td><td>[0,1]</td></tr>
+<tr><td>\(C_{\mathrm{FA}},C_{\mathrm{FR}}\)</td><td>两类错误的代价</td><td>常用 10 : 1</td></tr>
+<tr><td>\(P_{\mathrm{tar}}\)</td><td>真实用户出现的先验</td><td>NIST 常用 0.01</td></tr>
+</table>
+
+<h4>2. FA/FR 随阈值单调变化：从分布图上读出来</h4>
+<p>设本人分数分布密度 \(p(s\mid H_1)\)、冒充者分数分布 \(p(s\mid H_0)\)，则</p>
+<div class="math sub">\[ \mathrm{FRR}(\theta)=\int_{-\infty}^{\theta}p(s\mid H_1)\,\mathrm ds,\qquad
+\mathrm{FAR}(\theta)=\int_{\theta}^{\infty}p(s\mid H_0)\,\mathrm ds \tag{12-7} \]</div>
+<p>对 \(\theta\) 求导：\(\dfrac{\mathrm d\,\mathrm{FRR}}{\mathrm d\theta}=p(\theta\mid H_1)\gt 0\)、
+\(\dfrac{\mathrm d\,\mathrm{FAR}}{\mathrm d\theta}=-p(\theta\mid H_0)\lt 0\)。
+<b>一个升、一个降，且都是密度积分，所以二者不可能同时变小</b>。这条严格单调性是所有阈值权衡的根据。
+实践中不假设分布形状，而是把所有试验分数排序，逐个候选阈值统计 \(N_{\mathrm{FA}},N_{\mathrm{FR}}\) 得到经验阶梯曲线。</p>
+
+<h4>3. EER 的插值算法（工程实现细节）</h4>
+<p>分数是离散的，FAR 与 FRR 两条阶梯曲线通常不严格相交。做法是：</p>
+<div class="math sub">\[ \begin{aligned}
+&\text{(i) 在相邻阈值 }\theta_i,\theta_{i+1}\text{ 之间找 }d(\theta)=\mathrm{FAR}-\mathrm{FRR}\text{ 变号区间}\\
+&\text{(ii) 线性插值：}\ \tau=\frac{d(\theta_i)}{d(\theta_i)-d(\theta_{i+1})}\\
+&\text{(iii) }\mathrm{EER}=\mathrm{FAR}(\theta_i)+\tau\big[\mathrm{FAR}(\theta_{i+1})-\mathrm{FAR}(\theta_i)\big]
+\end{aligned} \tag{12-8} \]</div>
+<p>直接取「\(|d|\) 最小的那个采样点」在试验次数少时会高估 EER，因为阶梯宽度是 \(1/N_{\mathrm{imp}}\) 或 \(1/N_{\mathrm{tar}}\)。</p>
+
+<h4>4. 检测代价函数的推导：从贝叶斯风险出发</h4>
+<p>定义四种结果的风险：正确接受/正确拒绝代价为 0，误受代价 \(C_{\mathrm{FA}}\)、误拒代价 \(C_{\mathrm{FR}}\)。
+期望风险（贝叶斯风险）为各错误概率按先验加权：</p>
+<div class="math sub">\[ \begin{aligned}
+\mathcal R(\theta)&=C_{\mathrm{FR}}\,P(H_1)\,\Pr(\text{拒}\mid H_1)
++C_{\mathrm{FA}}\,P(H_0)\,\Pr(\text{受}\mid H_0)\\
+&=C_{\mathrm{FR}}P_{\mathrm{tar}}\,\mathrm{FRR}(\theta)+C_{\mathrm{FA}}P_{\mathrm{nontarget}}\,\mathrm{FAR}(\theta)
+\end{aligned} \tag{12-9} \]</div>
+<p>这正是式 (12-5) 的 \(C_{\mathrm{det}}\)。对 \(\theta\) 求导并令为 0：</p>
+<div class="math sub">\[ C_{\mathrm{FR}}P_{\mathrm{tar}}\,p(\theta\mid H_1)-C_{\mathrm{FA}}P_{\mathrm{nontarget}}\,p(\theta\mid H_0)=0
+\quad\Longrightarrow\quad
+\Lambda(\theta)=\frac{p(\theta\mid H_1)}{p(\theta\mid H_0)}
+=\frac{C_{\mathrm{FA}}P_{\mathrm{nontarget}}}{C_{\mathrm{FR}}P_{\mathrm{tar}}} \tag{12-10} \]</div>
+<p><b>最优阈值就是似然比等于「代价×先验之比」的那个点</b>（呼应第 11 讲式 11-2）。
+把 12-6 的算例代进去：右边 \(=\dfrac{10\times0.1}{1\times0.9}=1.11\)，即在该点两类密度相近，
+阈值应偏「宽松」一侧——与算例结论（\(\theta_1\) 优于 \(\theta_2\)）一致。
+归一化基准 \(C_{\mathrm{default}}=\min(C_{\mathrm{FR}}P_{\mathrm{tar}},\,C_{\mathrm{FA}}P_{\mathrm{nontarget}})\) 是
+「永远拒绝 / 永远接受」两种平凡策略的风险，故 \(\mathrm{minDCF}\in[0,1]\)，越接近 0 越好。</p>
+
+<h4>5. z-norm / t-norm 在消除什么</h4>
+<p>不同目标模型的打分分布尺度不同（有的模型分数整体偏高），不同测试语音的难度也不同。设观测分数</p>
+<div class="math sub">\[ s=a_{\mathrm{model}}+b_{\mathrm{test}}+s_{\mathrm{true}} \tag{12-11} \]</div>
+<p>其中 \(a_{\mathrm{model}}\) 是模型偏置、\(b_{\mathrm{test}}\) 是测试语音偏置。
+z-norm 用一批冒充语音估出该模型的 \((\mu_z,\sigma_z)\) 从而消掉 \(a_{\mathrm{model}}\)；
+t-norm 用一批背景模型估出该测试语音的 \((\mu_t,\sigma_t)\) 消掉 \(b_{\mathrm{test}}\)。
+两者串联（zt-norm）才把两个偏置都去掉。代价：需要额外的开发集，且每条测试要多算 \(N_{\mathrm{cohort}}\) 次打分。
+<b>s-norm</b> 把两者对称平均，对队列选择更鲁棒。</p>
+
+<h4>6. 公式 ↔ 代码</h4>
+<pre><code># 式(12-7) 经验 FAR/FRR 曲线（无需假设分布）
+ths = np.unique(np.concatenate([tar_scores, imp_scores]))
+far = np.array([(imp_scores >= t).mean() for t in ths])
+frr = np.array([(tar_scores <  t).mean() for t in ths])
+
+# 式(12-8) 插值求 EER
+d = far - frr
+i = np.where(np.sign(d[:-1]) != np.sign(d[1:]))[0][0]
+tau = d[i] / (d[i] - d[i+1])
+eer = far[i] + tau*(far[i+1] - far[i])
+
+# 式(12-9)(12-10) minDCF
+cdet = C_FR*frr*P_tar + C_FA*far*(1-P_tar)
+cd = cdet.min() / min(C_FR*P_tar, C_FA*(1-P_tar))
+
+# 式(12-11) z-norm
+s_norm = (s - imp_scores.mean()) / imp_scores.std()</code></pre>
+
+<h4>7. 边界与失效条件</h4>
+<ul><li>试验次数少时 EER 分辨率受限于 \(1/N\)：100 次冒充试验的最小非零 FAR 就是 1%，报「EER=0.3%」毫无意义。报告指标必须同时给出试验次数与置信区间。</li>
+<li>DET 曲线常用正态偏差刻度 \(\Phi^{-1}(p)\) 拉伸低错误率区域，与 ROC 的线性刻度读法不同；<b>DET 越靠近左下角越好</b>，AUC 说法不适用。</li>
+<li>阈值必须在<b>开发集</b>上选定，再在测试集上报结果；在测试集上调阈值等于作弊。</li>
+<li>归一化队列要与目标模型同域，否则估计出的 \(\mu,\sigma\) 反而引入偏差。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>把 EER 当"总体错误率"。</b>它是单方向错误率，总体约为 2 倍。② <b>用机器学习教材的 ROC 读法去读声纹 ROC。</b>轴和结论都相反。③ <b>拿 EER 直接定阈值。</b>EER 点只是"两类等错"，不一定是你的最优工作点，要用 DCF。④ <b>不做分数归一化就比较不同人的性能。</b></div>
 
@@ -1314,7 +2584,7 @@ zt-norm：两者串起来，效果通常最好，代价是计算量翻倍</div>
     <label><input type="checkbox" data-k="q12-1"> 我能解释为什么提高阈值会同时降低 FA、提高 FR。</label>
     <label><input type="checkbox" data-k="q12-2"> 我能说清 EER=5% 时，总体错误率为什么约 10%。</label>
     <label><input type="checkbox" data-k="q12-3"> 我能区分两种 ROC 画法，并说出各自的 AUC 读法。</label>
-    <label><input type="checkbox" data-k="q12-4"> 我能用 <code>C_det = C_FR·FR·P_T + C_FA·FA·P_I</code> 算出一个具体数值并比较两个阈值。</label>
+    <label><input type="checkbox" data-k="q12-4"> 我能用 \(C_{\det}=C_{\mathrm{FR}}\mathrm{FRR}P_{\mathrm{tar}}+C_{\mathrm{FA}}\mathrm{FAR}P_{\mathrm{nontarget}}\) 算出一个具体数值并比较两个阈值。</label>
   </div>
 </section>
 
@@ -1334,46 +2604,70 @@ zt-norm：两者串起来，效果通常最好，代价是计算量翻倍</div>
 
   <h3>① 为什么用概率模型而不是直接比特征</h3>
   <p>一个人说 10 秒话，得到约 1000 帧、每帧 39 维。你没法"直接比较"两个人的 1000×39 矩阵——长度不同、时间对不齐。所以需要一个<strong>把变长序列压成定长模型</strong>的办法，这就是 GMM 的作用：它用一组高斯分布描述"这个人的特征在空间中倾向出现在哪些区域"。</p>
-  <div class="eq">p(x | λ) = Σ_{c=1}^{C} π_c · N(x | μ_c, Σ_c)
-λ = {π_c, μ_c, Σ_c}：权重、均值、协方差
-N(x|μ,Σ) = 1/√((2π)^d|Σ|) · exp[−½(x−μ)ᵀΣ⁻¹(x−μ)]</div>
+  <div class="mathbox">
+<div class="math">\[ p(\mathbf x\mid\lambda)=\sum_{c=1}^{C}\pi_c\,\mathcal N(\mathbf x\mid\boldsymbol\mu_c,\Sigma_c),\qquad
+\sum_c\pi_c=1 \tag{13-1} \]</div>
+<div class="mathnote"><p>\(\lambda=\{\pi_c,\boldsymbol\mu_c,\Sigma_c\}_{c=1}^{C}\)：混合权重、均值、协方差；
+\(\mathcal N(\mathbf x\mid\boldsymbol\mu,\Sigma)=\dfrac{1}{\sqrt{(2\pi)^d|\Sigma|}}
+\exp\!\left[-\tfrac12(\mathbf x-\boldsymbol\mu)^{\mathsf T}\Sigma^{-1}(\mathbf x-\boldsymbol\mu)\right]\)。
+GMM 用多个高斯的加权和逼近任意形状的分布。声纹里通常取对角协方差（\(C=512\sim2048\)），
+因为 39 维特征全协方差的参数量与过拟合风险都太高。</p></div>
+</div>
   <p>直觉：单个高斯只能描述"一个团"，而人的特征分布是多峰的（不同音素、不同发声状态），所以用 C 个高斯加权叠加。C 通常取 512~2048。</p>
 
   <h3>② EM 算法：怎么把参数学出来</h3>
-  <p>目标：最大化所有帧的对数似然 <code>Σ_t log p(x_t|λ)</code>。直接求导没有解析解，所以用迭代的 EM：</p>
-  <div class="eq">E 步（算责任度）：γ_tc = π_c·N(x_t|μ_c,Σ_c) / Σ_j π_j·N(x_t|μ_j,Σ_j)
-   含义：第 t 帧"属于第 c 个高斯"的概率
-M 步（更新参数）：
-   μ_c ← Σ_t γ_tc·x_t / Σ_t γ_tc
-   Σ_c ← Σ_t γ_tc·(x_t−μ_c)(x_t−μ_c)ᵀ / Σ_t γ_tc
-   π_c ← Σ_t γ_tc / T
-反复迭代，直到对数似然不再明显上升</div>
+  <p>目标：最大化所有帧的对数似然 \(\sum_t\ln p(\mathbf x_t\mid\lambda)\)。直接求导没有解析解，所以用迭代的 EM：</p>
+  <div class="mathbox">
+<div class="math">\[ \begin{aligned}
+\text{E: }\;&\gamma_{tc}=\frac{\pi_c\mathcal N(\mathbf x_t\mid\boldsymbol\mu_c,\Sigma_c)}
+{\sum_{j}\pi_j\mathcal N(\mathbf x_t\mid\boldsymbol\mu_j,\Sigma_j)}\\[5pt]
+\text{M: }\;&\pi_c\leftarrow\frac{\sum_t\gamma_{tc}}{T},\quad
+\boldsymbol\mu_c\leftarrow\frac{\sum_t\gamma_{tc}\mathbf x_t}{\sum_t\gamma_{tc}},\quad
+\Sigma_c\leftarrow\frac{\sum_t\gamma_{tc}(\mathbf x_t-\boldsymbol\mu_c)(\mathbf x_t-\boldsymbol\mu_c)^{\mathsf T}}{\sum_t\gamma_{tc}}
+\end{aligned} \tag{13-2} \]</div>
+<div class="mathnote"><p>\(\gamma_{tc}\) 是「第 \(t\) 帧属于第 \(c\) 个高斯」的<b>责任度</b>（后验概率）。
+EM 通过构造对数似然的下界（ELBO）并交替优化：E 步固定参数算责任度，M 步固定责任度做加权极大似然，
+每轮保证似然不降，迭代到收敛。实现必须在<b>对数域</b>做（log-sum-exp 技巧），
+否则 512 个高斯的密度连乘会直接下溢为 0。初始化用 k-means，否则易陷入局部最优。</p></div>
+</div>
   <p>EM 保证每一步都不会让似然下降（这是它的理论性质），但只保证收敛到<strong>局部</strong>最优，所以初始化很重要（常用 k-means 初始化）。</p>
 
   <h3>③ UBM-MAP：解决"每人只有几十秒"</h3>
   <p>如果给每个说话人单独训一个 GMM，几十秒语音根本不够（参数有几十万个）。解决办法是两步走：</p>
-  <div class="eq">第 1 步：用大量不同说话人的数据训一个"通用背景模型"（UBM），它描述"人类语音的通用分布"
-第 2 步：对每个目标说话人，用他自己的数据把 UBM <b>微调</b>一下（MAP 自适应）：
-   μ̂_c = α_c·μ_c^data + (1−α_c)·μ_c^UBM
-   α_c = n_c / (n_c + r)，n_c 是该高斯分到的帧数，r 是相关性因子（约 16）</div>
+  <div class="mathbox">
+<div class="math">\[ \hat{\boldsymbol\mu}_c=\alpha_c\,\boldsymbol\mu_c^{\mathrm{data}}+(1-\alpha_c)\,\boldsymbol\mu_c^{\mathrm{UBM}},
+\qquad \alpha_c=\frac{n_c}{n_c+r},\quad n_c=\sum_t\gamma_{tc} \tag{13-3} \]</div>
+<div class="mathnote"><p><b>UBM-MAP 自适应</b>：先用大量不同说话人的数据训一个通用背景模型（描述「人类语音的通用分布」），
+再用目标说话人的少量数据把 UBM 的均值往数据方向拉。\(r\) 是相关性因子（常取 16）：
+某高斯分到的帧数 \(n_c\) 少 → \(\alpha_c\) 小 → 更信任 UBM；数据多才敢偏离。
+这解决了「每个说话人只有几秒数据、训不出 2048 个高斯」的根本困难，是 GMM-UBM 时代的基石。</p></div>
+</div>
   <p><code>α</code> 的含意很直观：该高斯分到的数据多（n_c 大），就更相信自己的数据；数据少就更多依赖 UBM。这样既不用从零学几十万参数，又能体现个体差异。</p>
   <div class="note"><span class="t">韩书 7.2.2 的实测结论</span>MAP 自适应时，<b>只更新均值</b>（不更新方差和权重）性能最好。原因：均值携带的身份信息最多，而方差在小样本下估计不稳，硬更新反而引入噪声。这条结论至今仍在很多工程实现里沿用。</div>
 
   <h3>④ 从超矢量到 i-vector：一次降维</h3>
-  <p>把每个高斯（C = 512）的均值拼起来，得到一个 <code>512 × 39 = 19968</code> 维的"超矢量"。维度太高、且大部分变化是信道造成的。i-vector 用一个低秩假设把它压下来：</p>
-  <div class="eq">M = m + T · w
-M：说话人的超矢量（19968 维）
-m：UBM 的均值超矢量（所有人共用）
-T：总变化空间矩阵（19968 × 400），从大量数据学出来
-w：i-vector（400 维）—— 这就是新的说话人表示</div>
+  <p>把每个高斯（C = 512）的均值拼起来，得到一个 \(512\times39=19968\) 维的"超矢量"。维度太高、且大部分变化是信道造成的。i-vector 用一个低秩假设把它压下来：</p>
+  <div class="mathbox">
+<div class="math">\[ \mathbf M=\mathbf m+T\mathbf w,\qquad
+\mathbf w\sim\mathcal N(\mathbf 0,I),\quad
+\mathbf w=(I+T^{\mathsf T}\Sigma^{-1}T)^{-1}T^{\mathsf T}\Sigma^{-1}(\mathbf M-\mathbf m) \tag{13-4} \]</div>
+<div class="mathnote"><p>\(\mathbf M\)：说话人的<b>超矢量</b>（把 UBM 所有高斯均值拼起来，\(2048\times39\approx 19968\) 维）；
+\(\mathbf m\)：UBM 的超矢量（所有人共用）；\(T\)：<b>总变化空间</b>矩阵（约 \(19968\times400\)），从大量数据学出；
+\(\mathbf w\)：<b>i-vector</b>（400 维），即新的说话人表示。
+后验均值那一步是贝叶斯线性高斯模型的闭式解（\(400\times400\) 求逆，与超矢量维度无关，所以很快）。
+i-vector 同时包含身份与信道信息，打分前要用 LDA/WCCN 去信道、再用 PLDA 或余弦打分。</p></div>
+</div>
   <p>直观理解：假设"说话人差异 + 信道差异"这些变化虽然维度高，但其实只在一个 400 维的子空间里发生。于是不管什么原因导致的差异，都被压进同一个 400 维向量 <code>w</code> 里——所以叫"总变化空间"（total variability）。</p>
 
   <h3>⑤ PLDA：把 i-vector 里的"身份"和"信道"分开</h3>
   <p>i-vector 里混着身份和信道。PLDA（概率线性判别分析）用生成模型把它们拆开：</p>
-  <div class="eq">w = μ + V·y + U·x + ε
-y：身份因子（同一个人所有录音共享）
-x：信道因子（同一段录音内共享）
-V、U：对应的子空间；ε：残差</div>
+  <div class="mathbox">
+<div class="math">\[ \mathbf w=\boldsymbol\mu+V\mathbf y+U\mathbf x+\boldsymbol\varepsilon \tag{13-5} \]</div>
+<div class="mathnote"><p>这是 JFA（联合因子分析）的分解，也是 i-vector 的思想来源：\(\mathbf y\) 是<b>身份因子</b>
+（同一人所有录音共享），\(\mathbf x\) 是<b>信道因子</b>（同一段录音内共享），\(V,U\) 是对应子空间，
+\(\boldsymbol\varepsilon\) 是残差。i-vector 的简化在于：不再区分 \(V,U\)，用一个总变化空间 \(T\)
+把两者一起建模，再用 LDA/PLDA 在后端把信道抹掉。<b>「先都装进来，再在打分时消掉」</b>是这一代方法的核心思路。</p></div>
+</div>
   <p>于是"两段语音是否同一人"变成一个似然比检验：<strong>共享同一个 y 的假设 vs 不共享的假设</strong>。这个框架在小样本下比直接算余弦距离稳定得多。</p>
 
   <h3>⑥ 方法演进与代表性能</h3>
@@ -1387,6 +2681,73 @@ V、U：对应的子空间；ε：残差</div>
   <p>要注意这张表的数字只能看趋势，不能横向比较：不同年份、不同数据集（NIST SRE 各年份条件差异很大）、不同时长条件下的结果不可直接比。这个道理和第 15 讲要讲的"综述里的 99% 不能横比"是同一件事。</p>
   <p>在设备声纹里，这条演进路线被大幅简化了——因为类别少（几种工况）、样本少，往往直接用 MFCC 统计量 + SVM/随机森林就够了。文献中也有走"物理先验特征 + 时序模型"路线的：刘云鹏 2020 用 50 Hz 倍频倒谱系数配合 GRU 识别直流偏磁，就是把"偏磁产生倍频"这一物理知识直接做进特征，比硬套通用框架更有效。</p>
 
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 13 讲　GMM–EM、MAP 自适应与 i-vector</div>
+
+<h4>1. EM 算法从 ELBO 推出来（不跳步）</h4>
+<p>目标是最大化对数似然 \(\ln p(X\mid\lambda)=\ln\sum_{\mathbf z}p(X,\mathbf z\mid\lambda)\)，
+\(\mathbf z\) 是「每帧属于哪个高斯」的隐变量。引入任意分布 \(q(\mathbf z)\)，由 Jensen 不等式：</p>
+<div class="math sub">\[ \begin{aligned}
+\ln p(X\mid\lambda)&=\ln\sum_{\mathbf z}q(\mathbf z)\frac{p(X,\mathbf z\mid\lambda)}{q(\mathbf z)}
+\ge\sum_{\mathbf z}q(\mathbf z)\ln\frac{p(X,\mathbf z\mid\lambda)}{q(\mathbf z)}\equiv\mathrm{ELBO}(q,\lambda)
+\end{aligned}\tag{13-8} \]</div>
+<p>两者之差恰是 \(\mathrm{KL}\big(q(\mathbf z)\,\|\,p(\mathbf z\mid X,\lambda)\big)\ge0\)。于是 EM 交替做两件事：</p>
+<div class="math sub">\[ \begin{aligned}
+\text{E 步：}&\ q\leftarrow p(\mathbf z\mid X,\lambda^{\mathrm{old}})\ \Rightarrow\ \text{KL}=0,\ \text{ELBO 紧贴似然}\\
+\text{M 步：}&\ \lambda\leftarrow\arg\max_{\lambda}\mathrm{ELBO}(q,\lambda)
+=\arg\max_\lambda\sum_{\mathbf z}q(\mathbf z)\ln p(X,\mathbf z\mid\lambda)
+\end{aligned} \tag{13-9} \]</div>
+<p>E 步算出的 \(q(z_t=c)\) 就是式 (13-2) 的责任度 \(\gamma_{tc}\)（贝叶斯公式展开即得）。
+M 步在 \(q\) 固定下是带权极大似然：对 \(\boldsymbol\mu_c\) 求偏导</p>
+<div class="math sub">\[ \frac{\partial}{\partial\boldsymbol\mu_c}\sum_{t,c}\gamma_{tc}
+\Big[-\tfrac12(\mathbf x_t-\boldsymbol\mu_c)^{\mathsf T}\Sigma_c^{-1}(\mathbf x_t-\boldsymbol\mu_c)\Big]=0
+\ \Longrightarrow\
+\boldsymbol\mu_c=\frac{\sum_t\gamma_{tc}\mathbf x_t}{\sum_t\gamma_{tc}} \tag{13-10} \]</div>
+<p>同理得 \(\Sigma_c\) 与 \(\pi_c\)（\(\pi_c\) 需加 \(\sum_c\pi_c=1\) 约束，用拉格朗日乘子）。
+每轮「E 使下界贴合、M 使下界上升」，保证 \(\ln p(X\mid\lambda)\) 单调不降。</p>
+<p><b>实现必须在对数域</b>：\(\ln\big[\pi_c\mathcal N(\mathbf x_t\mid\cdot)\big]
+=\ln\pi_c-\tfrac12\big[d\ln2\pi+\ln|\Sigma_c|+(\mathbf x_t-\boldsymbol\mu_c)^{\mathsf T}\Sigma_c^{-1}(\mathbf x_t-\boldsymbol\mu_c)\big]\)，
+再用 log-sum-exp 归一化 \(\ln\gamma_{tc}=\ell_{tc}-\ln\sum_j e^{\ell_{tj}}\)，
+其中 \(\ln\sum_j e^{\ell_j}=m+\ln\sum_j e^{\ell_j-m}\)、\(m=\max_j\ell_j\)。不这么做，39 维 × 512 高斯的密度连乘会直接下溢为 0。</p>
+
+<h4>2. UBM–MAP：为什么 \(\alpha_c=n_c/(n_c+r)\)</h4>
+<p>把 UBM 均值当作先验：\(\boldsymbol\mu_c\sim\mathcal N(\boldsymbol\mu_c^{\mathrm{UBM}},\ \Sigma_c/r)\)。
+观测到 \(n_c=\sum_t\gamma_{tc}\) 帧、样本均值 \(\boldsymbol\mu_c^{\mathrm{data}}\)，其似然为
+\(\mathcal N(\boldsymbol\mu_c^{\mathrm{data}}\mid\boldsymbol\mu_c,\Sigma_c/n_c)\)。高斯先验 × 高斯似然后验均值是精度加权平均：</p>
+<div class="math sub">\[ \hat{\boldsymbol\mu}_c=\frac{(r/\Sigma_c)\boldsymbol\mu_c^{\mathrm{UBM}}+(n_c/\Sigma_c)\boldsymbol\mu_c^{\mathrm{data}}}{r/\Sigma_c+n_c/\Sigma_c}
+=\frac{n_c}{n_c+r}\boldsymbol\mu_c^{\mathrm{data}}+\frac{r}{n_c+r}\boldsymbol\mu_c^{\mathrm{UBM}} \tag{13-11} \]</div>
+<p>正是式 (13-4)。\(r\) 是先验的「等效帧数」：数据少时先验占主导，数据多时才信任数据。
+这一步把「每个说话人几秒数据」与「2048 个高斯」的矛盾化解掉，是 GMM-UBM 能实用的关键。</p>
+
+<h4>3. i-vector 后验均值公式的来历</h4>
+<p>模型 \(\mathbf M=\mathbf m+T\mathbf w+\boldsymbol\varepsilon\)，\(\mathbf w\sim\mathcal N(\mathbf 0,I)\)、
+\(\boldsymbol\varepsilon\sim\mathcal N(\mathbf 0,\Sigma)\)。由线性高斯模型，后验 \(\mathbf w\mid\mathbf M\) 仍是高斯，其精度矩阵与均值为</p>
+<div class="math sub">\[ \begin{aligned}
+\mathrm{Cov}(\mathbf w\mid\mathbf M)&=\big(I+T^{\mathsf T}\Sigma^{-1}T\big)^{-1}\\
+\mathbb E[\mathbf w\mid\mathbf M]&=\big(I+T^{\mathsf T}\Sigma^{-1}T\big)^{-1}T^{\mathsf T}\Sigma^{-1}(\mathbf M-\mathbf m)
+\end{aligned}\tag{13-12} \]</div>
+<p>矩阵求逆的维度是总变化空间维度（400×400），<b>与超矢量的 19968 维无关</b>，所以每条语音提 i-vector 很快。
+\(\Sigma\) 由 UBM 的零阶/一阶 Baum–Welch 统计量按高斯块拼成分块对角阵，这是实现里最繁琐但最关键的一步。</p>
+
+<h4>4. PLDA 打分：把「像不像」变成似然比</h4>
+<p>对两条语音的 i-vector 建模（\(\mathbf w=\boldsymbol\mu+V\mathbf y+\boldsymbol\varepsilon\)，\(\mathbf y\) 身份隐变量、\(\boldsymbol\varepsilon\) 会话噪声），打分是</p>
+<div class="math sub">\[ s(\mathbf w_1,\mathbf w_2)=\ln\frac{p(\mathbf w_1,\mathbf w_2\mid\text{同一人})}{p(\mathbf w_1\mid H_{\mathrm{ind}})p(\mathbf w_2\mid H_{\mathrm{ind}})} \tag{13-13} \]</div>
+<p>两个高斯模型都有闭式协方差，代入即可算。PLDA 相比余弦相似度的优势是<b>显式建模了「同一人不同录音」的方差</b>，
+能自动给受信道影响大的维度降权，因此在 SRE 任务上长期优于余弦。</p>
+
+<h4>5. 三条技术路线的对照</h4>
+<table class="sym"><tr><th>方法</th><th>说话人表示</th><th>打分</th><th>少样本注册</th><th>主要弱点</th></tr>
+<tr><td>GMM-UBM</td><td>自适应后的 2048 高斯</td><td>对数似然比</td><td>尚可（MAP）</td><td>维度高、信道敏感</td></tr>
+<tr><td>i-vector + PLDA</td><td>400 维低秩向量</td><td>PLDA 似然比</td><td>好</td><td>线性高斯假设</td></tr>
+<tr><td>x-vector + PLDA</td><td>512 维 DNN embedding</td><td>PLDA / 余弦</td><td>很好</td><td>需大量训练数据</td></tr>
+</table>
+
+<h4>6. 边界与失效条件</h4>
+<ul><li>GMM 用全协方差时参数量 \(\sim C d^2/2\)，几秒数据必然奇异；对角协方差是必需而非简化。</li>
+<li>EM 只保证收敛到局部极大，k-means 初始化与多次重启影响明显。</li>
+<li>i-vector 的 \(T\) 必须在与测试同域的大规模数据上训练；跨域（录音设备不同）时性能下降明显，需要域适配。</li></ul>
+</div>
+
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>以为 GMM 的 C 越大越好。</b>数据不够时高斯越多越容易过拟合，UBM 常用 512–2048 是数据量决定的。② <b>i-vector 维度越高越好。</b>400 维是经验值，太高会引入信道噪声。③ <b>跳过 UBM 直接训每人一个 GMM。</b>小样本必崩。④ <b>拿不同年份的 EER 直接比。</b>数据集条件不同。</div>
 
@@ -1395,7 +2756,7 @@ V、U：对应的子空间；ε：残差</div>
     <label><input type="checkbox" data-k="q13-1"> 我能写出 GMM 的混合密度公式，并解释为什么需要多个高斯。</label>
     <label><input type="checkbox" data-k="q13-2"> 我能说出 EM 的 E 步和 M 步分别在算什么。</label>
     <label><input type="checkbox" data-k="q13-3"> 我能解释 UBM-MAP 的 α 系数含义，以及为什么只更新均值最好。</label>
-    <label><input type="checkbox" data-k="q13-4"> 我能写出 <code>M = m + T·w</code> 并说出 19968 → 400 维的意义。</label>
+    <label><input type="checkbox" data-k="q13-4"> 我能写出 \(\mathbf M=\mathbf m+T\mathbf w\) 并说出 19968 → 400 维的意义。</label>
   </div>
 </section>
 <section id="s14">
@@ -1414,12 +2775,16 @@ V、U：对应的子空间；ε：残差</div>
 
   <h3>① 从 i-vector 到 x-vector：换个方式得到定长向量</h3>
   <p>i-vector 的思路是"用 GMM 超矢量 + 低秩投影"，需要先训 UBM、再算 Baum-Welch 统计量，流程长且对不上齐。x-vector 直接把这件事交给神经网络：用 TDNN 逐帧提特征，再用<strong>统计池化</strong>把变长序列压成定长向量。</p>
-  <div class="eq">输入：一段语音的 MFCC（T 帧 × 39 维，T 不固定）
-TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但跨层连接）
-统计池化：把 T 帧的均值与标准差拼起来
-   μ = (1/T)Σ_t h_t          σ = sqrt[(1/T)Σ_t (h_t − μ)²]
-   输出 = [μ; σ]  → 2×隐层维，与 T 无关
-之后接 2 层全连接 → 512 维 embedding → softmax 分类</div>
+  <div class="mathbox">
+<div class="math">\[ \boldsymbol\mu=\frac{1}{T}\sum_{t=1}^{T}\mathbf h_t,\qquad
+\boldsymbol\sigma=\sqrt{\frac{1}{T}\sum_{t=1}^{T}(\mathbf h_t-\boldsymbol\mu)^2},\qquad
+\mathbf e=[\boldsymbol\mu;\,\boldsymbol\sigma] \tag{14-1} \]</div>
+<div class="mathnote"><p>输入是 MFCC \((\;T\text{ 帧}\times39\text{ 维}\;)\)，\(T\) 不固定。
+TDNN 前几层逐帧变换并利用上下文（类似一维卷积、跨层连接）得到 \(\mathbf h_t\)；
+<b>统计池化</b>把任意长度 \(T\) 压成固定长度的 \(\mathbf e\)（\(2\times\)隐层维），
+这是整条流水线能处理变长语音的关键。标准差项不是装饰：它携带了「帧间离散程度」信息，
+实测比只用均值明显更好。之后接全连接 → 512 维 embedding → softmax 分类。</p></div>
+</div>
   <p>为什么是"均值+标准差"而不是只取最后一帧？因为语音是变长的，只取最后一帧会丢掉其他时刻的信息；而均值和标准差是<strong>对时间顺序不敏感、但对内容敏感的统计量</strong>，正好把"这个人说话的总体倾向"压进去。</p>
 
   <h3>② 三种损失函数</h3>
@@ -1432,10 +2797,15 @@ TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但
   <p>AAM-softmax 的关键在于：普通 softmax 只要"正确类得分最高"就满意了，哪怕只高一点点。<strong>加 margin 后，正确类必须比第二名高出 cos 意义上的 m 弧度才算过关</strong>，于是模型被迫把同一类的样本压得更紧。这对"开集"场景（测试时出现训练时没见过的人）特别重要——因为此时你要比的不是分类对不对，而是 embedding 之间的距离。</p>
 
   <h3>③ 两种使用范式</h3>
-  <div class="eq">范式 A（分类）：训练 softmax 分类器，测试时取最大概率的类
-  适合：类别固定（几种已知工况）
-范式 B（度量）：训练 embedding，测试时算余弦相似度 / PLDA 打分，再比阈值
-  适合：类别会变（新用户注册、未知故障）</div>
+  <div class="mathbox">
+<div class="math">\[ \text{A：}\;\hat c=\arg\max_c p_c,\qquad
+\text{B：}\;s=\cos(\mathbf e_1,\mathbf e_2)=\frac{\mathbf e_1^{\mathsf T}\mathbf e_2}{\|\mathbf e_1\|\,\|\mathbf e_2\|},\;\;s\gt \theta? \tag{14-2} \]</div>
+<div class="mathnote"><p><b>范式 A（分类）</b>：softmax 输出固定类别，适合「几种已知工况」；
+<b>范式 B（度量）</b>：训练 embedding，测试时算余弦/PLDA 分数再比阈值，适合「类别会变」
+（新用户注册、未知故障），也是声纹确认的标准做法。
+训练 B 常用 AAM-Softmax：\(L=-\log\dfrac{e^{s(\cos(\theta_{y}+m)-\cdots)}}{\cdots}\)，
+在角度上加 margin \(m\) 迫使同类更紧、异类更开。</p></div>
+</div>
   <p>设备声纹大多用范式 A（工况种类固定），人的声纹大多用范式 B（要支持随时新增用户）。这个区别决定了你该用哪种损失：<strong>范式 A 用 softmax 就够，范式 B 才需要 AAM-softmax / triplet</strong>。</p>
 
   <figure><img src="assets/model_compare.png" alt="模型对比"><figcaption>手写 BPNN 与 CNN 在同一批 6 类合成声纹上的对比：BPNN 参数量 2694、CNN 6190，测试准确率 1.000 与 0.979。参数少反而更准，说明<b>在这个数据规模下模型复杂度不是瓶颈</b></figcaption></figure>
@@ -1458,6 +2828,56 @@ TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但
   <p><strong>经验 3：噪声是主要敌人，且必须单独报告。</strong>李嘉宁 2025 特意报告"10 dB 时提升 9.4%"，而不是只报高信噪比的 96%。这正是第 10 讲强调的"鲁棒性曲线"思路。</p>
   <p><strong>经验 4：前端可以学。</strong>李嘉宁用"可学习参数的 Gabor 卷积"替代固定的 MFCC 前端，本质是让网络自己决定滤波器形状——这是 MFCC 之后的一个重要演进方向，也解释了为什么"MFCC 不一定最优"。</p>
   <p><strong>经验 5：所有 99% 都不能横向比较。</strong>张重远的 99.71%（3 类、试验台）、陆云才的 99.2%/99.7%（自建库）、李楠的 99.6%（4 级松动程度）——类别数、数据来源、划分方式都不同。把它们排成排行榜是错的，只能看"各自解决了什么问题"。</p>
+
+  <div class="derive">
+<div class="dtitle">推导详解 · 第 14 讲　统计池化与 margin 损失</div>
+
+<h4>1. 为什么统计池化能处理变长输入</h4>
+<p>设帧级输出 \(\mathbf h_t\in\mathbb R^{D}\)，\(t=1..T\)，\(T\) 随语音长度变化。统计池化</p>
+<div class="math sub">\[ \boldsymbol\mu=\frac{1}{T}\sum_{t}\mathbf h_t,\qquad
+\boldsymbol\sigma^2=\frac{1}{T}\sum_t(\mathbf h_t-\boldsymbol\mu)^2,\qquad
+\mathbf e=[\boldsymbol\mu;\boldsymbol\sigma]\in\mathbb R^{2D} \tag{14-1} \]</div>
+<p>把「集合」映射成固定维数的一、二阶矩，因此后续全连接层的输入维度与 \(T\) 无关。
+从概率角度看，这是假设各帧独立同分布于某高斯、用充分统计量近似它；标准差项补充了「分散程度」，
+实测比只用均值提升明显（x-vector 论文的关键设计之一）。</p>
+<p><b>注意池化对 \(T\) 的偏置</b>：短语音的 \(\boldsymbol\sigma\) 估计方差大，长语音更稳，
+所以训练时要做长度均衡（按时长分桶、或随机裁剪到固定长度），否则模型会学到「时长」而非身份。</p>
+
+<h4>2. TDNN 与带上下文的逐帧变换</h4>
+<div class="math sub">\[ \mathbf h_t=f\!\left(W\big[\mathbf x_{t-\tau_1};\mathbf x_t;\mathbf x_{t+\tau_2}\big]+\mathbf b\right),\qquad
+\text{x-vector: }\tau\in\{-2,-1,0,1,2\}\ \text{的扩张卷积} \tag{14-2} \]</div>
+<p>与 CNN 的差别是每个时间位置看的是「拼接的上下文帧」而非二维邻域，
+且高层用<b>扩张（dilated）卷积</b>跳着取样：第 1 层看 \(\pm1\) 帧、第 2 层看 \(\pm2\)、第 3 层看 \(\pm3\)，
+三层就覆盖 15 帧上下文而不增加参数。按 10 ms 帧移算约 150 ms，足以覆盖一个音节。</p>
+
+<h4>3. AAM-Softmax：margin 加在哪里</h4>
+<p>普通 softmax 只要求正确类分数最大，类内可以很松。把权重与特征都做长度归一化并令 \(\mathbf w_c^{\mathsf T}\mathbf e=\cos\theta_c\)，加性角度间隔损失为</p>
+<div class="math sub">\[ L=-\ln\frac{e^{s\cos(\theta_{y}+m)}}{e^{s\cos(\theta_{y}+m)}+\sum_{c\neq y}e^{s\cos\theta_c}} \tag{14-3} \]</div>
+<p>它强迫正确类的角度比原来再小 \(m\)（常用 \(m=0.2\) rad），等价于在球面上把类间拉开、类内压紧。
+\(s\) 是尺度因子（常取 30），因为归一化后 \(\cos\theta\in[-1,1]\)，不放大则 softmax 太「软」、梯度太小。
+训练完成后丢掉分类层，取倒数第二层的 \(\mathbf e\) 作为 embedding，即可用于开集声纹确认。</p>
+
+<h4>4. embedding 打分的两种后端</h4>
+<div class="math sub">\[ s_{\cos}=\frac{\mathbf e_1^{\mathsf T}\mathbf e_2}{\|\mathbf e_1\|\|\mathbf e_2\|},\qquad
+s_{\mathrm{PLDA}}=\ln\frac{p(\mathbf e_1,\mathbf e_2\mid H_1)}{p(\mathbf e_1\mid H_0)p(\mathbf e_2\mid H_0)} \tag{14-4} \]</div>
+<p>余弦简单、无需训练、适合数据量少；PLDA 需要一批开发数据估计类内/类间协方差，但能按维度加权，
+在信道变化大时更稳。工程上常先做长度归一化 + LDA 降维去信道，再算余弦或 PLDA。</p>
+
+<h4>5. 与「手工特征」路线的对比账</h4>
+<table class="sym"><tr><th>环节</th><th>手工路线（第 6–10 讲）</th><th>x-vector 路线</th></tr>
+<tr><td>特征</td><td>MFCC + Δ + ΔΔ（39 维，人工设计）</td><td>原始 MFCC / 频谱，逐帧由网络学变换</td></tr>
+<tr><td>变长聚合</td><td>全局均值 / 统计量（人工）</td><td>统计池化（可学，且保留标准差）</td></tr>
+<tr><td>说话人表示</td><td>GMM 超矢量 / i-vector</td><td>512 维 embedding</td></tr>
+<tr><td>打分</td><td>对数似然比 / PLDA</td><td>余弦 / PLDA</td></tr>
+</table>
+<p>两条路线的<b>后半段其实一样</b>（都要定长向量 + 似然比/相似度 + 阈值），
+差别在于「前面那段变换是人工设计还是学出来的」。理解这点，第 12 讲的评价体系就能无缝迁移到深度模型。</p>
+
+<h4>6. 边界与失效条件</h4>
+<ul><li>训练类别数太少时 margin softmax 的类间结构学不充分，embedding 泛化差；这类方法依赖成千上万个说话人。</li>
+<li>短语音（&lt;2 s）时统计池化的二阶矩不可靠，性能明显下滑；可用注意力池化（给帧加权）缓解。</li>
+<li>域不匹配（训练用 16 kHz 电话语音、测试用 8 kHz 设备声）影响远大于模型结构差异，优先做数据/前端对齐。</li></ul>
+</div>
 
   <h3>误区与注意事项</h3>
   <div class="warn"><span class="t">误区</span>① <b>以为统计池化只是"求平均"。</b>标准差那一半同样重要，它携带"波动程度"信息。② <b>在闭集任务上用 triplet 损失。</b>没必要，softmax 更快更好。③ <b>照抄论文的超参数。</b>数据规模差一个数量级，学习率、层数都要重调。④ <b>把不同论文的准确率排榜。</b>数据集条件不同，比较无意义。</div>
@@ -1492,13 +2912,11 @@ TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但
 
   <h3>怎么验证自己"真的会了"</h3>
   <p>三关，从易到难，缺一不可：</p>
-  <div class="eq">第一关（能讲）：合上讲义，向别人解释"为什么 MFCC 要取 log"。
-   讲不清 = 只是记住了流程，没理解原因。
-第二关（能写）：不看现成代码，写出能通过 1e−10 对拍的 DFT。
-   写不出 = 公式还停在纸面上。
-第三关（能改）：给定一个新需求（比如"要在 10 dB 噪声下识别局放"），
-   能说出该改哪个环节、预期会怎样、怎么验证。
-   说不出 = 还不会用，只会复现。</div>
+  <div class="defbox"><div class="dh">三道出师关</div>
+<ol><li><b>能讲</b>：合上讲义，向别人解释「为什么 MFCC 要取 log」。讲不清 = 只记住流程，没理解原因。</li>
+<li><b>能写</b>：不看现成代码，写出能与 numpy 对拍到 \(10^{-10}\) 的 DFT。写不出 = 公式还停在纸面上。</li>
+<li><b>能改</b>：给定新需求（如「要在 10 dB 噪声下识别局放」），能说出该改哪个环节、预期会怎样、怎么验证。
+说不出 = 还不会用，只会复现。</li></ol></div>
   <p>第三关才是真正的分水岭。举个具体例子：要在强噪声下识别局放，你会怎么改？可以从四个层面答——<strong>数据层</strong>（加噪训练、谱减降噪）；<strong>特征层</strong>（换用对噪声更稳的特征，如谱平坦度、过零率，或学时频掩蔽）；<strong>模型层</strong>（多传感器融合、注意力机制）；<strong>评估层</strong>（报告噪声衰减曲线而不是单一准确率）。能把这四层串起来讲，就说明整条链路通了。</p>
 
   <h3>进阶方向（结合综述列出的挑战）</h3>
@@ -1528,7 +2946,40 @@ TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但
     <label><input type="checkbox" data-k="fin-11"> 我能解释 EER 与 2×EER，并用 DCF 比较两个阈值。</label>
     <label><input type="checkbox" data-k="fin-12"> 我能对一篇声纹论文提出至少两个方法学质疑。</label>
   </div>
-</section>
+<div class="derive">
+<div class="dtitle">推导详解 · 第 15 讲　从「能跑」到「能用」的检查清单</div>
+
+<h4>1. 一条完整流水线的参数表（可直接照抄）</h4>
+<table class="sym"><tr><th>环节</th><th>参数</th><th>取值</th><th>改错的后果</th></tr>
+<tr><td>采集</td><td>\(F_s\)</td><td>8000 Hz / 16 bit</td><td>&lt;2×最高频率 → 混叠，不可恢复</td></tr>
+<tr><td>抗混叠</td><td>模拟低通截止</td><td>3.4 kHz</td><td>缺失 → 高频伪装成低频峰</td></tr>
+<tr><td>预加重</td><td>\(\alpha\)</td><td>设备声 0～0.45；语音 0.97</td><td>过大 → 100 Hz 基频被压 30 dB</td></tr>
+<tr><td>分帧</td><td>\(L/S\)</td><td>200 / 80 点</td><td>无重叠 → OLA 重构失真</td></tr>
+<tr><td>窗</td><td>汉明</td><td>0.54−0.46cos</td><td>矩形窗 → −13 dB 旁瓣、严重泄漏</td></tr>
+<tr><td>FFT</td><td>\(N\)</td><td>256（2 的幂）</td><td>补零只改显示密度，不改分辨率</td></tr>
+<tr><td>幅度谱</td><td>\(2/N\)</td><td>直流除外</td><td>漏乘 → 幅值虚高 \(N/2\) 倍</td></tr>
+<tr><td>Mel</td><td>\(M\)</td><td>26</td><td>照搬语音配置 → 低频判别信息只占 2–3 通道</td></tr>
+<tr><td>倒谱</td><td>\(n_{\mathrm{ceps}}\)</td><td>13 + Δ + ΔΔ = 39</td><td>只加维不加差分 → 误识别高约 20%</td></tr>
+<tr><td>归一化</td><td>CMN</td><td>逐维减均值</td><td>漏做 → 换设备即崩</td></tr>
+<tr><td>划分</td><td>按段分组</td><td>60/20/20</td><td>按帧随机切 → 指标虚高</td></tr>
+<tr><td>判决</td><td>\(\theta\)</td><td>在开发集上按 minDCF 选</td><td>测试集上调阈值 → 作弊</td></tr>
+</table>
+
+<h4>2. 排查问题的固定顺序（从前往后，别跳）</h4>
+<ol><li><b>时域</b>：画原始波形，确认没削波、没有直流偏置、长度与 \(F_s\) 对得上。</li>
+<li><b>频域</b>：画纯正弦的谱，确认峰值落在正确频率、幅值经 \(2/N\) 后正确、旁瓣是加了窗的样子。</li>
+<li><b>特征</b>：打印每一帧的形状与取值范围，确认 39 维、无 NaN、CMN 后各维均值≈0。</li>
+<li><b>模型</b>：跑梯度检查（\(\lt 10^{-8}\)），确认一轮更新后损失确实下降（式 8-13）。</li>
+<li><b>划分</b>：确认训练集与测试集没有共享同一段录音。</li>
+<li><b>评价</b>：同时报 FAR/FRR/EER/minDCF 与试验次数，别只报准确率。</li></ol>
+
+<h4>3. 三个可自己动手的「破坏性实验」</h4>
+<ul><li><b>把 \(F_s\) 改成 500 Hz</b>：看 100 Hz 基频附近凭空多出哪些峰，验证式 (2-10) 的混叠预测。</li>
+<li><b>把汉明窗换成矩形窗</b>：比较纯正弦谱的旁瓣高度，量出约 30 dB 的差异。</li>
+<li><b>把 \(\Delta/\Delta\Delta\) 去掉</b>：在同样数据上对比分类准确率，复现「加差分比加维数更有效」的结论。</li></ul>
+</div>
+
+  </section>
 
 <section id="s16">
   <h2><span class="no">附录</span>中英术语对照、章节映射与参考文献</h2>
@@ -1610,7 +3061,66 @@ TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但
     <tr><td>小波尺度换算</td><td>f ≈ Fs / a</td><td>8 kHz、a=80 → 100 Hz</td></tr>
     <tr><td>卷积输出</td><td>(H−F+2P)/S+1</td><td>32、F=3、P=1、S=1 → 32</td></tr>
   </table>
-</section>
+<div class="derive">
+<div class="dtitle">附录 · 全书符号总表与公式速查</div>
+
+<h4>A. 符号总表</h4>
+<table class="sym"><tr><th>符号</th><th>含义</th><th>首次出现</th></tr>
+<tr><td>\(x(t),x[n]\)</td><td>连续 / 离散信号</td><td>第 1、2 讲</td></tr>
+<tr><td>\(F_s,T_s,N\)</td><td>采样率、采样间隔、点数</td><td>第 2 讲</td></tr>
+<tr><td>\(L,S,M\)</td><td>帧长、帧移、帧数 / 滤波器数</td><td>第 2、6 讲</td></tr>
+<tr><td>\(w[n]\)</td><td>窗函数</td><td>第 2 讲</td></tr>
+<tr><td>\(X[k],X[m,k]\)</td><td>DFT / STFT 系数</td><td>第 4、5 讲</td></tr>
+<tr><td>\(W_N\)</td><td>旋转因子 \(e^{-j2\pi/N}\)</td><td>第 4 讲</td></tr>
+<tr><td>\(P[k],H_m[k],E_m,L_m,c_i\)</td><td>功率谱、Mel 滤波器、通道能量、对数能量、倒谱系数</td><td>第 6 讲</td></tr>
+<tr><td>\(a,b,\psi,cA_j,cD_j\)</td><td>尺度、平移、母小波、近似/细节系数</td><td>第 7 讲</td></tr>
+<tr><td>\(W,\mathbf b,\mathbf z,\mathbf h,\boldsymbol\delta\)</td><td>权重、偏置、净输入、激活、误差信号</td><td>第 8 讲</td></tr>
+<tr><td>\(\eta,\lambda,\gamma\)</td><td>学习率、正则系数、动量系数</td><td>第 8、10 讲</td></tr>
+<tr><td>\(F,P,S,\mathrm{RF}\)</td><td>核大小、padding、步长、感受野</td><td>第 9 讲</td></tr>
+<tr><td>\(\theta,\mathrm{FAR},\mathrm{FRR},\mathrm{EER},C_{\det}\)</td><td>阈值、两类错误率、等错误率、检测代价</td><td>第 12 讲</td></tr>
+<tr><td>\(\pi_c,\boldsymbol\mu_c,\Sigma_c,\gamma_{tc}\)</td><td>GMM 权重/均值/协方差、责任度</td><td>第 13 讲</td></tr>
+<tr><td>\(\mathbf M,\mathbf m,T,\mathbf w\)</td><td>超矢量、UBM 超矢量、总变化空间、i-vector</td><td>第 13 讲</td></tr>
+<tr><td>\(\mathbf e,\boldsymbol\mu,\boldsymbol\sigma\)</td><td>embedding、统计池化均值/标准差</td><td>第 14 讲</td></tr>
+</table>
+
+<h4>B. 公式速查（按用途）</h4>
+<table class="sym"><tr><th>用途</th><th>公式</th><th>编号</th></tr>
+<tr><td>采样</td><td>\(x[n]=x(n/F_s)\)</td><td>2-1</td></tr>
+<tr><td>奈奎斯特条件</td><td>\(F_s\gt 2f_{\max}\)</td><td>2-2</td></tr>
+<tr><td>混叠频率</td><td>\(f_{\mathrm{alias}}=\min_k|f-kF_s|\)</td><td>2-3</td></tr>
+<tr><td>量化信噪比</td><td>\(\mathrm{SNR}_{\mathrm{dB}}=6.02B+1.76\)</td><td>2-4</td></tr>
+<tr><td>DFT</td><td>\(X[k]=\sum_n x[n]W_N^{kn}\)</td><td>4-2</td></tr>
+<tr><td>IDFT</td><td>\(x[n]=\frac1N\sum_kX[k]e^{j2\pi kn/N}\)</td><td>4-9</td></tr>
+<tr><td>单边幅度谱</td><td>\(A[k]=2|X[k]|/N\)</td><td>4-5</td></tr>
+<tr><td>真实分辨率</td><td>\(\Delta f=1/T_{\mathrm{obs}}=F_s/N_0\)</td><td>4-6</td></tr>
+<tr><td>FFT 复杂度</td><td>\(\frac N2\log_2N\)</td><td>4-6</td></tr>
+<tr><td>STFT</td><td>\(X[m,k]=\sum_nx[n]w[n-mS]e^{-j2\pi kn/N}\)</td><td>5-1</td></tr>
+<tr><td>时频不确定</td><td>\(\Delta t\,\Delta f\ge1/(4\pi)\)</td><td>5-2</td></tr>
+<tr><td>Mel 刻度</td><td>\(m(f)=2595\log_{10}(1+f/700)\)</td><td>6-3</td></tr>
+<tr><td>通道能量</td><td>\(E_m=\sum_kP[k]H_m[k]\)</td><td>6-4</td></tr>
+<tr><td>对数能量</td><td>\(L_m=\ln(E_m+\varepsilon)\)</td><td>6-5</td></tr>
+<tr><td>DCT-II</td><td>\(c_i=\sqrt{2/M}\sum_mL_m\cos[\frac{\pi i}{M}(m-\frac12)]\)</td><td>6-6</td></tr>
+<tr><td>一阶差分</td><td>\(d_t=\frac{\sum_n n(c_{t+n}-c_{t-n})}{2\sum_nn^2}\)</td><td>6-7</td></tr>
+<tr><td>CWT</td><td>\(W(a,b)=\int x(t)\,\overline{\psi((t-b)/a)}/\sqrt a\,\mathrm dt\)</td><td>7-1</td></tr>
+<tr><td>softmax</td><td>\(p_c=e^{z_c}/\sum_je^{z_j}\)</td><td>8-2</td></tr>
+<tr><td>交叉熵</td><td>\(L=-\sum_cy_c\ln p_c\)</td><td>8-3</td></tr>
+<tr><td>输出层误差</td><td>\(\boldsymbol\delta_2=\mathbf p-\mathbf y\)</td><td>8-4</td></tr>
+<tr><td>隐层误差</td><td>\(\boldsymbol\delta_1=(W_2^{\mathsf T}\boldsymbol\delta_2)\odot\sigma'(\mathbf z_1)\)</td><td>8-5</td></tr>
+<tr><td>卷积尺寸</td><td>\(H_{\mathrm{out}}=\lfloor(H_{\mathrm{in}}+2P-F)/S\rfloor+1\)</td><td>9-2</td></tr>
+<tr><td>检测代价</td><td>\(C_{\det}=C_{\mathrm{FR}}\mathrm{FRR}P_{\mathrm{tar}}+C_{\mathrm{FA}}\mathrm{FAR}P_{\mathrm{nontarget}}\)</td><td>12-5</td></tr>
+<tr><td>GMM</td><td>\(p(\mathbf x\mid\lambda)=\sum_c\pi_c\mathcal N(\mathbf x\mid\boldsymbol\mu_c,\Sigma_c)\)</td><td>13-1</td></tr>
+<tr><td>i-vector</td><td>\(\mathbf M=\mathbf m+T\mathbf w\)</td><td>13-5</td></tr>
+<tr><td>统计池化</td><td>\(\mathbf e=[\boldsymbol\mu;\boldsymbol\sigma]\)</td><td>14-1</td></tr>
+</table>
+
+<h4>C. 关于公式排版的说明</h4>
+<p>本版起，全部公式改用 <b>KaTeX</b> 排版（本地字体，离线可用），并按「讲-序」编号。
+编号如 <b>(4-9)</b> 中的 4 表示第 4 讲、9 表示该讲的公式序号；带「推导详解」字样的编号（如 4-9、6-10）
+出现在各讲末尾的推导补充中，与正文公式属于同一编号体系。
+所有下式里的中文说明、变量表、数值算例都放在公式<b>之外</b>，以免中文字形干扰数学排版。</p>
+</div>
+
+  </section>
 
 </main>
 </div>
@@ -1646,6 +3156,20 @@ TDNN 前几层：逐帧变换，同时利用上下文（类似一维卷积，但
   }, {rootMargin:'-20% 0px -70% 0px'});
   secs.forEach(function(s){ obs.observe(s); });
 })();
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof renderMathInElement === "function") {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "\\[", right: "\\]", display: true},
+        {left: "\\(", right: "\\)", display: false}
+      ],
+      ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+      throwOnError: false
+    });
+  }
+});
 </script>
 </body>
 </html>

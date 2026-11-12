@@ -7,7 +7,8 @@
   · 目录用真实正文页码（正文页码从 1 起，与封面/目录分离）
   · 正文：宋体 10.5pt、首行缩进 2 字符、两端对齐、行距 1.72
   · 图编号「图 X-Y」、表编号「表 X-Y」（表题取自上文标题）、三线表
-  · 公式改为真正的上下标排版（不再出现 Σ_{n=0}^{N-1} 这种 ASCII 写法）
+  · 公式由本地 KaTeX 排版（真正的 Σ / ∫ / 分式 / 上下标），按「讲-序」编号
+  · 每讲附推导详解：符号表、逐步推导、数值算例、公式↔代码、失效条件
   · 采样量化表由截图改为可排版的正文表格
   · 页眉书名 + 页脚页码 + PDF 书签 + 元数据
 
@@ -177,6 +178,41 @@ table.num td:first-child { font-variant-numeric: tabular-nums; color: #6b7583; }
 .checklist input { -webkit-appearance: none; appearance: none; width: 8.4pt; height: 8.4pt;
   border: 0.9pt solid #78838f; border-radius: 1.5pt; margin: 0 6pt 0 0; vertical-align: -0.6pt; }
 .mk { color: #fff; font-size: 1pt; }
+
+/* ---------- 第 3 版：KaTeX 公式 / 定义框 / 推导详解（印刷白底） ---------- */
+.katex { color: #16202e; font-size: 1.02em; }
+.mathbox { border: 0.6pt solid #d5dce5; background: #f8fafc; margin: 8pt 0 10pt;
+  padding: 0; break-inside: avoid; border-radius: 2pt; }
+.mathbox .math { padding: 7pt 10pt; text-align: center; text-indent: 0;
+  border-bottom: 0.5pt solid #e1e7ee; }
+.mathbox .math .katex-display { margin: 0; }
+.mathbox .mathnote { padding: 5pt 10pt 6pt; font-size: 9.3pt; line-height: 1.7;
+  color: #3c4654; text-indent: 0; }
+.mathbox .mathnote p { text-indent: 0; margin: 0 0 3pt; }
+.defbox { background: #f7f9fb; border-left: 2.6pt solid #5a8fd0; padding: 6pt 10pt;
+  margin: 7pt 0 9pt; break-inside: avoid; }
+.defbox .dh { font-family: "Microsoft YaHei"; font-weight: 700; font-size: 9.6pt;
+  color: #24527f; margin-bottom: 3pt; }
+.defbox p, .defbox li { text-indent: 0; font-size: 9.6pt; }
+.defbox ol { margin: 3pt 0; }
+.derive { border: 0.6pt solid #c8d6e8; background: #fbfcfe; padding: 2pt 12pt 8pt;
+  margin: 12pt 0 10pt; }
+.derive .dtitle { font-family: "Microsoft YaHei"; font-size: 11pt; font-weight: 700;
+  color: %(accent)s; border-bottom: 0.7pt solid #c8d6e8; padding-bottom: 4pt;
+  margin: 9pt 0 6pt; text-indent: 0; break-after: avoid; }
+.derive h4 { color: %(accent)s; margin: 10pt 0 4pt; }
+.derive p, .derive li { text-indent: 0; font-size: 9.7pt; }
+.derive .math.sub { background: #f2f6fc; border: 0.5pt solid #dbe5f2; padding: 6pt 8pt;
+  margin: 6pt 0 8pt; text-align: center; break-inside: avoid; }
+.derive .math.sub .katex-display { margin: 0; }
+table.sym { font-size: 9.1pt; }
+table.sym th { background: #eef2f8; }
+table.sym td:first-child { font-family: "Cambria", "Times New Roman", serif;
+  color: #1f3f6b; white-space: nowrap; }
+.symgrid > div { display: inline-block; width: 48%%; vertical-align: top;
+  padding: 2pt 6pt; box-sizing: border-box; font-size: 9.4pt; }
+.warn.inline { background: #fdf7f2; border-left: 2.6pt solid #cf8a3c;
+  padding: 5pt 8pt; margin: 6pt 0; }
 """
 
 BAD_CAP = {"准备", "自检", "误区与注意事项", "怎么做 + 为什么", "怎么做+为什么"}
@@ -295,9 +331,11 @@ def transform_section(sec, ch_no):
             tb.insert(0, thead)
             thead.append(rows[0])
 
-    # 表编号（表题取自上文最近的标题）
+    # 表编号（表题取自上文最近的标题）；推导详解里的符号表不参与正式编号
     tk = 0
     for tb in sec.xpath(".//table"):
+        if "sym" in (tb.get("class") or ""):
+            continue
         cap_text = tb.get("data-cap") or ""
         prev = tb.getprevious()
         hop = 0
@@ -353,11 +391,28 @@ def build_body(chapters):
 
 CSS_READY = CSS.replace("%%", "%").replace("%(accent)s", ACCENT)
 
+# 本地 KaTeX（离线可用）；正文页需要，封面/目录不需要
+MATH_HEAD = ('<link rel="stylesheet" href="assets/katex/katex.min.css">'
+             '<script src="assets/katex/katex.min.js"></script>'
+             '<script src="assets/katex/contrib/auto-render.min.js"></script>')
+MATH_RUN = ("<script>\n"
+            "document.addEventListener('DOMContentLoaded', function () {\n"
+            "  if (typeof renderMathInElement === 'function') {\n"
+            "    renderMathInElement(document.body, {\n"
+            "      delimiters: [{left: '\\\\[', right: '\\\\]', display: true},\n"
+            "                  {left: '\\\\(', right: '\\\\)', display: false}],\n"
+            "      ignoredTags: ['script','noscript','style','textarea','pre','code','option'],\n"
+            "      throwOnError: false\n"
+            "    });\n"
+            "  }\n"
+            "});\n</script>")
 
-def page_html(title, inner):
+
+def page_html(title, inner, math=False):
     return ('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
-            '<title>%s</title><style>%s</style></head><body>%s</body></html>'
-            % (title, CSS_READY, inner))
+            '<title>%s</title><style>%s</style>%s</head><body>%s%s</body></html>'
+            % (title, CSS_READY, MATH_HEAD if math else "", inner,
+               MATH_RUN if math else ""))
 
 
 def cover_html():
@@ -365,15 +420,15 @@ def cover_html():
         '<div class="cover">'
         '<table class="meta">'
         '<tr><td class="k">文档类型</td><td>学习讲义（自学用）</td>'
-        '<td class="k">版　　本</td><td>2.0</td></tr>'
+        '<td class="k">版　　本</td><td>3.0（公式版）</td></tr>'
         '<tr><td class="k">适用对象</td><td>零基础，需高中物理与基础代数</td>'
         '<td class="k">配套项目</td><td>acoustic-lab/（可运行代码）</td></tr>'
         '<tr><td class="k">内容来源</td><td colspan="3">韩纪庆等《语音信号处理（第 3 版）》；'
         '王泉《声纹技术：从核心算法到工程实践》；项目实测数据</td></tr>'
         '<tr><td class="k">在线仓库</td><td colspan="3">github.com/Lzq2190/voiceprint-lab'
         '（讲义、代码、图表与数据；仓库说明见第 0 讲）</td></tr>'
-        '<tr><td class="k">说　　明</td><td colspan="3">书中公式按标准形式重写并标注出处；'
-        '全部图表由配套脚本实测生成，非示意图</td></tr>'
+        '<tr><td class="k">说　　明</td><td colspan="3">书中公式按标准形式用 KaTeX 排版并标注出处、逐条编号；'
+        '每讲附推导详解（符号表、逐步推导、数值算例、代码对应、失效条件）；全部图表由配套脚本实测生成</td></tr>'
         '</table>'
         '<div class="grow"></div>'
         '<div class="mid">'
@@ -404,8 +459,9 @@ def toc_html(chapters, pages):
         '<div class="toc"><h1>目　录</h1>'
         '<div class="hint">共 %d 讲　·　页码为正文页码</div>%s'
         '<div class="tocfoot">每一讲均按「目标 → 产出 → 准备 → 怎么做 + 为什么 → '
-        '误区与注意事项 → 自检」编排。自检项可直接勾选，用于确认是否真正掌握；'
-        '配套可运行项目 acoustic-lab/ 中的脚本生成了本文全部图表与数值。</div></div>'
+        '推导详解 → 误区与注意事项 → 自检」编排。全部公式由 KaTeX 排版并按「讲-序」编号；'
+        '推导详解给出符号表、不跳步的推导、手算数值例与代码对应。自检项可直接勾选，'
+        '用于确认是否真正掌握；配套可运行项目 acoustic-lab/ 中的脚本生成了本文全部图表与数值。</div></div>'
         % (len(chapters), "".join(rows)))
     return page_html("目录", inner)
 
@@ -415,10 +471,11 @@ def render(hpath, ppath):
     if os.path.exists(ppath):
         os.remove(ppath)
     subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--no-sandbox",
+                    "--allow-file-access-from-files",
                     "--no-pdf-header-footer", "--print-to-pdf=" + ppath,
-                    "--virtual-time-budget=20000",
+                    "--virtual-time-budget=30000",
                     "file:///" + hpath.replace("\\", "/")],
-                   check=True, capture_output=True, timeout=240)
+                   check=True, capture_output=True, timeout=300)
     if not os.path.exists(ppath):
         raise RuntimeError("渲染失败：" + ppath)
 
@@ -458,8 +515,9 @@ def main():
     chapters = load_chapters()
     print("    %d 节：%s … %s" % (len(chapters), chapters[0]["label"], chapters[-1]["label"]))
 
-    print("2/6 排版并渲染正文 ...")
-    io.open(BODY_HTML, "w", encoding="utf-8").write(page_html("正文", build_body(chapters)))
+    print("2/6 排版并渲染正文（KaTeX 公式） ...")
+    io.open(BODY_HTML, "w", encoding="utf-8").write(
+        page_html("正文", build_body(chapters), math=True))
     render(BODY_HTML, BODY_PDF)
 
     print("3/6 定位每讲起始页 ...")
